@@ -32,129 +32,77 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       }
 
       setMessage({ type: 'success', text: 'ההזמנה נשלחה בהצלחה! ממתין לאישור.' })
-      setForm({
-        pilot_name: '',
-        date: '',
-        start_time: '',
-        end_time: '',
-        with_instructor: false,
-        instructor_name: 'Shani Segev',
-      })
+      setForm({ pilot_name: '', date: '', start_time: '', end_time: '', with_instructor: false, instructor_name: 'Shani Segev' })
       onSuccess?.()
     } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'שגיאה ביצירת ההזמנה',
-      })
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'שגיאה ביצירת ההזמנה' })
     } finally {
       setSubmitting(false)
     }
   }
 
-  // Default date to today
   const today = new Date().toISOString().split('T')[0]
+  const inputClass = "w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-base"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Pilot Name */}
       <div>
-        <label className="block text-baron-blue-200 text-sm font-medium mb-1">
-          שם הטייס
-        </label>
-        <input
-          type="text"
-          required
-          value={form.pilot_name}
+        <label className="block text-slate-600 text-sm font-medium mb-1.5">שם הטייס</label>
+        <input type="text" required value={form.pilot_name}
           onChange={(e) => setForm({ ...form, pilot_name: e.target.value })}
-          placeholder="הכנס שם מלא"
-          className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 focus:outline-none focus:border-baron-blue-400 focus:ring-1 focus:ring-baron-blue-400 text-lg"
-        />
+          placeholder="הכנס שם מלא" className={inputClass} />
       </div>
 
-      {/* Date */}
       <div>
-        <label className="block text-baron-blue-200 text-sm font-medium mb-1">
-          תאריך
-        </label>
-        <input
-          type="date"
-          required
-          min={today}
-          value={form.date}
+        <label className="block text-slate-600 text-sm font-medium mb-1.5">תאריך</label>
+        <input type="date" required min={today} value={form.date}
           onChange={(e) => setForm({ ...form, date: e.target.value })}
-          className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 focus:ring-1 focus:ring-baron-blue-400 text-lg"
-        />
+          className={inputClass} />
       </div>
 
-      {/* Times */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">
-            שעת התחלה
-          </label>
-          <input
-            type="time"
-            required
-            value={form.start_time}
+          <label className="block text-slate-600 text-sm font-medium mb-1.5">שעת התחלה</label>
+          <input type="time" required value={form.start_time}
             onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 focus:ring-1 focus:ring-baron-blue-400 text-lg"
-          />
+            className={inputClass} />
         </div>
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">
-            שעת סיום
-          </label>
-          <input
-            type="time"
-            required
-            value={form.end_time}
+          <label className="block text-slate-600 text-sm font-medium mb-1.5">שעת סיום</label>
+          <input type="time" required value={form.end_time}
             onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 focus:ring-1 focus:ring-baron-blue-400 text-lg"
-          />
+            className={inputClass} />
         </div>
       </div>
 
-      {/* Instructor */}
-      <div className="space-y-2">
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={form.with_instructor}
+      <div className="space-y-3">
+        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <input type="checkbox" checked={form.with_instructor}
             onChange={(e) => setForm({ ...form, with_instructor: e.target.checked })}
-            className="w-5 h-5 rounded border-baron-blue-600 bg-baron-blue-800/50 text-baron-blue-500 focus:ring-baron-blue-400"
-          />
-          <span className="text-white text-lg">טיסה עם מדריך</span>
+            className="w-5 h-5 rounded border-slate-300 text-blue-500 focus:ring-blue-400" />
+          <span className="text-slate-700 text-base font-medium">טיסה עם מדריך</span>
         </label>
 
         {form.with_instructor && (
-          <select
-            value={form.instructor_name}
+          <select value={form.instructor_name}
             onChange={(e) => setForm({ ...form, instructor_name: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 focus:ring-1 focus:ring-baron-blue-400 text-lg"
-          >
+            className={inputClass}>
             <option value="Shani Segev">Shani Segev</option>
           </select>
         )}
       </div>
 
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full py-4 rounded-xl bg-baron-blue-500 hover:bg-baron-blue-400 disabled:bg-baron-blue-700 disabled:cursor-not-allowed text-white font-bold text-lg transition-colors shadow-lg"
-      >
+      <button type="submit" disabled={submitting}
+        className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-lg transition-colors shadow-sm">
         {submitting ? 'שולח...' : 'שלח הזמנה ✈️'}
       </button>
 
-      {/* Message */}
       {message && (
-        <div
-          className={`p-4 rounded-lg text-center font-medium ${
-            message.type === 'success'
-              ? 'bg-green-500/20 border border-green-500/50 text-green-200'
-              : 'bg-red-500/20 border border-red-500/50 text-red-200'
-          }`}
-        >
+        <div className={`p-4 rounded-xl text-center font-medium text-sm ${
+          message.type === 'success'
+            ? 'bg-green-50 border border-green-200 text-green-700'
+            : 'bg-red-50 border border-red-200 text-red-700'
+        }`}>
           {message.text}
         </div>
       )}
