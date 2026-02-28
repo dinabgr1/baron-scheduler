@@ -83,11 +83,24 @@ const SOLO_BG = '#fef08a'
 const SOLO_TEXT = '#713f12'
 
 function getBookingColors(b: Booking) {
-  const rejected = b.status === 'rejected'
-  if (b.with_instructor) {
-    return { bg: INSTRUCTOR_COLOR, text: 'white', opacity: rejected ? 0.4 : 1 }
+  if (b.status === 'rejected') {
+    return { bg: '#fee2e2', text: '#991b1b', opacity: 0.8 }
   }
-  return { bg: SOLO_BG, text: SOLO_TEXT, opacity: rejected ? 0.4 : 1 }
+  if (b.status === 'pending') {
+    return { bg: '#f59e0b', text: '#78350f', opacity: 1 }
+  }
+  // approved
+  if (b.with_instructor) {
+    return { bg: INSTRUCTOR_COLOR, text: 'white', opacity: 1 }
+  }
+  return { bg: SOLO_BG, text: SOLO_TEXT, opacity: 1 }
+}
+
+function statusBadge(status: string): { text: string; bg: string; color: string } | null {
+  if (status === 'pending') return { text: 'ממתין', bg: '#78350f', color: '#fef3c7' }
+  if (status === 'approved') return { text: '✓', bg: '#16a34a', color: 'white' }
+  if (status === 'rejected') return { text: 'נדחה', bg: '#dc2626', color: 'white' }
+  return null
 }
 
 function statusDotColor(status: string): string {
@@ -126,6 +139,7 @@ function BookingBlock({
   const minHeight = Math.max(height, 22)
   const colors = getBookingColors(b)
   const rejected = b.status === 'rejected'
+  const badge = statusBadge(b.status)
 
   return (
     <div
@@ -139,10 +153,15 @@ function BookingBlock({
         backgroundColor: colors.bg,
         color: colors.text,
         opacity: colors.opacity,
-        borderLeft: `3px solid ${statusDotColor(b.status)}`,
       }}
       title={`${b.pilot_name} | ${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}${b.instructor_name ? ` | מדריך: ${b.instructor_name}` : ''} | ${b.status}`}
     >
+      {badge && (
+        <div className="absolute top-0.5 right-0.5 px-1 py-px rounded text-[8px] font-bold leading-tight whitespace-nowrap"
+          style={{ backgroundColor: badge.bg, color: badge.color }}>
+          {badge.text}
+        </div>
+      )}
       <div className="px-1.5 py-0.5 h-full flex flex-col justify-start">
         <div className={`${compact ? 'text-[10px]' : 'text-[11px] md:text-xs'} font-bold truncate leading-tight`}>
           {b.pilot_name}
@@ -289,6 +308,26 @@ export default function WeeklyCalendar() {
 
   return (
     <div>
+      {/* Legend - sticky top */}
+      <div className="flex items-center justify-center gap-x-3 gap-y-1 flex-wrap px-3 py-1.5 bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: INSTRUCTOR_COLOR }} />עם מדריך
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: SOLO_BG, border: '1px solid #d4d4d8' }} />טיסה עצמאית
+        </span>
+        <span className="text-slate-300">|</span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#f59e0b' }} />ממתין
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#22c55e' }} />מאושר
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#ef4444' }} />נדחה
+        </span>
+      </div>
+
       {/* View switcher + zoom */}
       <div className="flex items-center justify-between p-3 border-b border-slate-100">
         <div className="flex items-center gap-1">
@@ -371,25 +410,6 @@ export default function WeeklyCalendar() {
         />
       )}
 
-      {/* Legend */}
-      <div className="p-3 border-t border-slate-200 flex flex-wrap gap-x-4 gap-y-1 justify-center text-xs text-slate-500">
-        <span className="flex items-center gap-1.5">
-          <span className="w-4 h-3 rounded" style={{ backgroundColor: INSTRUCTOR_COLOR }} />עם מדריך
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-4 h-3 rounded" style={{ backgroundColor: SOLO_BG }} />טיסה עצמאית
-        </span>
-        <span className="mx-1 text-slate-300">|</span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#f59e0b' }} />ממתין
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#22c55e' }} />מאושר
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ef4444' }} />נדחה
-        </span>
-      </div>
     </div>
   )
 }
@@ -530,6 +550,7 @@ function MonthView({
                   {dayBookings.slice(0, 3).map(b => {
                     const colors = getBookingColors(b)
                     const rejected = b.status === 'rejected'
+                    const badge = statusBadge(b.status)
                     return (
                       <div key={b.id} className="relative">
                         <div
@@ -539,12 +560,19 @@ function MonthView({
                             backgroundColor: colors.bg,
                             color: colors.text,
                             opacity: colors.opacity,
-                            borderLeft: `2px solid ${statusDotColor(b.status)}`,
                             fontSize: '10px',
                             lineHeight: '14px',
                           }}
                           title={`${b.pilot_name} ${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}`}
                         >
+                          {badge && b.status !== 'approved' && (
+                            <span className="inline-block px-0.5 rounded text-[7px] font-bold mr-0.5" style={{ backgroundColor: badge.bg, color: badge.color }}>
+                              {badge.text}
+                            </span>
+                          )}
+                          {badge && b.status === 'approved' && (
+                            <span className="text-[8px] mr-0.5" style={{ color: '#16a34a' }}>✓</span>
+                          )}
                           <span className="font-bold">{b.pilot_name.split(' ')[0]}</span>
                           <span className="opacity-75 ml-1 hidden md:inline">{b.start_time.slice(0,5)}</span>
                         </div>
