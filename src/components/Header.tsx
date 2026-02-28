@@ -7,6 +7,7 @@ const navItems = [
   { href: '/', label: 'הזמנה', icon: '✈️' },
   { href: '/availability', label: 'זמינות', icon: '📅' },
   { href: '/post-flight', label: 'דיווח', icon: '📝' },
+  { href: '/tools', label: 'כלים', icon: '🔧' },
   { href: '/admin', label: 'ניהול', icon: '⚙️' },
 ]
 

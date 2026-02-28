@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Booking, FlightLog } from '@/lib/supabase'
-import FuelCalculator from './FuelCalculator'
 
 type Step = 'name' | 'select' | 'form' | 'done'
 
@@ -419,9 +418,6 @@ export default function PostFlightForm() {
           className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 focus:outline-none focus:border-baron-blue-400 text-lg resize-none"
         />
       </div>
-
-      {/* Fuel Calculator */}
-      <FuelCalculator />
 
       {/* Submit */}
       <button
