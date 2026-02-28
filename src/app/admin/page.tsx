@@ -18,6 +18,49 @@ export default function AdminPage() {
   const [editForm, setEditForm] = useState<Partial<Booking>>({})
   const [selectedFlightLog, setSelectedFlightLog] = useState<string | null>(null)
   const [calendarKey, setCalendarKey] = useState(0)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [addSubmitting, setAddSubmitting] = useState(false)
+  const [addForm, setAddForm] = useState({
+    pilot_name: '',
+    date: '',
+    start_time: '',
+    end_time: '',
+    with_instructor: false,
+    instructor_name: 'Shani Segev',
+    status: 'approved' as 'pending' | 'approved' | 'rejected',
+  })
+
+  async function createAdminBooking(e: React.FormEvent) {
+    e.preventDefault()
+    setAddSubmitting(true)
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(addForm),
+      })
+      if (!res.ok) throw new Error('Failed')
+
+      // If status is not pending, update it
+      if (addForm.status !== 'pending') {
+        const booking = await res.json()
+        await fetch(`/api/bookings/${booking.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: addForm.status }),
+        })
+      }
+
+      setAddForm({ pilot_name: '', date: '', start_time: '', end_time: '', with_instructor: false, instructor_name: 'Shani Segev', status: 'approved' })
+      setShowAddForm(false)
+      loadBookings()
+      setCalendarKey(k => k + 1)
+    } catch {
+      alert('שגיאה ביצירת ההזמנה')
+    } finally {
+      setAddSubmitting(false)
+    }
+  }
 
   async function login(e: React.FormEvent) {
     e.preventDefault()
@@ -194,6 +237,93 @@ export default function AdminPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Add booking button + form */}
+        <div>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showAddForm
+                ? 'bg-red-600 hover:bg-red-500 text-white'
+                : 'bg-green-600 hover:bg-green-500 text-white'
+            }`}
+          >
+            {showAddForm ? '✕ סגור' : '➕ הוסף הזמנה'}
+          </button>
+
+          {showAddForm && (
+            <form onSubmit={createAdminBooking} className="mt-3 bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-4 space-y-3">
+              <h3 className="text-white font-bold text-lg">הוספת הזמנה (מנהל)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-baron-blue-200 text-xs font-medium mb-1">שם הטייס</label>
+                  <input type="text" required value={addForm.pilot_name}
+                    onChange={e => setAddForm({ ...addForm, pilot_name: e.target.value })}
+                    placeholder="שם מלא"
+                    className="w-full px-3 py-2 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 text-sm focus:outline-none focus:border-baron-blue-400" />
+                </div>
+                <div>
+                  <label className="block text-baron-blue-200 text-xs font-medium mb-1">תאריך</label>
+                  <input type="date" required value={addForm.date}
+                    onChange={e => setAddForm({ ...addForm, date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white text-sm focus:outline-none focus:border-baron-blue-400" />
+                </div>
+                <div>
+                  <label className="block text-baron-blue-200 text-xs font-medium mb-1">שעת התחלה</label>
+                  <input type="time" required value={addForm.start_time}
+                    onChange={e => setAddForm({ ...addForm, start_time: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white text-sm focus:outline-none focus:border-baron-blue-400" />
+                </div>
+                <div>
+                  <label className="block text-baron-blue-200 text-xs font-medium mb-1">שעת סיום</label>
+                  <input type="time" required value={addForm.end_time}
+                    onChange={e => setAddForm({ ...addForm, end_time: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white text-sm focus:outline-none focus:border-baron-blue-400" />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-4 items-center">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={addForm.with_instructor}
+                    onChange={e => setAddForm({ ...addForm, with_instructor: e.target.checked })}
+                    className="w-4 h-4 rounded border-baron-blue-500 text-blue-500" />
+                  <span className="text-baron-blue-200 text-sm">עם מדריך</span>
+                </label>
+                {addForm.with_instructor && (
+                  <select value={addForm.instructor_name}
+                    onChange={e => setAddForm({ ...addForm, instructor_name: e.target.value })}
+                    className="px-3 py-1.5 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white text-sm">
+                    <option value="Shani Segev">שני שגיב</option>
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-baron-blue-200 text-xs font-medium mb-1">סטטוס</label>
+                <div className="flex gap-2">
+                  {([
+                    { value: 'approved', label: 'מאושר', color: 'bg-green-600 hover:bg-green-500' },
+                    { value: 'pending', label: 'ממתין', color: 'bg-yellow-600 hover:bg-yellow-500' },
+                    { value: 'rejected', label: 'נדחה', color: 'bg-red-600 hover:bg-red-500' },
+                  ] as const).map(s => (
+                    <button key={s.value} type="button"
+                      onClick={() => setAddForm({ ...addForm, status: s.value })}
+                      className={`px-3 py-1.5 rounded-lg text-white text-xs font-medium transition-colors ${
+                        addForm.status === s.value ? s.color + ' ring-2 ring-white/50' : 'bg-baron-blue-700/50 text-baron-blue-300'
+                      }`}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button type="submit" disabled={addSubmitting}
+                className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-500 disabled:bg-baron-blue-700 text-white font-bold text-sm transition-colors">
+                {addSubmitting ? 'יוצר...' : 'צור הזמנה'}
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Calendar View */}
