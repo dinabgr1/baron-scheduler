@@ -87,7 +87,7 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
           <select value={form.instructor_name}
             onChange={(e) => setForm({ ...form, instructor_name: e.target.value })}
             className={inputClass}>
-            <option value="Shani Segev">Shani Segev</option>
+            <option value="Shani Segev">שני שגיב</option>
           </select>
         )}
       </div>
