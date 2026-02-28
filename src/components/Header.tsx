@@ -34,6 +34,9 @@ export default function Header() {
             <Link href="/" className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2">
               <span>📅</span><span>הזמנת טיסה</span>
             </Link>
+            <Link href="/availability" className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2">
+              <span>📊</span><span>זמינות המטוס</span>
+            </Link>
             <Link href="/post-flight" className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2">
               <span>📝</span><span>דיווח לאחר טיסה</span>
             </Link>
@@ -49,6 +52,10 @@ export default function Header() {
             <Link href="/" onClick={() => setMenuOpen(false)}
               className="px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
               <span>📅</span><span>הזמנת טיסה</span>
+            </Link>
+            <Link href="/availability" onClick={() => setMenuOpen(false)}
+              className="px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+              <span>📊</span><span>זמינות המטוס</span>
             </Link>
             <Link href="/post-flight" onClick={() => setMenuOpen(false)}
               className="px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
