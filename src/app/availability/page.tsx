@@ -14,9 +14,6 @@ export default function AvailabilityPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-100">
-            <h3 className="text-slate-800 font-bold text-lg">📅 לוח שבועי</h3>
-          </div>
           <WeeklyCalendar />
         </div>
       </main>
