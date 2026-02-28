@@ -78,29 +78,32 @@ function getMonthGrid(year: number, month: number): Date[][] {
   return weeks
 }
 
-const INSTRUCTOR_COLOR = '#1d4ed8'
-const SOLO_BG = '#fef08a'
-const SOLO_TEXT = '#713f12'
+// Primary color = flight type. Status shown as left border stripe.
+function getBookingStyle(b: Booking): {
+  bg: string; text: string; opacity: number;
+  borderColor: string; statusLabel: string; statusLabelBg: string; statusLabelText: string
+} {
+  // Primary: flight type
+  const isInstructor = b.with_instructor
+  const bg = isInstructor ? '#1e3a5f' : '#dbeafe'          // navy vs sky-100
+  const text = isInstructor ? '#ffffff' : '#1e40af'         // white vs blue-800
 
-function getBookingColors(b: Booking) {
-  if (b.status === 'rejected') {
-    return { bg: '#fee2e2', text: '#991b1b', opacity: 0.8 }
+  // Secondary: status stripe + label
+  const statusMap: Record<string, { border: string; label: string; labelBg: string; labelText: string }> = {
+    pending:  { border: '#f59e0b', label: '⏳ ממתין',  labelBg: '#fef3c7', labelText: '#92400e' },
+    approved: { border: '#22c55e', label: '✓ מאושר',   labelBg: '#dcfce7', labelText: '#166534' },
+    rejected: { border: '#ef4444', label: '✕ נדחה',    labelBg: '#fee2e2', labelText: '#991b1b' },
   }
-  if (b.status === 'pending') {
-    return { bg: '#f59e0b', text: '#78350f', opacity: 1 }
+  const s = statusMap[b.status] || statusMap.pending
+  return {
+    bg,
+    text,
+    opacity: b.status === 'rejected' ? 0.65 : 1,
+    borderColor: s.border,
+    statusLabel: s.label,
+    statusLabelBg: s.labelBg,
+    statusLabelText: s.labelText,
   }
-  // approved
-  if (b.with_instructor) {
-    return { bg: INSTRUCTOR_COLOR, text: 'white', opacity: 1 }
-  }
-  return { bg: SOLO_BG, text: SOLO_TEXT, opacity: 1 }
-}
-
-function statusBadge(status: string): { text: string; bg: string; color: string } | null {
-  if (status === 'pending') return { text: 'ממתין', bg: '#78350f', color: '#fef3c7' }
-  if (status === 'approved') return { text: '✓', bg: '#16a34a', color: 'white' }
-  if (status === 'rejected') return { text: 'נדחה', bg: '#dc2626', color: 'white' }
-  return null
 }
 
 function statusDotColor(status: string): string {
@@ -137,41 +140,39 @@ function BookingBlock({
   const top = ((timeToMinutes(b.start_time) - START_HOUR * 60) / 60) * hourHeight
   const height = ((timeToMinutes(b.end_time) - timeToMinutes(b.start_time)) / 60) * hourHeight
   const minHeight = Math.max(height, 22)
-  const colors = getBookingColors(b)
+  const style = getBookingStyle(b)
   const rejected = b.status === 'rejected'
-  const badge = statusBadge(b.status)
 
   return (
     <div
       onClick={(e) => { e.stopPropagation(); onBookingClick(b) }}
       className={`absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md overflow-hidden cursor-pointer
-        ${rejected ? 'line-through' : ''}
-        hover:brightness-110 hover:shadow-md transition-all`}
+        hover:brightness-105 hover:shadow-lg transition-all`}
       style={{
         top,
         height: minHeight,
-        backgroundColor: colors.bg,
-        color: colors.text,
-        opacity: colors.opacity,
+        backgroundColor: style.bg,
+        color: style.text,
+        opacity: style.opacity,
+        borderRight: `4px solid ${style.borderColor}`,
       }}
       title={`${b.pilot_name} | ${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}${b.instructor_name ? ` | מדריך: ${b.instructor_name}` : ''} | ${b.status}`}
     >
-      {badge && (
-        <div className="absolute top-0.5 right-0.5 px-1 py-px rounded text-[8px] font-bold leading-tight whitespace-nowrap"
-          style={{ backgroundColor: badge.bg, color: badge.color }}>
-          {badge.text}
-        </div>
-      )}
-      <div className="px-1.5 py-0.5 h-full flex flex-col justify-start">
+      {/* Status label - top right */}
+      <div className="absolute top-0.5 left-0.5 px-1 py-px rounded text-[8px] font-bold leading-tight whitespace-nowrap"
+        style={{ backgroundColor: style.statusLabelBg, color: style.statusLabelText }}>
+        {style.statusLabel}
+      </div>
+      <div className={`px-1.5 pt-4 pb-0.5 h-full flex flex-col justify-start ${rejected ? 'line-through' : ''}`}>
         <div className={`${compact ? 'text-[10px]' : 'text-[11px] md:text-xs'} font-bold truncate leading-tight`}>
           {b.pilot_name}
         </div>
-        {minHeight >= 32 && (
+        {minHeight >= 40 && (
           <div className={`${compact ? 'text-[9px]' : 'text-[10px] md:text-[11px]'} opacity-80 leading-tight font-mono`}>
             {b.start_time.slice(0,5)}-{b.end_time.slice(0,5)}
           </div>
         )}
-        {minHeight >= 48 && b.instructor_name && (
+        {minHeight >= 56 && b.instructor_name && (
           <div className={`${compact ? 'text-[9px]' : 'text-[10px]'} opacity-70 truncate leading-tight`}>
             {b.instructor_name}
           </div>
@@ -309,22 +310,24 @@ export default function WeeklyCalendar() {
   return (
     <div>
       {/* Legend - sticky top */}
-      <div className="flex items-center justify-center gap-x-3 gap-y-1 flex-wrap px-3 py-1.5 bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: INSTRUCTOR_COLOR }} />עם מדריך
+      <div className="flex items-center justify-center gap-x-4 gap-y-1 flex-wrap px-3 py-2 bg-white border-b border-slate-200 text-[11px] text-slate-600 font-medium">
+        <span className="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">סוג טיסה:</span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-4 rounded-sm" style={{ backgroundColor: '#1e3a5f' }} />עם מדריך
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: SOLO_BG, border: '1px solid #d4d4d8' }} />טיסה עצמאית
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-4 rounded-sm" style={{ backgroundColor: '#dbeafe', border: '1px solid #93c5fd' }} />עצמאית
         </span>
-        <span className="text-slate-300">|</span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#f59e0b' }} />ממתין
+        <span className="text-slate-200">│</span>
+        <span className="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">סטטוס:</span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-1 h-4 rounded-full" style={{ backgroundColor: '#f59e0b' }} />ממתין
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#22c55e' }} />מאושר
+        <span className="flex items-center gap-1.5">
+          <span className="w-1 h-4 rounded-full" style={{ backgroundColor: '#22c55e' }} />מאושר
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#ef4444' }} />נדחה
+        <span className="flex items-center gap-1.5">
+          <span className="w-1 h-4 rounded-full" style={{ backgroundColor: '#ef4444' }} />נדחה
         </span>
       </div>
 
@@ -548,31 +551,22 @@ function MonthView({
                 </div>
                 <div className="space-y-0.5">
                   {dayBookings.slice(0, 3).map(b => {
-                    const colors = getBookingColors(b)
-                    const rejected = b.status === 'rejected'
-                    const badge = statusBadge(b.status)
+                    const s = getBookingStyle(b)
                     return (
                       <div key={b.id} className="relative">
                         <div
                           onClick={() => onBookingClick(b)}
-                          className={`rounded px-1 py-px truncate cursor-pointer hover:brightness-110 transition-all ${rejected ? 'line-through' : ''}`}
+                          className={`rounded px-1 py-px truncate cursor-pointer hover:brightness-105 transition-all ${b.status === 'rejected' ? 'line-through' : ''}`}
                           style={{
-                            backgroundColor: colors.bg,
-                            color: colors.text,
-                            opacity: colors.opacity,
+                            backgroundColor: s.bg,
+                            color: s.text,
+                            opacity: s.opacity,
                             fontSize: '10px',
                             lineHeight: '14px',
+                            borderRight: `3px solid ${s.borderColor}`,
                           }}
-                          title={`${b.pilot_name} ${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}`}
+                          title={`${b.pilot_name} ${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)} | ${b.status}`}
                         >
-                          {badge && b.status !== 'approved' && (
-                            <span className="inline-block px-0.5 rounded text-[7px] font-bold mr-0.5" style={{ backgroundColor: badge.bg, color: badge.color }}>
-                              {badge.text}
-                            </span>
-                          )}
-                          {badge && b.status === 'approved' && (
-                            <span className="text-[8px] mr-0.5" style={{ color: '#16a34a' }}>✓</span>
-                          )}
                           <span className="font-bold">{b.pilot_name.split(' ')[0]}</span>
                           <span className="opacity-75 ml-1 hidden md:inline">{b.start_time.slice(0,5)}</span>
                         </div>
