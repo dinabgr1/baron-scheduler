@@ -1,9 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Booking } from '@/lib/supabase'
 
 const DAYS_HE = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳']
+const START_HOUR = 6
+const END_HOUR = 22
+const TOTAL_HOURS = END_HOUR - START_HOUR
+const HOUR_HEIGHT = 60 // px per hour
 
 function getWeekDates(offset: number): Date[] {
   const today = new Date()
@@ -25,10 +29,29 @@ function formatDateShort(d: Date): string {
   return `${d.getDate()}/${d.getMonth() + 1}`
 }
 
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
+}
+
+function topForTime(time: string): number {
+  const minutes = timeToMinutes(time)
+  const startMinutes = START_HOUR * 60
+  return ((minutes - startMinutes) / 60) * HOUR_HEIGHT
+}
+
+function heightForRange(start: string, end: string): number {
+  const startMin = timeToMinutes(start)
+  const endMin = timeToMinutes(end)
+  return ((endMin - startMin) / 60) * HOUR_HEIGHT
+}
+
 export default function WeeklyCalendar() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [mobileStart, setMobileStart] = useState(0)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const weekDates = getWeekDates(weekOffset)
   const from = formatDate(weekDates[0])
@@ -42,21 +65,38 @@ export default function WeeklyCalendar() {
       .catch(() => setLoading(false))
   }, [from, to])
 
+  // Reset mobile start when week changes
+  useEffect(() => { setMobileStart(0) }, [weekOffset])
+
+  // Scroll to 7:00 on mount
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = HOUR_HEIGHT // 1 hour below START_HOUR (06:00) = 07:00
+    }
+  }, [loading])
+
   function isToday(d: Date): boolean {
     return formatDate(d) === formatDate(new Date())
   }
 
-  // Group bookings by date
   const bookingsByDate: Record<string, Booking[]> = {}
   bookings.forEach(b => {
     if (!bookingsByDate[b.date]) bookingsByDate[b.date] = []
     bookingsByDate[b.date].push(b)
   })
 
+  const statusColors: Record<string, { bg: string; border: string; text: string }> = {
+    pending: { bg: 'bg-amber-100/80', border: 'border-amber-400', text: 'text-amber-900' },
+    approved: { bg: 'bg-green-100/80', border: 'border-green-400', text: 'text-green-900' },
+    rejected: { bg: 'bg-red-100/60', border: 'border-red-400', text: 'text-red-800 line-through' },
+  }
+
+  const MOBILE_DAYS = 3
+
   return (
     <div>
       {/* Week navigation */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-100">
+      <div className="flex items-center justify-between p-3 border-b border-slate-100">
         <button onClick={() => setWeekOffset(weekOffset - 1)}
           className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors text-sm font-medium">
           ←
@@ -78,57 +118,143 @@ export default function WeeklyCalendar() {
         </button>
       </div>
 
+      {/* Mobile day nav */}
+      <div className="md:hidden flex items-center justify-between px-3 py-2 border-b border-slate-100 bg-slate-50">
+        <button
+          onClick={() => setMobileStart(Math.max(0, mobileStart - MOBILE_DAYS))}
+          disabled={mobileStart === 0}
+          className="p-1.5 rounded bg-slate-200 hover:bg-slate-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold">
+          ‹
+        </button>
+        <span className="text-xs text-slate-500 font-medium">
+          {formatDateShort(weekDates[mobileStart])} — {formatDateShort(weekDates[Math.min(mobileStart + MOBILE_DAYS - 1, 6)])}
+        </span>
+        <button
+          onClick={() => setMobileStart(Math.min(7 - MOBILE_DAYS, mobileStart + MOBILE_DAYS))}
+          disabled={mobileStart >= 7 - MOBILE_DAYS}
+          className="p-1.5 rounded bg-slate-200 hover:bg-slate-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold">
+          ›
+        </button>
+      </div>
+
       {loading ? (
         <div className="p-8 text-center text-slate-400">טוען...</div>
       ) : (
-        <div className="grid grid-cols-7 divide-x divide-slate-100">
-          {weekDates.map((d, i) => {
-            const dateStr = formatDate(d)
-            const dayBookings = bookingsByDate[dateStr] || []
-            const today = isToday(d)
-            return (
-              <div key={i} className={`min-h-[80px] ${today ? 'bg-blue-50' : ''}`}>
-                {/* Day header */}
-                <div className={`text-center py-2 border-b border-slate-100 ${today ? 'bg-blue-100' : ''}`}>
-                  <div className={`text-xs font-bold ${today ? 'text-blue-600' : 'text-slate-500'}`}>
+        <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: '500px' }}>
+          {/* Day headers row */}
+          <div className="flex sticky top-0 z-10 bg-white border-b border-slate-200">
+            {/* Time axis header */}
+            <div className="flex-shrink-0 w-12 md:w-14" />
+            {/* Day columns */}
+            {weekDates.map((d, i) => {
+              const today = isToday(d)
+              const hiddenOnMobile = i < mobileStart || i >= mobileStart + MOBILE_DAYS
+              return (
+                <div
+                  key={i}
+                  className={`flex-1 text-center py-2 border-l border-slate-100
+                    ${today ? 'bg-blue-50' : 'bg-white'}
+                    ${hiddenOnMobile ? 'hidden md:block' : ''}`}
+                >
+                  <div className={`text-xs font-bold ${today ? 'text-blue-600' : 'text-slate-400'}`}>
                     {DAYS_HE[i]}
                   </div>
-                  <div className={`text-sm font-bold ${today ? 'text-blue-700' : 'text-slate-700'}`}>
+                  <div className={`text-sm font-bold leading-tight ${today ? 'bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center mx-auto' : 'text-slate-700'}`}>
                     {d.getDate()}
                   </div>
                 </div>
-                {/* Bookings */}
-                <div className="p-1 space-y-1">
+              )
+            })}
+          </div>
+
+          {/* Time grid */}
+          <div className="flex relative">
+            {/* Hour labels */}
+            <div className="flex-shrink-0 w-12 md:w-14 relative" style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}>
+              {Array.from({ length: TOTAL_HOURS }, (_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-full text-right pr-2 text-xs text-slate-400 font-mono"
+                  style={{ top: i * HOUR_HEIGHT - 6 }}
+                >
+                  {String(START_HOUR + i).padStart(2, '0')}:00
+                </div>
+              ))}
+            </div>
+
+            {/* Day columns with bookings */}
+            {weekDates.map((d, i) => {
+              const dateStr = formatDate(d)
+              const dayBookings = bookingsByDate[dateStr] || []
+              const today = isToday(d)
+              const hiddenOnMobile = i < mobileStart || i >= mobileStart + MOBILE_DAYS
+
+              return (
+                <div
+                  key={i}
+                  className={`flex-1 relative border-l border-slate-100
+                    ${today ? 'bg-blue-50/40' : ''}
+                    ${hiddenOnMobile ? 'hidden md:block' : ''}`}
+                  style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
+                >
+                  {/* Hour grid lines */}
+                  {Array.from({ length: TOTAL_HOURS }, (_, h) => (
+                    <div
+                      key={h}
+                      className="absolute w-full border-t border-slate-100"
+                      style={{ top: h * HOUR_HEIGHT }}
+                    />
+                  ))}
+
+                  {/* Booking blocks */}
                   {dayBookings.map(b => {
-                    const colors = {
-                      pending: 'bg-amber-100 border-amber-300 text-amber-800',
-                      approved: 'bg-green-100 border-green-300 text-green-800',
-                      rejected: 'bg-red-100 border-red-300 text-red-700 line-through opacity-60',
-                    }
+                    const top = topForTime(b.start_time)
+                    const height = heightForRange(b.start_time, b.end_time)
+                    const colors = statusColors[b.status] || statusColors.pending
+                    const minHeight = Math.max(height, 28)
+
                     return (
-                      <div key={b.id} className={`text-xs p-1 rounded border ${colors[b.status]}`}>
-                        <div className="font-bold truncate">{b.pilot_name.split(' ')[0]}</div>
-                        <div className="opacity-75">{b.start_time.slice(0,5)}-{b.end_time.slice(0,5)}</div>
+                      <div
+                        key={b.id}
+                        className={`absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md border-l-[3px] ${colors.bg} ${colors.border} ${colors.text} overflow-hidden cursor-default`}
+                        style={{ top, height: minHeight }}
+                        title={`${b.pilot_name} | ${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}${b.instructor_name ? ` | מדריך: ${b.instructor_name}` : ''}`}
+                      >
+                        <div className="px-1.5 py-0.5 h-full flex flex-col justify-start">
+                          <div className="text-[11px] md:text-xs font-bold truncate leading-tight">
+                            {b.pilot_name}
+                          </div>
+                          {minHeight >= 36 && (
+                            <div className="text-[10px] md:text-[11px] opacity-75 leading-tight font-mono">
+                              {b.start_time.slice(0,5)}-{b.end_time.slice(0,5)}
+                            </div>
+                          )}
+                          {minHeight >= 52 && b.instructor_name && (
+                            <div className="text-[10px] opacity-65 truncate leading-tight">
+                              מדריך: {b.instructor_name}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )
                   })}
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       )}
 
       {/* Legend */}
-      <div className="p-3 border-t border-slate-100 flex gap-4 justify-center text-xs text-slate-500">
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-amber-100 border border-amber-300" />ממתין
+      <div className="p-3 border-t border-slate-200 flex gap-4 justify-center text-xs text-slate-500">
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded border-l-[3px] border-amber-400 bg-amber-100" />ממתין
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-green-100 border border-green-300" />מאושר
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded border-l-[3px] border-green-400 bg-green-100" />מאושר
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-red-100 border border-red-300" />נדחה
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded border-l-[3px] border-red-400 bg-red-100" />נדחה
         </span>
       </div>
     </div>
