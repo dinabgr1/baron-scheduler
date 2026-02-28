@@ -1,12 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Booking } from '@/lib/supabase'
 import FuelCalculator from './FuelCalculator'
 
 type Step = 'name' | 'select' | 'form' | 'done'
 
 export default function PostFlightForm() {
+  const searchParams = useSearchParams()
+  const bookingIdParam = searchParams.get('booking_id')
+
   const [step, setStep] = useState<Step>('name')
   const [pilotName, setPilotName] = useState('')
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -15,6 +19,7 @@ export default function PostFlightForm() {
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [initialLoading, setInitialLoading] = useState(!!bookingIdParam)
 
   const [form, setForm] = useState({
     hobbs_start: '',
@@ -27,6 +32,42 @@ export default function PostFlightForm() {
     oil_engine2: '',
     notes: '',
   })
+
+  // Auto-load booking from URL param
+  useEffect(() => {
+    if (!bookingIdParam) return
+
+    async function loadBooking() {
+      try {
+        const [bookingRes, logsRes] = await Promise.all([
+          fetch(`/api/bookings/${bookingIdParam}`),
+          fetch('/api/flight-logs'),
+        ])
+        const booking = await bookingRes.json()
+        const logs = await logsRes.json()
+
+        if (booking && booking.id) {
+          setSelectedBooking(booking)
+          setPilotName(booking.pilot_name)
+          if (Array.isArray(logs) && logs.length > 0) {
+            setLastHobbs(logs[0].hobbs_end || 0)
+            setForm(f => ({ ...f, hobbs_start: logs[0].hobbs_end ? String(logs[0].hobbs_end) : '' }))
+          }
+          setStep('form')
+        }
+      } catch {
+        setError('שגיאה בטעינת ההזמנה')
+      } finally {
+        setInitialLoading(false)
+      }
+    }
+
+    loadBooking()
+  }, [bookingIdParam])
+
+  if (initialLoading) {
+    return <div className="p-8 text-center text-baron-blue-300">טוען הזמנה...</div>
+  }
 
   async function searchBookings() {
     if (!pilotName.trim()) return

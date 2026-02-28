@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Booking } from '@/lib/supabase'
 
 const DAYS_HE = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳']
@@ -12,7 +13,7 @@ const DEFAULT_HOUR_HEIGHT = 40
 const MIN_HOUR_HEIGHT = 24
 const MAX_HOUR_HEIGHT = 80
 const ZOOM_STEP = 8
-const VISIBLE_HOURS = 12 // 07:00-19:00
+const VISIBLE_HOURS = 12
 
 type View = 'day' | '3day' | 'week' | 'month'
 
@@ -92,7 +93,34 @@ function statusDotColor(status: string): string {
   return '#f59e0b'
 }
 
-function BookingBlock({ b, compact, hourHeight }: { b: Booking; compact?: boolean; hourHeight: number }) {
+// Tooltip component
+function Tooltip({ message, onClose }: { message: string; onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 2500)
+    return () => clearTimeout(timer)
+  }, [onClose])
+
+  return (
+    <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1 px-2.5 py-1.5 rounded-lg bg-slate-800 text-white text-[11px] whitespace-nowrap shadow-lg animate-fade-in">
+      {message}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+    </div>
+  )
+}
+
+function BookingBlock({
+  b,
+  compact,
+  hourHeight,
+  flightLogIds,
+  onBookingClick,
+}: {
+  b: Booking
+  compact?: boolean
+  hourHeight: number
+  flightLogIds: Set<string>
+  onBookingClick: (b: Booking) => void
+}) {
   const top = ((timeToMinutes(b.start_time) - START_HOUR * 60) / 60) * hourHeight
   const height = ((timeToMinutes(b.end_time) - timeToMinutes(b.start_time)) / 60) * hourHeight
   const minHeight = Math.max(height, 22)
@@ -101,7 +129,10 @@ function BookingBlock({ b, compact, hourHeight }: { b: Booking; compact?: boolea
 
   return (
     <div
-      className={`absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md overflow-hidden cursor-default ${rejected ? 'line-through' : ''}`}
+      onClick={(e) => { e.stopPropagation(); onBookingClick(b) }}
+      className={`absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md overflow-hidden cursor-pointer
+        ${rejected ? 'line-through' : ''}
+        hover:brightness-110 hover:shadow-md transition-all`}
       style={{
         top,
         height: minHeight,
@@ -132,11 +163,14 @@ function BookingBlock({ b, compact, hourHeight }: { b: Booking; compact?: boolea
 }
 
 export default function WeeklyCalendar() {
+  const router = useRouter()
   const [view, setView] = useState<View>('week')
   const [anchor, setAnchor] = useState<Date>(new Date())
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT)
+  const [flightLogIds, setFlightLogIds] = useState<Set<string>>(new Set())
+  const [tooltip, setTooltip] = useState<{ bookingId: string; message: string } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const today = new Date()
 
@@ -153,13 +187,20 @@ export default function WeeklyCalendar() {
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/bookings?from=${fetchFrom}&to=${fetchTo}`)
-      .then(r => r.json())
-      .then(data => { setBookings(Array.isArray(data) ? data : []); setLoading(false) })
+    Promise.all([
+      fetch(`/api/bookings?from=${fetchFrom}&to=${fetchTo}`).then(r => r.json()),
+      fetch('/api/flight-logs').then(r => r.json()),
+    ])
+      .then(([bookingsData, logsData]) => {
+        setBookings(Array.isArray(bookingsData) ? bookingsData : [])
+        if (Array.isArray(logsData)) {
+          setFlightLogIds(new Set(logsData.map((l: { booking_id: string }) => l.booking_id)))
+        }
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
   }, [fetchFrom, fetchTo])
 
-  // Scroll to 07:00 on load
   useEffect(() => {
     if (!loading && scrollRef.current && view !== 'month') {
       scrollRef.current.scrollTop = (7 - START_HOUR) * hourHeight
@@ -171,6 +212,38 @@ export default function WeeklyCalendar() {
     if (!bookingsByDate[b.date]) bookingsByDate[b.date] = []
     bookingsByDate[b.date].push(b)
   })
+
+  const handleBookingClick = useCallback((b: Booking) => {
+    // Check if flight log already submitted
+    if (flightLogIds.has(b.id)) {
+      setTooltip({ bookingId: b.id, message: 'דיווח כבר הוגש' })
+      return
+    }
+
+    // Build the booking end datetime
+    const [endH, endM] = b.end_time.split(':').map(Number)
+    const bookingEnd = new Date(b.date + 'T' + b.end_time.substring(0, 5) + ':00')
+    const now = new Date()
+    const diffMs = now.getTime() - bookingEnd.getTime()
+    const diffMinutes = diffMs / (1000 * 60)
+
+    if (diffMinutes < 0) {
+      // Flight hasn't ended yet
+      setTooltip({ bookingId: b.id, message: 'הטיסה עדיין לא הסתיימה' })
+      return
+    }
+
+    if (diffMinutes > 60) {
+      // More than 1 hour after end
+      setTooltip({ bookingId: b.id, message: 'פג תוקף הזמן לדיווח. פנה למנהל' })
+      return
+    }
+
+    // Within 1-hour window — navigate to post-flight form
+    router.push(`/post-flight?booking_id=${b.id}`)
+  }, [flightLogIds, router])
+
+  const clearTooltip = useCallback(() => setTooltip(null), [])
 
   function navigate(dir: number) {
     const d = new Date(anchor)
@@ -201,7 +274,6 @@ export default function WeeklyCalendar() {
     { key: 'month', label: 'חודש' },
   ]
 
-  // Container height = exactly 12 visible hours at current zoom
   const containerHeight = VISIBLE_HOURS * hourHeight
 
   return (
@@ -265,7 +337,15 @@ export default function WeeklyCalendar() {
       {loading ? (
         <div className="p-8 text-center text-slate-400">טוען...</div>
       ) : view === 'month' ? (
-        <MonthView anchor={anchor} bookingsByDate={bookingsByDate} today={today} />
+        <MonthView
+          anchor={anchor}
+          bookingsByDate={bookingsByDate}
+          today={today}
+          flightLogIds={flightLogIds}
+          onBookingClick={handleBookingClick}
+          tooltip={tooltip}
+          clearTooltip={clearTooltip}
+        />
       ) : (
         <TimeGridView
           dates={getGridDates(anchor, view)}
@@ -275,6 +355,10 @@ export default function WeeklyCalendar() {
           compact={view === 'week'}
           hourHeight={hourHeight}
           containerHeight={containerHeight}
+          flightLogIds={flightLogIds}
+          onBookingClick={handleBookingClick}
+          tooltip={tooltip}
+          clearTooltip={clearTooltip}
         />
       )}
 
@@ -309,6 +393,10 @@ function TimeGridView({
   compact,
   hourHeight,
   containerHeight,
+  flightLogIds,
+  onBookingClick,
+  tooltip,
+  clearTooltip,
 }: {
   dates: Date[]
   bookingsByDate: Record<string, Booking[]>
@@ -317,10 +405,13 @@ function TimeGridView({
   compact: boolean
   hourHeight: number
   containerHeight: number
+  flightLogIds: Set<string>
+  onBookingClick: (b: Booking) => void
+  tooltip: { bookingId: string; message: string } | null
+  clearTooltip: () => void
 }) {
   return (
     <div ref={scrollRef} className="overflow-y-auto" style={{ height: containerHeight }}>
-      {/* Day headers */}
       <div className="flex sticky top-0 z-10 bg-white border-b border-slate-200">
         <div className="flex-shrink-0 w-12 md:w-14" />
         {dates.map((d, i) => {
@@ -338,7 +429,6 @@ function TimeGridView({
         })}
       </div>
 
-      {/* Grid body */}
       <div className="flex relative">
         <div className="flex-shrink-0 w-12 md:w-14 relative" style={{ height: TOTAL_HOURS * hourHeight }}>
           {Array.from({ length: TOTAL_HOURS }, (_, i) => (
@@ -362,7 +452,18 @@ function TimeGridView({
                 <div key={h} className="absolute w-full border-t border-slate-100" style={{ top: h * hourHeight }} />
               ))}
               {dayBookings.map(b => (
-                <BookingBlock key={b.id} b={b} compact={compact} hourHeight={hourHeight} />
+                <div key={b.id} className="relative">
+                  <BookingBlock b={b} compact={compact} hourHeight={hourHeight} flightLogIds={flightLogIds} onBookingClick={onBookingClick} />
+                  {tooltip?.bookingId === b.id && (
+                    <div className="absolute z-50" style={{
+                      top: ((timeToMinutes(b.start_time) - START_HOUR * 60) / 60) * hourHeight - 8,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                    }}>
+                      <Tooltip message={tooltip.message} onClose={clearTooltip} />
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           )
@@ -376,10 +477,18 @@ function MonthView({
   anchor,
   bookingsByDate,
   today,
+  flightLogIds,
+  onBookingClick,
+  tooltip,
+  clearTooltip,
 }: {
   anchor: Date
   bookingsByDate: Record<string, Booking[]>
   today: Date
+  flightLogIds: Set<string>
+  onBookingClick: (b: Booking) => void
+  tooltip: { bookingId: string; message: string } | null
+  clearTooltip: () => void
 }) {
   const grid = getMonthGrid(anchor.getFullYear(), anchor.getMonth())
   const currentMonth = anchor.getMonth()
@@ -417,21 +526,26 @@ function MonthView({
                     const colors = getBookingColors(b)
                     const rejected = b.status === 'rejected'
                     return (
-                      <div
-                        key={b.id}
-                        className={`rounded px-1 py-px truncate ${rejected ? 'line-through' : ''}`}
-                        style={{
-                          backgroundColor: colors.bg,
-                          color: colors.text,
-                          opacity: colors.opacity,
-                          borderLeft: `2px solid ${statusDotColor(b.status)}`,
-                          fontSize: '10px',
-                          lineHeight: '14px',
-                        }}
-                        title={`${b.pilot_name} ${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}`}
-                      >
-                        <span className="font-bold">{b.pilot_name.split(' ')[0]}</span>
-                        <span className="opacity-75 ml-1 hidden md:inline">{b.start_time.slice(0,5)}</span>
+                      <div key={b.id} className="relative">
+                        <div
+                          onClick={() => onBookingClick(b)}
+                          className={`rounded px-1 py-px truncate cursor-pointer hover:brightness-110 transition-all ${rejected ? 'line-through' : ''}`}
+                          style={{
+                            backgroundColor: colors.bg,
+                            color: colors.text,
+                            opacity: colors.opacity,
+                            borderLeft: `2px solid ${statusDotColor(b.status)}`,
+                            fontSize: '10px',
+                            lineHeight: '14px',
+                          }}
+                          title={`${b.pilot_name} ${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}`}
+                        >
+                          <span className="font-bold">{b.pilot_name.split(' ')[0]}</span>
+                          <span className="opacity-75 ml-1 hidden md:inline">{b.start_time.slice(0,5)}</span>
+                        </div>
+                        {tooltip?.bookingId === b.id && (
+                          <Tooltip message={tooltip.message} onClose={clearTooltip} />
+                        )}
                       </div>
                     )
                   })}

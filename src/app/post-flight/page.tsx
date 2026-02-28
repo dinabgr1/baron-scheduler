@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import Header from '@/components/Header'
 import PostFlightForm from '@/components/PostFlightForm'
 
@@ -16,7 +17,9 @@ export default function PostFlightPage() {
         </div>
 
         <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-6">
-          <PostFlightForm />
+          <Suspense fallback={<div className="p-8 text-center text-baron-blue-300">טוען...</div>}>
+            <PostFlightForm />
+          </Suspense>
         </div>
       </main>
     </div>
