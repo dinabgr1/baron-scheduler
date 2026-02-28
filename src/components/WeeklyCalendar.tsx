@@ -8,7 +8,11 @@ const MONTHS_HE = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי
 const START_HOUR = 6
 const END_HOUR = 22
 const TOTAL_HOURS = END_HOUR - START_HOUR
-const HOUR_HEIGHT = 60
+const DEFAULT_HOUR_HEIGHT = 40
+const MIN_HOUR_HEIGHT = 24
+const MAX_HOUR_HEIGHT = 80
+const ZOOM_STEP = 8
+const VISIBLE_HOURS = 12 // 07:00-19:00
 
 type View = 'day' | '3day' | 'week' | 'month'
 
@@ -28,20 +32,10 @@ function timeToMinutes(time: string): number {
   return h * 60 + m
 }
 
-function topForTime(time: string): number {
-  const minutes = timeToMinutes(time)
-  return ((minutes - START_HOUR * 60) / 60) * HOUR_HEIGHT
-}
-
-function heightForRange(start: string, end: string): number {
-  return ((timeToMinutes(end) - timeToMinutes(start)) / 60) * HOUR_HEIGHT
-}
-
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
-// Get dates for time-grid views (day/3day/week)
 function getGridDates(anchor: Date, view: View): Date[] {
   if (view === 'day') return [new Date(anchor)]
   if (view === '3day') {
@@ -51,7 +45,6 @@ function getGridDates(anchor: Date, view: View): Date[] {
       return d
     })
   }
-  // week: start from Sunday
   const day = anchor.getDay()
   const sunday = new Date(anchor)
   sunday.setDate(anchor.getDate() - day)
@@ -62,10 +55,9 @@ function getGridDates(anchor: Date, view: View): Date[] {
   })
 }
 
-// Get the full month grid (6 rows x 7 cols, starting Sunday)
 function getMonthGrid(year: number, month: number): Date[][] {
   const first = new Date(year, month, 1)
-  const startDay = first.getDay() // 0=Sun
+  const startDay = first.getDay()
   const start = new Date(first)
   start.setDate(1 - startDay)
 
@@ -82,33 +74,28 @@ function getMonthGrid(year: number, month: number): Date[][] {
   return weeks
 }
 
+const INSTRUCTOR_COLOR = '#1d4ed8'
+const SOLO_BG = '#fef08a'
+const SOLO_TEXT = '#713f12'
+
 function getBookingColors(b: Booking) {
   const rejected = b.status === 'rejected'
   if (b.with_instructor) {
-    return {
-      bg: '#0ea5e9',
-      text: 'white',
-      opacity: rejected ? 0.4 : 1,
-    }
+    return { bg: INSTRUCTOR_COLOR, text: 'white', opacity: rejected ? 0.4 : 1 }
   }
-  return {
-    bg: '#fef08a',
-    text: '#713f12',
-    opacity: rejected ? 0.4 : 1,
-  }
+  return { bg: SOLO_BG, text: SOLO_TEXT, opacity: rejected ? 0.4 : 1 }
 }
 
 function statusDotColor(status: string): string {
   if (status === 'approved') return '#22c55e'
   if (status === 'rejected') return '#ef4444'
-  return '#f59e0b' // pending
+  return '#f59e0b'
 }
 
-// --- Booking block for time-grid views ---
-function BookingBlock({ b, compact }: { b: Booking; compact?: boolean }) {
-  const top = topForTime(b.start_time)
-  const height = heightForRange(b.start_time, b.end_time)
-  const minHeight = Math.max(height, 28)
+function BookingBlock({ b, compact, hourHeight }: { b: Booking; compact?: boolean; hourHeight: number }) {
+  const top = ((timeToMinutes(b.start_time) - START_HOUR * 60) / 60) * hourHeight
+  const height = ((timeToMinutes(b.end_time) - timeToMinutes(b.start_time)) / 60) * hourHeight
+  const minHeight = Math.max(height, 22)
   const colors = getBookingColors(b)
   const rejected = b.status === 'rejected'
 
@@ -129,12 +116,12 @@ function BookingBlock({ b, compact }: { b: Booking; compact?: boolean }) {
         <div className={`${compact ? 'text-[10px]' : 'text-[11px] md:text-xs'} font-bold truncate leading-tight`}>
           {b.pilot_name}
         </div>
-        {minHeight >= 36 && (
+        {minHeight >= 32 && (
           <div className={`${compact ? 'text-[9px]' : 'text-[10px] md:text-[11px]'} opacity-80 leading-tight font-mono`}>
             {b.start_time.slice(0,5)}-{b.end_time.slice(0,5)}
           </div>
         )}
-        {minHeight >= 52 && b.instructor_name && (
+        {minHeight >= 48 && b.instructor_name && (
           <div className={`${compact ? 'text-[9px]' : 'text-[10px]'} opacity-70 truncate leading-tight`}>
             {b.instructor_name}
           </div>
@@ -149,10 +136,10 @@ export default function WeeklyCalendar() {
   const [anchor, setAnchor] = useState<Date>(new Date())
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT)
   const scrollRef = useRef<HTMLDivElement>(null)
   const today = new Date()
 
-  // Compute date range for fetching
   let fetchFrom: string, fetchTo: string
   if (view === 'month') {
     const grid = getMonthGrid(anchor.getFullYear(), anchor.getMonth())
@@ -172,12 +159,12 @@ export default function WeeklyCalendar() {
       .catch(() => setLoading(false))
   }, [fetchFrom, fetchTo])
 
-  // Scroll to 7am on time-grid views
+  // Scroll to 07:00 on load
   useEffect(() => {
     if (!loading && scrollRef.current && view !== 'month') {
-      scrollRef.current.scrollTop = HOUR_HEIGHT
+      scrollRef.current.scrollTop = (7 - START_HOUR) * hourHeight
     }
-  }, [loading, view])
+  }, [loading, view, hourHeight])
 
   const bookingsByDate: Record<string, Booking[]> = {}
   bookings.forEach(b => {
@@ -185,7 +172,6 @@ export default function WeeklyCalendar() {
     bookingsByDate[b.date].push(b)
   })
 
-  // Navigation
   function navigate(dir: number) {
     const d = new Date(anchor)
     if (view === 'day') d.setDate(d.getDate() + dir)
@@ -195,19 +181,12 @@ export default function WeeklyCalendar() {
     setAnchor(d)
   }
 
-  function goToday() {
-    setAnchor(new Date())
-  }
+  function goToday() { setAnchor(new Date()) }
 
-  // Header label
   function headerLabel(): string {
-    if (view === 'month') {
-      return `${MONTHS_HE[anchor.getMonth()]} ${anchor.getFullYear()}`
-    }
+    if (view === 'month') return `${MONTHS_HE[anchor.getMonth()]} ${anchor.getFullYear()}`
     const dates = getGridDates(anchor, view)
-    if (view === 'day') {
-      return `${DAYS_HE[dates[0].getDay()]} ${formatDateShort(dates[0])}`
-    }
+    if (view === 'day') return `${DAYS_HE[dates[0].getDay()]} ${formatDateShort(dates[0])}`
     return `${formatDateShort(dates[0])} — ${formatDateShort(dates[dates.length - 1])}`
   }
 
@@ -222,22 +201,45 @@ export default function WeeklyCalendar() {
     { key: 'month', label: 'חודש' },
   ]
 
+  // Container height = exactly 12 visible hours at current zoom
+  const containerHeight = VISIBLE_HOURS * hourHeight
+
   return (
     <div>
-      {/* View switcher */}
-      <div className="flex items-center justify-center gap-1 p-3 border-b border-slate-100">
-        {views.map(v => (
-          <button
-            key={v.key}
-            onClick={() => setView(v.key)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors
-              ${view === v.key
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-          >
-            {v.label}
-          </button>
-        ))}
+      {/* View switcher + zoom */}
+      <div className="flex items-center justify-between p-3 border-b border-slate-100">
+        <div className="flex items-center gap-1">
+          {views.map(v => (
+            <button
+              key={v.key}
+              onClick={() => setView(v.key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors
+                ${view === v.key
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+        {view !== 'month' && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setHourHeight(h => Math.max(MIN_HOUR_HEIGHT, h - ZOOM_STEP))}
+              disabled={hourHeight <= MIN_HOUR_HEIGHT}
+              className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 text-sm font-bold flex items-center justify-center"
+            >
+              −
+            </button>
+            <button
+              onClick={() => setHourHeight(h => Math.min(MAX_HOUR_HEIGHT, h + ZOOM_STEP))}
+              disabled={hourHeight >= MAX_HOUR_HEIGHT}
+              className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 text-sm font-bold flex items-center justify-center"
+            >
+              +
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Navigation */}
@@ -263,11 +265,7 @@ export default function WeeklyCalendar() {
       {loading ? (
         <div className="p-8 text-center text-slate-400">טוען...</div>
       ) : view === 'month' ? (
-        <MonthView
-          anchor={anchor}
-          bookingsByDate={bookingsByDate}
-          today={today}
-        />
+        <MonthView anchor={anchor} bookingsByDate={bookingsByDate} today={today} />
       ) : (
         <TimeGridView
           dates={getGridDates(anchor, view)}
@@ -275,16 +273,18 @@ export default function WeeklyCalendar() {
           today={today}
           scrollRef={scrollRef}
           compact={view === 'week'}
+          hourHeight={hourHeight}
+          containerHeight={containerHeight}
         />
       )}
 
       {/* Legend */}
       <div className="p-3 border-t border-slate-200 flex flex-wrap gap-x-4 gap-y-1 justify-center text-xs text-slate-500">
         <span className="flex items-center gap-1.5">
-          <span className="w-4 h-3 rounded" style={{ backgroundColor: '#0ea5e9' }} />עם מדריך
+          <span className="w-4 h-3 rounded" style={{ backgroundColor: INSTRUCTOR_COLOR }} />עם מדריך
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-4 h-3 rounded" style={{ backgroundColor: '#fef08a' }} />טיסה עצמאית
+          <span className="w-4 h-3 rounded" style={{ backgroundColor: SOLO_BG }} />טיסה עצמאית
         </span>
         <span className="mx-1 text-slate-300">|</span>
         <span className="flex items-center gap-1.5">
@@ -301,22 +301,25 @@ export default function WeeklyCalendar() {
   )
 }
 
-// --- Time grid (day / 3-day / week) ---
 function TimeGridView({
   dates,
   bookingsByDate,
   today,
   scrollRef,
   compact,
+  hourHeight,
+  containerHeight,
 }: {
   dates: Date[]
   bookingsByDate: Record<string, Booking[]>
   today: Date
   scrollRef: React.RefObject<HTMLDivElement>
   compact: boolean
+  hourHeight: number
+  containerHeight: number
 }) {
   return (
-    <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: '500px' }}>
+    <div ref={scrollRef} className="overflow-y-auto" style={{ height: containerHeight }}>
       {/* Day headers */}
       <div className="flex sticky top-0 z-10 bg-white border-b border-slate-200">
         <div className="flex-shrink-0 w-12 md:w-14" />
@@ -337,17 +340,15 @@ function TimeGridView({
 
       {/* Grid body */}
       <div className="flex relative">
-        {/* Hour labels */}
-        <div className="flex-shrink-0 w-12 md:w-14 relative" style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}>
+        <div className="flex-shrink-0 w-12 md:w-14 relative" style={{ height: TOTAL_HOURS * hourHeight }}>
           {Array.from({ length: TOTAL_HOURS }, (_, i) => (
             <div key={i} className="absolute w-full text-right pr-2 text-xs text-slate-400 font-mono"
-              style={{ top: i * HOUR_HEIGHT - 6 }}>
+              style={{ top: i * hourHeight - 6 }}>
               {String(START_HOUR + i).padStart(2, '0')}:00
             </div>
           ))}
         </div>
 
-        {/* Day columns */}
         {dates.map((d, i) => {
           const dateStr = formatDate(d)
           const dayBookings = bookingsByDate[dateStr] || []
@@ -356,12 +357,12 @@ function TimeGridView({
           return (
             <div key={i}
               className={`flex-1 relative border-l border-slate-100 ${isT ? 'bg-blue-50/40' : ''}`}
-              style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}>
+              style={{ height: TOTAL_HOURS * hourHeight }}>
               {Array.from({ length: TOTAL_HOURS }, (_, h) => (
-                <div key={h} className="absolute w-full border-t border-slate-100" style={{ top: h * HOUR_HEIGHT }} />
+                <div key={h} className="absolute w-full border-t border-slate-100" style={{ top: h * hourHeight }} />
               ))}
               {dayBookings.map(b => (
-                <BookingBlock key={b.id} b={b} compact={compact} />
+                <BookingBlock key={b.id} b={b} compact={compact} hourHeight={hourHeight} />
               ))}
             </div>
           )
@@ -371,7 +372,6 @@ function TimeGridView({
   )
 }
 
-// --- Month view ---
 function MonthView({
   anchor,
   bookingsByDate,
@@ -386,7 +386,6 @@ function MonthView({
 
   return (
     <div className="overflow-x-auto">
-      {/* Day headers */}
       <div className="grid grid-cols-7 border-b border-slate-200">
         {DAYS_HE.map((d, i) => (
           <div key={i} className="text-center py-2 text-xs font-bold text-slate-400 border-l border-slate-100 first:border-l-0">
@@ -395,7 +394,6 @@ function MonthView({
         ))}
       </div>
 
-      {/* Week rows */}
       {grid.map((week, wi) => (
         <div key={wi} className="grid grid-cols-7 border-b border-slate-100">
           {week.map((d, di) => {
