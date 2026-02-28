@@ -90,6 +90,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // Auto-create pilot if not exists
+  try {
+    const { data: existingPilot } = await supabase
+      .from('pilots')
+      .select('id')
+      .eq('name', pilot_name)
+      .maybeSingle()
+
+    if (!existingPilot) {
+      await supabase.from('pilots').insert({
+        name: pilot_name,
+        phone: body.phone || null,
+        is_active: true,
+      })
+    }
+  } catch (pilotErr) {
+    console.error('Auto-create pilot error:', pilotErr)
+  }
+
   // Send WhatsApp notification
   const origin = request.headers.get('origin') || request.headers.get('host') || 'http://localhost:3000'
   const baseUrl = origin.startsWith('http') ? origin : `https://${origin}`

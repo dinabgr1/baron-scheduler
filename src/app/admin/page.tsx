@@ -38,6 +38,7 @@ export default function AdminPage() {
   const [pilotForm, setPilotForm] = useState({ name: '', phone: '', license_number: '' })
   const [editingPilotId, setEditingPilotId] = useState<string | null>(null)
   const [editPilotForm, setEditPilotForm] = useState<Partial<Pilot>>({})
+  const [showAddPilotForm, setShowAddPilotForm] = useState(false)
 
   // Rates state
   const [rates, setRates] = useState<Rate[]>([])
@@ -175,7 +176,8 @@ export default function AdminPage() {
   // Load tab data
   useEffect(() => {
     if (!authed) return
-    if (activeTab === 'טייסים') loadPilots()
+    if (activeTab === 'הזמנות') loadPilots()
+    if (activeTab === 'טייסים') { loadPilots(); loadHourPackages(); loadBookings() }
     if (activeTab === 'תעריפים') loadRates()
     if (activeTab === 'בנק שעות') loadHourPackages()
   }, [activeTab, authed])
@@ -548,6 +550,12 @@ export default function AdminPage() {
                               <>
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-white font-bold text-lg">{b.pilot_name}</span>
+                                  {(() => {
+                                    const matchedPilot = pilots.find(p => p.name === b.pilot_name)
+                                    return matchedPilot ? (
+                                      <a href={`/admin/pilots/${matchedPilot.id}`} className="text-baron-blue-400 hover:text-white transition-colors" title="כרטיס טייס">👤</a>
+                                    ) : null
+                                  })()}
                                   <span className={`text-xs px-2 py-0.5 rounded ${
                                     b.status === 'approved' ? 'bg-green-500/20 text-green-300' :
                                     b.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' :
@@ -645,73 +653,86 @@ export default function AdminPage() {
         {/* ====== טייסים TAB ====== */}
         {activeTab === 'טייסים' && (
           <div className="space-y-4">
-            {/* Add pilot form */}
-            <form onSubmit={addPilot} className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-4 space-y-3">
-              <h3 className="text-white font-bold">הוספת טייס</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input type="text" required value={pilotForm.name}
-                  onChange={e => setPilotForm({ ...pilotForm, name: e.target.value })}
-                  placeholder="שם" className={inputClass} />
-                <input type="tel" value={pilotForm.phone}
-                  onChange={e => setPilotForm({ ...pilotForm, phone: e.target.value })}
-                  placeholder="טלפון" className={inputClass} />
-                <input type="text" value={pilotForm.license_number}
-                  onChange={e => setPilotForm({ ...pilotForm, license_number: e.target.value })}
-                  placeholder="מספר רישיון" className={inputClass} />
-              </div>
-              <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium">
-                הוסף טייס
+            {/* Add pilot button + form */}
+            <div>
+              <button onClick={() => setShowAddPilotForm(!showAddPilotForm)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  showAddPilotForm ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-green-600 hover:bg-green-500 text-white'
+                }`}>
+                {showAddPilotForm ? '✕ סגור' : '+ הוסף טייס'}
               </button>
-            </form>
 
-            {/* Pilots table */}
-            <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-baron-blue-700/50">
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">שם</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">טלפון</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">רישיון</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">פעיל</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">פעולות</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pilots.map(p => (
-                    <tr key={p.id} className="border-b border-baron-blue-700/30">
-                      {editingPilotId === p.id ? (
-                        <>
-                          <td className="p-2"><input type="text" value={editPilotForm.name || ''} onChange={e => setEditPilotForm({ ...editPilotForm, name: e.target.value })} className={inputClass} /></td>
-                          <td className="p-2"><input type="tel" value={editPilotForm.phone || ''} onChange={e => setEditPilotForm({ ...editPilotForm, phone: e.target.value })} className={inputClass} /></td>
-                          <td className="p-2"><input type="text" value={editPilotForm.license_number || ''} onChange={e => setEditPilotForm({ ...editPilotForm, license_number: e.target.value })} className={inputClass} /></td>
-                          <td className="p-3 text-white">{p.is_active ? 'כן' : 'לא'}</td>
-                          <td className="p-2 flex gap-1">
-                            <button onClick={() => savePilotEdit(p.id)} className="px-2 py-1 rounded bg-green-600 text-white text-xs">שמור</button>
-                            <button onClick={() => setEditingPilotId(null)} className="px-2 py-1 rounded bg-baron-blue-700 text-white text-xs">ביטול</button>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="p-3 text-white">{p.name}</td>
-                          <td className="p-3 text-baron-blue-300">{p.phone || '-'}</td>
-                          <td className="p-3 text-baron-blue-300">{p.license_number || '-'}</td>
-                          <td className="p-3 text-white">{p.is_active ? 'כן' : 'לא'}</td>
-                          <td className="p-3 flex gap-1">
-                            <button onClick={() => { setEditingPilotId(p.id); setEditPilotForm({ name: p.name, phone: p.phone, license_number: p.license_number }) }}
-                              className="px-2 py-1 rounded bg-baron-blue-600 text-white text-xs">ערוך</button>
-                            <button onClick={() => deletePilot(p.id)}
-                              className="px-2 py-1 rounded bg-red-600 text-white text-xs">מחק</button>
-                          </td>
-                        </>
-                      )}
-                    </tr>
-                  ))}
-                  {pilots.length === 0 && (
-                    <tr><td colSpan={5} className="p-4 text-center text-baron-blue-400">אין טייסים</td></tr>
-                  )}
-                </tbody>
-              </table>
+              {showAddPilotForm && (
+                <form onSubmit={addPilot} className="mt-3 bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-4 space-y-3">
+                  <h3 className="text-white font-bold">הוספת טייס</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input type="text" required value={pilotForm.name}
+                      onChange={e => setPilotForm({ ...pilotForm, name: e.target.value })}
+                      placeholder="שם" className={inputClass} />
+                    <input type="tel" value={pilotForm.phone}
+                      onChange={e => setPilotForm({ ...pilotForm, phone: e.target.value })}
+                      placeholder="טלפון" className={inputClass} />
+                    <input type="text" value={pilotForm.license_number}
+                      onChange={e => setPilotForm({ ...pilotForm, license_number: e.target.value })}
+                      placeholder="מספר רישיון" className={inputClass} />
+                  </div>
+                  <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium">
+                    הוסף טייס
+                  </button>
+                </form>
+              )}
             </div>
+
+            {/* Pilot cards grid */}
+            {pilots.length === 0 ? (
+              <div className="text-center text-baron-blue-300 py-8">אין טייסים</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pilots.map(p => {
+                  const pilotPackages = hourPackages.filter(pkg => pkg.pilot_name === p.name)
+                  const totalPurchased = pilotPackages.reduce((sum, pkg) => sum + pkg.hours_purchased, 0)
+                  const totalUsed = pilotPackages.reduce((sum, pkg) => sum + pkg.hours_used, 0)
+                  const balance = totalPurchased - totalUsed
+                  const today = new Date().toISOString().split('T')[0]
+                  const futureBookings = bookings.filter(b =>
+                    b.pilot_name === p.name && b.date >= today && (b.status === 'pending' || b.status === 'approved')
+                  ).length
+
+                  return (
+                    <div key={p.id} className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="text-white font-bold text-lg">{p.name}</h3>
+                          {p.phone && <div className="text-baron-blue-300 text-sm">{p.phone}</div>}
+                          {p.license_number && <div className="text-baron-blue-400 text-xs">רישיון: {p.license_number}</div>}
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded ${p.is_active ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                          {p.is_active ? 'פעיל' : 'לא פעיל'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
+                        <div className="bg-baron-blue-800/50 rounded-lg p-2">
+                          <div className={`font-bold ${balance > 0 ? 'text-green-400' : balance === 0 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            {balance} שעות
+                          </div>
+                          <div className="text-baron-blue-400 text-xs">נותרו מתוך {totalPurchased} שנרכשו</div>
+                        </div>
+                        <div className="bg-baron-blue-800/50 rounded-lg p-2">
+                          <div className="text-white font-bold">{futureBookings}</div>
+                          <div className="text-baron-blue-400 text-xs">הזמנות עתידיות</div>
+                        </div>
+                      </div>
+
+                      <a href={`/admin/pilots/${p.id}`}
+                        className="block w-full text-center py-2 rounded-lg bg-baron-blue-600 hover:bg-baron-blue-500 text-white text-sm font-medium transition-colors">
+                        פתח כרטיס
+                      </a>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
 
