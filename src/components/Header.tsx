@@ -1,73 +1,67 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+
+const navItems = [
+  { href: '/', label: 'הזמנה', icon: '✈️' },
+  { href: '/availability', label: 'זמינות', icon: '📅' },
+  { href: '/post-flight', label: 'דיווח', icon: '📝' },
+  { href: '/admin', label: 'ניהול', icon: '⚙️' },
+]
 
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false)
+  const pathname = usePathname()
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-2xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+    <>
+      {/* Desktop header */}
+      <header className="bg-[#1e3a5f] sticky top-0 z-50 shadow-md">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="text-3xl">✈️</div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-800 leading-tight">Baron Scheduler</h1>
-              <p className="text-blue-600 text-sm font-mono font-bold">4X-DZJ</p>
-            </div>
+            <span className="text-white font-bold text-xl">Baron Scheduler</span>
+            <span className="text-amber-400 font-mono font-bold">4X-DZJ</span>
           </Link>
 
-          {/* Mobile menu button */}
-          <button
-            className="md:hidden text-slate-600 p-2"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-            </svg>
-          </button>
-
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-2">
-            <Link href="/" className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2">
-              <span>📅</span><span>הזמנת טיסה</span>
-            </Link>
-            <Link href="/availability" className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2">
-              <span>📊</span><span>זמינות המטוס</span>
-            </Link>
-            <Link href="/post-flight" className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2">
-              <span>📝</span><span>דיווח לאחר טיסה</span>
-            </Link>
-            <Link href="/admin" className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2">
-              <span>🔐</span><span>ניהול</span>
-            </Link>
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  pathname === item.href
+                    ? 'bg-white/20 text-white'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
         </div>
+      </header>
 
-        {/* Mobile menu */}
-        {menuOpen && (
-          <nav className="md:hidden mt-3 pb-2 border-t border-slate-100 pt-3 flex flex-col gap-1">
-            <Link href="/" onClick={() => setMenuOpen(false)}
-              className="px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
-              <span>📅</span><span>הזמנת טיסה</span>
-            </Link>
-            <Link href="/availability" onClick={() => setMenuOpen(false)}
-              className="px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
-              <span>📊</span><span>זמינות המטוס</span>
-            </Link>
-            <Link href="/post-flight" onClick={() => setMenuOpen(false)}
-              className="px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
-              <span>📝</span><span>דיווח לאחר טיסה</span>
-            </Link>
-            <Link href="/admin" onClick={() => setMenuOpen(false)}
-              className="px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
-              <span>🔐</span><span>ניהול</span>
-            </Link>
-          </nav>
-        )}
-      </div>
-    </header>
+      {/* Mobile bottom nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
+        <div className="flex justify-around items-center h-16">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-xs font-medium transition-colors ${
+                  isActive ? 'text-[#1e3a5f]' : 'text-gray-400'
+                }`}
+              >
+                <span className="text-lg">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </div>
+      </nav>
+    </>
   )
 }

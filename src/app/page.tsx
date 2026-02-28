@@ -5,18 +5,22 @@ import BookingForm from '@/components/BookingForm'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       <Header />
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Title */}
-        <div className="text-center space-y-1">
-          <h2 className="text-2xl font-bold text-slate-800">הזמנת טיסה</h2>
-          <p className="text-slate-500 text-sm">Beechcraft Baron 58 | <span className="font-mono font-bold text-blue-600">4X-DZJ</span></p>
+      <main className="max-w-2xl mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
+        {/* Hero Banner */}
+        <div className="bg-[#1e3a5f] text-white rounded-2xl p-4 flex items-center gap-4">
+          <span className="text-4xl">✈️</span>
+          <div>
+            <div className="font-bold text-lg">Beechcraft Baron 58</div>
+            <div className="text-amber-400 font-mono font-bold">4X-DZJ</div>
+            <div className="text-slate-300 text-sm">מוכן לטיסה הבאה שלך</div>
+          </div>
         </div>
 
         {/* Booking Form Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-          <h3 className="text-slate-800 font-bold text-lg mb-4">📋 טופס הזמנה</h3>
+          <h3 className="text-slate-800 font-bold text-lg mb-4">הזמנת טיסה</h3>
           <BookingForm />
         </div>
       </main>

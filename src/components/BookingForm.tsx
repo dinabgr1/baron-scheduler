@@ -5,11 +5,13 @@ import { useState } from 'react'
 export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
   const [form, setForm] = useState({
     pilot_name: '',
+    phone: '',
     date: '',
     start_time: '',
     end_time: '',
     with_instructor: false,
     instructor_name: 'Shani Segev',
+    flight_purpose: 'אימון',
   })
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -32,7 +34,7 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       }
 
       setMessage({ type: 'success', text: 'ההזמנה נשלחה בהצלחה! ממתין לאישור.' })
-      setForm({ pilot_name: '', date: '', start_time: '', end_time: '', with_instructor: false, instructor_name: 'Shani Segev' })
+      setForm({ pilot_name: '', phone: '', date: '', start_time: '', end_time: '', with_instructor: false, instructor_name: 'Shani Segev', flight_purpose: 'אימון' })
       onSuccess?.()
     } catch (error) {
       setMessage({ type: 'error', text: error instanceof Error ? error.message : 'שגיאה ביצירת ההזמנה' })
@@ -42,7 +44,7 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
   }
 
   const today = new Date().toISOString().split('T')[0]
-  const inputClass = "w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-base"
+  const inputClass = "w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-base"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -51,6 +53,25 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
         <input type="text" required value={form.pilot_name}
           onChange={(e) => setForm({ ...form, pilot_name: e.target.value })}
           placeholder="הכנס שם מלא" className={inputClass} />
+      </div>
+
+      <div>
+        <label className="block text-slate-600 text-sm font-medium mb-1.5">טלפון</label>
+        <input type="tel" required value={form.phone}
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          placeholder="050-0000000" className={inputClass} />
+      </div>
+
+      <div>
+        <label className="block text-slate-600 text-sm font-medium mb-1.5">מטרת הטיסה</label>
+        <select value={form.flight_purpose}
+          onChange={(e) => setForm({ ...form, flight_purpose: e.target.value })}
+          className={inputClass}>
+          <option value="אימון">אימון</option>
+          <option value="טיסה פרטית">טיסה פרטית</option>
+          <option value="טיסה עצמאית">טיסה עצמאית</option>
+          <option value="אחר">אחר</option>
+        </select>
       </div>
 
       <div>
@@ -93,7 +114,7 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
 
       <button type="submit" disabled={submitting}
-        className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-lg transition-colors shadow-sm">
+        className="w-full py-4 rounded-xl bg-[#1e3a5f] hover:bg-[#1e40af] active:bg-blue-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-lg transition-colors shadow-sm">
         {submitting ? 'שולח...' : 'שלח הזמנה ✈️'}
       </button>
 

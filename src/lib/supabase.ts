@@ -46,3 +46,7 @@ export type FlightLog = {
   notes: string | null
   created_at: string
 }
+
+export type Pilot = { id: string; name: string; phone: string|null; email: string|null; license_number: string|null; is_active: boolean; created_at: string }
+export type Rate = { id: string; name: string; rate_per_hour: number; description: string|null; is_active: boolean; created_at: string }
+export type HourPackage = { id: string; pilot_id: string|null; pilot_name: string; hours_purchased: number; hours_used: number; price_paid: number|null; purchase_date: string; notes: string|null; created_at: string }

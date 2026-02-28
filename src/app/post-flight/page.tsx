@@ -30,7 +30,7 @@ export default function PostFlightPage() {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-lg mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
         <Suspense fallback={<div className="p-8 text-center text-baron-blue-300">טוען...</div>}>
           <PostFlightContent />
         </Suspense>
