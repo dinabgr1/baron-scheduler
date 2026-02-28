@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Booking } from '@/lib/supabase'
+import { Booking, FlightLog } from '@/lib/supabase'
 
 const DAYS_HE = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳']
 const MONTHS_HE = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר']
@@ -14,6 +14,9 @@ const MIN_HOUR_HEIGHT = 24
 const MAX_HOUR_HEIGHT = 80
 const ZOOM_STEP = 8
 const VISIBLE_HOURS = 12
+
+const SUBMISSION_WINDOW_DAYS = 7
+const EDIT_WINDOW_MINUTES = 60
 
 type View = 'day' | '3day' | 'week' | 'month'
 
@@ -93,7 +96,6 @@ function statusDotColor(status: string): string {
   return '#f59e0b'
 }
 
-// Tooltip component
 function Tooltip({ message, onClose }: { message: string; onClose: () => void }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 2500)
@@ -112,13 +114,11 @@ function BookingBlock({
   b,
   compact,
   hourHeight,
-  flightLogIds,
   onBookingClick,
 }: {
   b: Booking
   compact?: boolean
   hourHeight: number
-  flightLogIds: Set<string>
   onBookingClick: (b: Booking) => void
 }) {
   const top = ((timeToMinutes(b.start_time) - START_HOUR * 60) / 60) * hourHeight
@@ -169,7 +169,7 @@ export default function WeeklyCalendar() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT)
-  const [flightLogIds, setFlightLogIds] = useState<Set<string>>(new Set())
+  const [logsByBookingId, setLogsByBookingId] = useState<Record<string, FlightLog>>({})
   const [tooltip, setTooltip] = useState<{ bookingId: string; message: string } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const today = new Date()
@@ -194,7 +194,9 @@ export default function WeeklyCalendar() {
       .then(([bookingsData, logsData]) => {
         setBookings(Array.isArray(bookingsData) ? bookingsData : [])
         if (Array.isArray(logsData)) {
-          setFlightLogIds(new Set(logsData.map((l: { booking_id: string }) => l.booking_id)))
+          const map: Record<string, FlightLog> = {}
+          logsData.forEach((l: FlightLog) => { map[l.booking_id] = l })
+          setLogsByBookingId(map)
         }
         setLoading(false)
       })
@@ -214,34 +216,43 @@ export default function WeeklyCalendar() {
   })
 
   const handleBookingClick = useCallback((b: Booking) => {
-    // Check if flight log already submitted
-    if (flightLogIds.has(b.id)) {
-      setTooltip({ bookingId: b.id, message: 'דיווח כבר הוגש' })
-      return
-    }
-
-    // Build the booking end datetime
-    const [endH, endM] = b.end_time.split(':').map(Number)
     const bookingEnd = new Date(b.date + 'T' + b.end_time.substring(0, 5) + ':00')
     const now = new Date()
     const diffMs = now.getTime() - bookingEnd.getTime()
     const diffMinutes = diffMs / (1000 * 60)
+    const diffDays = diffMs / (1000 * 60 * 60 * 24)
 
+    const existingLog = logsByBookingId[b.id]
+
+    if (existingLog) {
+      // Log already submitted — check if within 1-hour edit window from submission
+      const submittedAt = new Date(existingLog.created_at)
+      const editDiffMs = now.getTime() - submittedAt.getTime()
+      const editDiffMinutes = editDiffMs / (1000 * 60)
+
+      if (editDiffMinutes <= EDIT_WINDOW_MINUTES) {
+        // Within edit window — navigate with edit mode
+        router.push(`/post-flight?booking_id=${b.id}&edit=1`)
+      } else {
+        setTooltip({ bookingId: b.id, message: 'פג תוקף הזמן לעריכה. פנה למנהל' })
+      }
+      return
+    }
+
+    // No log yet — check submission window
     if (diffMinutes < 0) {
-      // Flight hasn't ended yet
       setTooltip({ bookingId: b.id, message: 'הטיסה עדיין לא הסתיימה' })
       return
     }
 
-    if (diffMinutes > 60) {
-      // More than 1 hour after end
+    if (diffDays > SUBMISSION_WINDOW_DAYS) {
       setTooltip({ bookingId: b.id, message: 'פג תוקף הזמן לדיווח. פנה למנהל' })
       return
     }
 
-    // Within 1-hour window — navigate to post-flight form
+    // Within 7-day window — navigate to post-flight form
     router.push(`/post-flight?booking_id=${b.id}`)
-  }, [flightLogIds, router])
+  }, [logsByBookingId, router])
 
   const clearTooltip = useCallback(() => setTooltip(null), [])
 
@@ -341,7 +352,6 @@ export default function WeeklyCalendar() {
           anchor={anchor}
           bookingsByDate={bookingsByDate}
           today={today}
-          flightLogIds={flightLogIds}
           onBookingClick={handleBookingClick}
           tooltip={tooltip}
           clearTooltip={clearTooltip}
@@ -355,7 +365,6 @@ export default function WeeklyCalendar() {
           compact={view === 'week'}
           hourHeight={hourHeight}
           containerHeight={containerHeight}
-          flightLogIds={flightLogIds}
           onBookingClick={handleBookingClick}
           tooltip={tooltip}
           clearTooltip={clearTooltip}
@@ -393,7 +402,6 @@ function TimeGridView({
   compact,
   hourHeight,
   containerHeight,
-  flightLogIds,
   onBookingClick,
   tooltip,
   clearTooltip,
@@ -405,7 +413,6 @@ function TimeGridView({
   compact: boolean
   hourHeight: number
   containerHeight: number
-  flightLogIds: Set<string>
   onBookingClick: (b: Booking) => void
   tooltip: { bookingId: string; message: string } | null
   clearTooltip: () => void
@@ -453,7 +460,7 @@ function TimeGridView({
               ))}
               {dayBookings.map(b => (
                 <div key={b.id} className="relative">
-                  <BookingBlock b={b} compact={compact} hourHeight={hourHeight} flightLogIds={flightLogIds} onBookingClick={onBookingClick} />
+                  <BookingBlock b={b} compact={compact} hourHeight={hourHeight} onBookingClick={onBookingClick} />
                   {tooltip?.bookingId === b.id && (
                     <div className="absolute z-50" style={{
                       top: ((timeToMinutes(b.start_time) - START_HOUR * 60) / 60) * hourHeight - 8,
@@ -477,7 +484,6 @@ function MonthView({
   anchor,
   bookingsByDate,
   today,
-  flightLogIds,
   onBookingClick,
   tooltip,
   clearTooltip,
@@ -485,7 +491,6 @@ function MonthView({
   anchor: Date
   bookingsByDate: Record<string, Booking[]>
   today: Date
-  flightLogIds: Set<string>
   onBookingClick: (b: Booking) => void
   tooltip: { bookingId: string; message: string } | null
   clearTooltip: () => void
