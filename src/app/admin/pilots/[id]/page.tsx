@@ -23,6 +23,14 @@ export default function PilotDetailPage() {
   const [billingRecords, setBillingRecords] = useState<BillingRecord[]>([])
   const [rates, setRates] = useState<Rate[]>([])
 
+  // Document management state
+  type PilotDocument = { id: string; pilot_name: string; document_type: string; expiry_date: string | null; notes: string | null; created_at: string }
+  const [documents, setDocuments] = useState<PilotDocument[]>([])
+  const [showDocForm, setShowDocForm] = useState(false)
+  const [docForm, setDocForm] = useState({ document_type: 'רישיון טיס', expiry_date: '', notes: '' })
+  const [editingDocId, setEditingDocId] = useState<string | null>(null)
+  const [editDocForm, setEditDocForm] = useState({ document_type: '', expiry_date: '', notes: '' })
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [billingTab, setBillingTab] = useState<BillingTab>('שעות')
@@ -76,20 +84,22 @@ export default function PilotDetailPage() {
     setLoading(true)
     setError('')
     try {
-      const [bookingsRes, logsRes, packagesRes, billingRes, ratesRes] = await Promise.all([
+      const [bookingsRes, logsRes, packagesRes, billingRes, ratesRes, docsRes] = await Promise.all([
         fetch(`/api/pilots/${pilotId}/bookings`),
         fetch(`/api/pilots/${pilotId}/flight-logs`),
         fetch(`/api/pilots/${pilotId}/packages`),
         fetch(`/api/pilots/${pilotId}/billing`),
         fetch('/api/rates'),
+        fetch(`/api/pilots/${pilotId}/documents`),
       ])
 
-      const [bookingsData, logsData, packagesData, billingData, ratesData] = await Promise.all([
+      const [bookingsData, logsData, packagesData, billingData, ratesData, docsData] = await Promise.all([
         bookingsRes.json(),
         logsRes.json(),
         packagesRes.json(),
         billingRes.json(),
         ratesRes.json(),
+        docsRes.json(),
       ])
 
       if (Array.isArray(bookingsData)) setBookings(bookingsData)
@@ -97,6 +107,7 @@ export default function PilotDetailPage() {
       if (Array.isArray(packagesData)) setPackages(packagesData)
       if (Array.isArray(billingData)) setBillingRecords(billingData)
       if (Array.isArray(ratesData)) setRates(ratesData)
+      if (Array.isArray(docsData)) setDocuments(docsData)
     } catch {
       setError('שגיאה בטעינת נתונים')
     }
@@ -188,6 +199,43 @@ export default function PilotDetailPage() {
     setBillingForm({ flight_date: '', hours_flown: '', rate_per_hour: '', notes: '' })
     setShowBillingForm(false)
     loadData()
+  }
+
+  async function addDocument(e: React.FormEvent) {
+    e.preventDefault()
+    await fetch(`/api/pilots/${pilotId}/documents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(docForm),
+    })
+    setDocForm({ document_type: 'רישיון טיס', expiry_date: '', notes: '' })
+    setShowDocForm(false)
+    loadData()
+  }
+
+  async function updateDocument(id: string) {
+    await fetch(`/api/pilots/${pilotId}/documents`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...editDocForm }),
+    })
+    setEditingDocId(null)
+    loadData()
+  }
+
+  async function deleteDocument(id: string) {
+    if (!confirm('למחוק מסמך?')) return
+    await fetch(`/api/pilots/${pilotId}/documents?doc_id=${id}`, { method: 'DELETE' })
+    loadData()
+  }
+
+  function getDocColorClass(expiryDate: string | null) {
+    if (!expiryDate) return { bg: 'bg-gray-100', text: 'text-gray-700' }
+    const days = Math.floor((new Date(expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    if (days < 0) return { bg: 'bg-red-100', text: 'text-red-700' }
+    if (days < 30) return { bg: 'bg-red-50', text: 'text-red-600' }
+    if (days < 60) return { bg: 'bg-orange-50', text: 'text-orange-600' }
+    return { bg: 'bg-green-50', text: 'text-green-600' }
   }
 
   function formatDate(d: string) {
@@ -579,6 +627,132 @@ export default function PilotDetailPage() {
             <div className="border-t border-gray-200 pt-3 mt-3">
               <span className="text-gray-500 text-sm">סה&quot;כ שעות טיסה (מ-flight logs): </span>
               <span className="text-gray-900 font-bold">{Math.round(totalFlightHours * 10) / 10}</span>
+            </div>
+          )}
+        </div>
+        {/* PDF Export Button */}
+        <div className="flex justify-center">
+          <a href={`/api/pilots/${pilotId}/pdf`} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors">
+            📄 ייצוא PDF
+          </a>
+        </div>
+
+        {/* Section D - Documents */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-gray-900 font-bold text-lg">📄 מסמכים</h3>
+            <button onClick={() => setShowDocForm(!showDocForm)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                showDocForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+              }`}>
+              {showDocForm ? '✕ סגור' : '+ הוסף מסמך'}
+            </button>
+          </div>
+
+          {showDocForm && (
+            <form onSubmit={addDocument} className="mb-4 bg-gray-50 rounded-lg p-4 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-gray-700 text-xs font-semibold mb-1">סוג מסמך</label>
+                  <select value={docForm.document_type}
+                    onChange={e => setDocForm({ ...docForm, document_type: e.target.value })}
+                    className={inputClass}>
+                    <option value="רישיון טיס">רישיון טיס</option>
+                    <option value="בדיקה רפואית">בדיקה רפואית</option>
+                    <option value="ביטוח">ביטוח</option>
+                    <option value="אישור Class Rating">אישור Class Rating</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-xs font-semibold mb-1">תאריך תפוגה</label>
+                  <input type="date" value={docForm.expiry_date}
+                    onChange={e => setDocForm({ ...docForm, expiry_date: e.target.value })}
+                    className={inputClass} />
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-xs font-semibold mb-1">הערות</label>
+                  <input type="text" value={docForm.notes}
+                    onChange={e => setDocForm({ ...docForm, notes: e.target.value })}
+                    className={inputClass} />
+                </div>
+              </div>
+              <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-sm">
+                הוסף מסמך
+              </button>
+            </form>
+          )}
+
+          {documents.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-4">אין מסמכים</p>
+          ) : (
+            <div className="space-y-2">
+              {documents.map(doc => {
+                const colors = getDocColorClass(doc.expiry_date)
+                const isExpired = doc.expiry_date && new Date(doc.expiry_date) < new Date()
+                const daysUntil = doc.expiry_date
+                  ? Math.floor((new Date(doc.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                  : null
+                const isEditingDoc = editingDocId === doc.id
+
+                return (
+                  <div key={doc.id} className={`rounded-lg p-3 border border-gray-200 ${colors.bg}`}>
+                    {isEditingDoc ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          <select value={editDocForm.document_type}
+                            onChange={e => setEditDocForm({ ...editDocForm, document_type: e.target.value })}
+                            className={inputClass}>
+                            <option value="רישיון טיס">רישיון טיס</option>
+                            <option value="בדיקה רפואית">בדיקה רפואית</option>
+                            <option value="ביטוח">ביטוח</option>
+                            <option value="אישור Class Rating">אישור Class Rating</option>
+                          </select>
+                          <input type="date" value={editDocForm.expiry_date}
+                            onChange={e => setEditDocForm({ ...editDocForm, expiry_date: e.target.value })}
+                            className={inputClass} />
+                          <input type="text" value={editDocForm.notes}
+                            onChange={e => setEditDocForm({ ...editDocForm, notes: e.target.value })}
+                            placeholder="הערות" className={inputClass} />
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => updateDocument(doc.id)}
+                            className="px-3 py-1 rounded bg-green-600 text-white text-xs">שמור</button>
+                          <button onClick={() => setEditingDocId(null)}
+                            className="px-3 py-1 rounded bg-gray-200 text-gray-700 text-xs">ביטול</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="text-gray-900 font-medium text-sm">{doc.document_type}</div>
+                          <div className="text-gray-500 text-xs">
+                            {doc.expiry_date ? `תפוגה: ${formatDate(doc.expiry_date)}` : 'ללא תאריך תפוגה'}
+                            {daysUntil !== null && (
+                              <span className={`mr-2 font-medium ${colors.text}`}>
+                                {isExpired ? `(פג תוקף לפני ${Math.abs(daysUntil)} ימים)` : `(${daysUntil} ימים)`}
+                              </span>
+                            )}
+                          </div>
+                          {doc.notes && <div className="text-gray-400 text-xs mt-0.5">{doc.notes}</div>}
+                        </div>
+                        <div className="flex gap-1">
+                          <button onClick={() => {
+                            setEditingDocId(doc.id)
+                            setEditDocForm({
+                              document_type: doc.document_type,
+                              expiry_date: doc.expiry_date || '',
+                              notes: doc.notes || '',
+                            })
+                          }} className="px-2 py-1 rounded bg-blue-600 text-white text-xs">ערוך</button>
+                          <button onClick={() => deleteDocument(doc.id)}
+                            className="px-2 py-1 rounded bg-red-600 text-white text-xs">מחק</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>

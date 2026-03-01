@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Booking, FlightLog } from '@/lib/supabase'
+import PreFlightChecklist from '@/components/PreFlightChecklist'
 
 type Step = 'name' | 'select' | 'form' | 'done'
 
@@ -17,6 +18,9 @@ export default function PostFlightForm() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [existingLogId, setExistingLogId] = useState<string | null>(null)
   const [lastHobbs, setLastHobbs] = useState<number>(0)
+  const [hasChecklist, setHasChecklist] = useState<boolean | null>(null)
+  const [showChecklist, setShowChecklist] = useState(false)
+  const [checklistData, setChecklistData] = useState<Record<string, boolean> | null>(null)
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -33,6 +37,25 @@ export default function PostFlightForm() {
     oil_engine2: '',
     notes: '',
   })
+
+  const [ratePerHour, setRatePerHour] = useState<number>(0)
+
+  // Fetch rate for cost calculation
+  useEffect(() => {
+    fetch('/api/rates').then(r => r.json()).then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        setRatePerHour(data[0].rate_per_hour || 0)
+      }
+    }).catch(() => {})
+  }, [])
+
+  // Auto cost calculation
+  const flightDuration = form.hobbs_start && form.hobbs_end
+    ? Math.round((parseFloat(form.hobbs_end) - parseFloat(form.hobbs_start)) * 10) / 10
+    : 0
+  const estimatedCost = flightDuration > 0 && ratePerHour > 0
+    ? Math.round(flightDuration * ratePerHour)
+    : 0
 
   // Auto-load booking from URL param
   useEffect(() => {
@@ -127,9 +150,24 @@ export default function PostFlightForm() {
     }
   }
 
-  function selectBooking(booking: Booking) {
+  async function selectBooking(booking: Booking) {
     setSelectedBooking(booking)
     setForm((f) => ({ ...f, hobbs_start: lastHobbs ? String(lastHobbs) : '' }))
+
+    // Check if pre-flight checklist exists for this booking
+    try {
+      const res = await fetch(`/api/preflight?booking_id=${booking.id}`)
+      const data = await res.json()
+      if (data && data.completed) {
+        setHasChecklist(true)
+        setChecklistData(data.checklist_data)
+      } else {
+        setHasChecklist(false)
+      }
+    } catch {
+      setHasChecklist(false)
+    }
+
     setStep('form')
   }
 
@@ -298,6 +336,33 @@ export default function PostFlightForm() {
         </div>
       </div>
 
+      {/* Pre-flight checklist status */}
+      {hasChecklist === false && !showChecklist && (
+        <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+          <div className="flex justify-between items-center">
+            <span>⚠️ לא בוצע צ&apos;קליסט לפני טיסה</span>
+            <button type="button" onClick={() => setShowChecklist(true)}
+              className="text-blue-600 hover:text-blue-800 font-medium text-xs">מלא עכשיו</button>
+          </div>
+        </div>
+      )}
+      {hasChecklist === true && (
+        <div className="p-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm">
+          ✅ צ&apos;קליסט לפני טיסה הושלם
+        </div>
+      )}
+      {showChecklist && selectedBooking && (
+        <PreFlightChecklist
+          bookingId={selectedBooking.id}
+          pilotName={pilotName}
+          existingChecklist={checklistData}
+          onComplete={() => {
+            setHasChecklist(true)
+            setShowChecklist(false)
+          }}
+        />
+      )}
+
       {/* Hobbs */}
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -418,6 +483,16 @@ export default function PostFlightForm() {
           className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg resize-none"
         />
       </div>
+
+      {/* Estimated cost */}
+      {flightDuration > 0 && ratePerHour > 0 && (
+        <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
+          <div className="text-blue-800 font-bold text-sm mb-1">💰 עלות משוערת</div>
+          <div className="text-blue-900 text-lg font-black">
+            {flightDuration} שעות × ₪{ratePerHour.toLocaleString()} = ₪{estimatedCost.toLocaleString()}
+          </div>
+        </div>
+      )}
 
       {/* Submit */}
       <button

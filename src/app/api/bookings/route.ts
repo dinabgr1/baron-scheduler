@@ -54,6 +54,25 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Check for booking conflicts
+  const { data: existingBookings } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('date', date)
+    .in('status', ['approved', 'pending'])
+
+  if (existingBookings && existingBookings.length > 0) {
+    const hasConflict = existingBookings.some((existing: { start_time: string; end_time: string }) => {
+      return start_time < existing.end_time && end_time > existing.start_time
+    })
+    if (hasConflict) {
+      return NextResponse.json(
+        { error: 'המטוס תפוס בשעות אלה' },
+        { status: 409 }
+      )
+    }
+  }
+
   // Create Google Calendar event
   let googleEventId: string | null = null
   try {

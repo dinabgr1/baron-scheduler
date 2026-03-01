@@ -14,6 +14,7 @@ export default function ToolsPage() {
   const [lastFlight, setLastFlight] = useState<{ date: string; start_time: string; end_time: string; hobbs_start: number; hobbs_end: number; flight_hours: number } | null>(null)
   const [searchDone, setSearchDone] = useState(false)
   const [maintenance, setMaintenance] = useState<{ records: MaintenanceRecord[]; currentHobbs: number } | null>(null)
+  const [unreportedCount, setUnreportedCount] = useState(0)
 
   useEffect(() => {
     fetch('/api/maintenance').then(r => r.json()).then(setMaintenance).catch(() => {})
@@ -39,6 +40,13 @@ export default function ToolsPage() {
       const lRes = await fetch('/api/flight-logs')
       const logs = await lRes.json()
       const log = logs.find((l: { booking_id: string }) => l.booking_id === lastBooking.id)
+
+      // Check for unreported flights
+      const today = new Date().toISOString().split('T')[0]
+      const pastBookings = pilotBookings.filter((b: { date: string; status: string }) => b.date < today && b.status === 'approved')
+      const reportedIds = new Set(logs.filter((l: { booking_id: string }) => pastBookings.some((b: { id: string }) => b.id === l.booking_id)).map((l: { booking_id: string }) => l.booking_id))
+      const unreported = pastBookings.filter((b: { id: string }) => !reportedIds.has(b.id)).length
+      setUnreportedCount(unreported)
 
       setLastFlight({
         date: lastBooking.date,
@@ -113,6 +121,17 @@ export default function ToolsPage() {
           </div>
           {searchDone && !lastFlight && (
             <p className="text-gray-500 text-sm text-center py-2">לא נמצאו טיסות</p>
+          )}
+          {unreportedCount > 0 && (
+            <a href="/post-flight" className="block">
+              <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 flex items-center gap-2">
+                <span className="text-xl">⚠️</span>
+                <div>
+                  <div className="text-red-700 font-bold text-sm">יש לך {unreportedCount} טיסות שלא דווחו!</div>
+                  <div className="text-red-600 text-xs">לחץ כאן לדווח</div>
+                </div>
+              </div>
+            </a>
           )}
           {lastFlight && (
             <div className="bg-gray-50 rounded-xl p-4 space-y-2">

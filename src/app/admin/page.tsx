@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
+import NotificationBanner from '@/components/NotificationBanner'
 import WeeklyCalendar from '@/components/WeeklyCalendar'
 import { Booking, FlightLog, Pilot, Rate, HourPackage } from '@/lib/supabase'
 
-type AdminTab = 'הזמנות' | 'טייסים' | 'פיננסים'
+type AdminTab = 'הזמנות' | 'טייסים' | 'פיננסים' | 'תחזוקה' | 'דוחות'
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
@@ -50,8 +51,56 @@ export default function AdminPage() {
   const [hourPackages, setHourPackages] = useState<HourPackage[]>([])
   const [packageForm, setPackageForm] = useState({ pilot_name: '', hours_purchased: '', hours_gift: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '' })
 
+  // Maintenance state
+  type MaintenanceRecord = {
+    id: string; maintenance_type: string; last_done_date: string | null;
+    last_done_hobbs: number; interval_hours: number; interval_months: number | null; notes: string | null
+  }
+  const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([])
+  const [currentHobbs, setCurrentHobbs] = useState(0)
+  const [editingMaintId, setEditingMaintId] = useState<string | null>(null)
+  const [maintEditForm, setMaintEditForm] = useState({ last_done_hobbs: '', last_done_date: '' })
+  const [showAddMaint, setShowAddMaint] = useState(false)
+  const [maintAddForm, setMaintAddForm] = useState({ maintenance_type: '', interval_hours: '', interval_months: '', last_done_hobbs: '', last_done_date: '', notes: '' })
+
   // Stats
   const [stats, setStats] = useState({ totalBookings: 0, pendingBookings: 0, flightHours: 0, lastHobbs: 0 })
+
+  async function loadMaintenance() {
+    const res = await fetch('/api/maintenance')
+    const data = await res.json()
+    if (data.records) setMaintenanceRecords(data.records)
+    if (data.currentHobbs) setCurrentHobbs(data.currentHobbs)
+  }
+
+  async function saveMaintEdit(id: string) {
+    await fetch('/api/maintenance', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, last_done_hobbs: parseFloat(maintEditForm.last_done_hobbs), last_done_date: maintEditForm.last_done_date }),
+    })
+    setEditingMaintId(null)
+    loadMaintenance()
+  }
+
+  async function addMaintenanceItem(e: React.FormEvent) {
+    e.preventDefault()
+    await fetch('/api/maintenance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        maintenance_type: maintAddForm.maintenance_type,
+        interval_hours: parseFloat(maintAddForm.interval_hours) || 0,
+        interval_months: maintAddForm.interval_months ? parseInt(maintAddForm.interval_months) : null,
+        last_done_hobbs: parseFloat(maintAddForm.last_done_hobbs) || 0,
+        last_done_date: maintAddForm.last_done_date || null,
+        notes: maintAddForm.notes || null,
+      }),
+    })
+    setMaintAddForm({ maintenance_type: '', interval_hours: '', interval_months: '', last_done_hobbs: '', last_done_date: '', notes: '' })
+    setShowAddMaint(false)
+    loadMaintenance()
+  }
 
   async function createAdminBooking(e: React.FormEvent) {
     e.preventDefault()
@@ -179,6 +228,8 @@ export default function AdminPage() {
     if (activeTab === 'טייסים') { loadPilots(); loadHourPackages(); loadBookings() }
     // rates loaded with פיננסים
     if (activeTab === 'פיננסים') { loadHourPackages(); loadRates() }
+    if (activeTab === 'תחזוקה') loadMaintenance()
+    if (activeTab === 'דוחות') { loadBookings(); loadFlightLogs(); loadHourPackages(); loadPilots() }
   }, [activeTab, authed])
 
   async function updateBookingStatus(id: string, status: 'approved' | 'rejected') {
@@ -311,7 +362,7 @@ export default function AdminPage() {
     ? bookings
     : bookings.filter((b) => b.status === filter)
 
-  const tabs: AdminTab[] = ['הזמנות', 'טייסים', 'פיננסים']
+  const tabs: AdminTab[] = ['הזמנות', 'טייסים', 'פיננסים', 'תחזוקה', 'דוחות']
 
   const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 
@@ -375,6 +426,8 @@ export default function AdminPage() {
             <div className="text-gray-500 uppercase tracking-wide text-xs">Hobbs אחרון</div>
           </div>
         </div>
+
+        <NotificationBanner />
 
         {/* Tabs */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-1 flex gap-1 overflow-x-auto">
@@ -955,6 +1008,264 @@ export default function AdminPage() {
             </div>
           )
         })()}
+        {/* ====== תחזוקה TAB ====== */}
+        {activeTab === 'תחזוקה' && (
+          <div className="space-y-4">
+            {/* Current Hobbs display */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 text-center">
+              <div className="text-gray-500 text-sm mb-1">Hobbs נוכחי</div>
+              <div className="text-5xl font-black text-gray-900">{currentHobbs}</div>
+            </div>
+
+            {/* Maintenance records */}
+            <div className="space-y-3">
+              {maintenanceRecords.map(rec => {
+                const isCalendarBased = rec.interval_months && rec.interval_months > 0
+                let hoursRemaining = 0
+                let pct = 0
+                let monthsRemaining = 0
+                let colorClass = 'text-green-600'
+                let barColor = 'bg-green-500'
+
+                if (isCalendarBased && rec.last_done_date) {
+                  const lastDone = new Date(rec.last_done_date)
+                  const nextDue = new Date(lastDone)
+                  nextDue.setMonth(nextDue.getMonth() + (rec.interval_months || 0))
+                  monthsRemaining = Math.round((nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30.44))
+                  pct = Math.min(100, ((rec.interval_months || 1) - monthsRemaining) / (rec.interval_months || 1) * 100)
+                  if (monthsRemaining <= 1) { colorClass = 'text-red-600'; barColor = 'bg-red-500' }
+                  else if (monthsRemaining <= 3) { colorClass = 'text-orange-600'; barColor = 'bg-orange-400' }
+                } else {
+                  const hoursUsed = currentHobbs - rec.last_done_hobbs
+                  hoursRemaining = Math.round((rec.interval_hours - hoursUsed) * 10) / 10
+                  pct = Math.min(100, (hoursUsed / (rec.interval_hours || 1)) * 100)
+                  if (hoursRemaining <= 10) { colorClass = 'text-red-600'; barColor = 'bg-red-500' }
+                  else if (hoursRemaining <= 25) { colorClass = 'text-orange-600'; barColor = 'bg-orange-400' }
+                }
+
+                const isEditing = editingMaintId === rec.id
+
+                return (
+                  <div key={rec.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="text-gray-900 font-bold">{rec.notes || rec.maintenance_type}</div>
+                        <div className="text-gray-500 text-xs">
+                          {rec.last_done_date && `ביצוע אחרון: ${rec.last_done_date}`}
+                          {rec.last_done_hobbs > 0 && ` | Hobbs: ${rec.last_done_hobbs}`}
+                        </div>
+                      </div>
+                      <span className={`font-bold text-lg ${colorClass}`}>
+                        {isCalendarBased ? `${monthsRemaining} חודשים` : `${hoursRemaining}h`}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${barColor}`}
+                        style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>{isCalendarBased ? `כל ${rec.interval_months} חודשים` : `כל ${rec.interval_hours}h`}</span>
+                      <span>{isCalendarBased ? '' : `ביקורת ב-${rec.last_done_hobbs + rec.interval_hours}h`}</span>
+                    </div>
+
+                    {isEditing ? (
+                      <div className="border-t border-gray-200 pt-3 space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-gray-700 text-xs font-semibold mb-1">Hobbs בביצוע</label>
+                            <input type="number" step="0.1" value={maintEditForm.last_done_hobbs}
+                              onChange={e => setMaintEditForm({ ...maintEditForm, last_done_hobbs: e.target.value })}
+                              className={inputClass} />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-xs font-semibold mb-1">תאריך ביצוע</label>
+                            <input type="date" value={maintEditForm.last_done_date}
+                              onChange={e => setMaintEditForm({ ...maintEditForm, last_done_date: e.target.value })}
+                              className={inputClass} />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => saveMaintEdit(rec.id)}
+                            className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-sm font-medium">שמור</button>
+                          <button onClick={() => setEditingMaintId(null)}
+                            className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium">ביטול</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={() => {
+                        setEditingMaintId(rec.id)
+                        setMaintEditForm({
+                          last_done_hobbs: String(currentHobbs),
+                          last_done_date: new Date().toISOString().split('T')[0],
+                        })
+                      }} className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                        ✏️ עדכן תחזוקה
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Add maintenance form */}
+            <div>
+              <button onClick={() => setShowAddMaint(!showAddMaint)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  showAddMaint ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+                }`}>
+                {showAddMaint ? '✕ סגור' : '+ הוסף פריט תחזוקה'}
+              </button>
+
+              {showAddMaint && (
+                <form onSubmit={addMaintenanceItem} className="mt-3 bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">סוג תחזוקה</label>
+                      <input type="text" required value={maintAddForm.maintenance_type}
+                        onChange={e => setMaintAddForm({ ...maintAddForm, maintenance_type: e.target.value })}
+                        placeholder="לדוגמה: החלפת שמן" className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">מרווח שעות</label>
+                      <input type="number" step="0.1" value={maintAddForm.interval_hours}
+                        onChange={e => setMaintAddForm({ ...maintAddForm, interval_hours: e.target.value })}
+                        placeholder="50" className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">מרווח חודשים (אופציונלי)</label>
+                      <input type="number" value={maintAddForm.interval_months}
+                        onChange={e => setMaintAddForm({ ...maintAddForm, interval_months: e.target.value })}
+                        placeholder="12" className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">Hobbs בביצוע אחרון</label>
+                      <input type="number" step="0.1" value={maintAddForm.last_done_hobbs}
+                        onChange={e => setMaintAddForm({ ...maintAddForm, last_done_hobbs: e.target.value })}
+                        placeholder={String(currentHobbs)} className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">תאריך ביצוע אחרון</label>
+                      <input type="date" value={maintAddForm.last_done_date}
+                        onChange={e => setMaintAddForm({ ...maintAddForm, last_done_date: e.target.value })}
+                        className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">תיאור</label>
+                      <input type="text" value={maintAddForm.notes}
+                        onChange={e => setMaintAddForm({ ...maintAddForm, notes: e.target.value })}
+                        placeholder="תיאור הפריט" className={inputClass} />
+                    </div>
+                  </div>
+                  <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold">
+                    הוסף פריט
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ====== דוחות TAB ====== */}
+        {activeTab === 'דוחות' && (() => {
+          const now = new Date()
+          const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+          const monthBookings = bookings.filter(b => b.date.startsWith(currentMonth))
+          const monthFlightLogs = flightLogs.filter(log => {
+            const booking = bookings.find(b => b.id === log.booking_id)
+            return booking && booking.date.startsWith(currentMonth)
+          })
+          const monthHours = monthFlightLogs.reduce((sum, log) => {
+            if (log.hobbs_end && log.hobbs_start) return sum + (log.hobbs_end - log.hobbs_start)
+            return sum + (log.flight_time_hours || 0) + (log.flight_time_minutes || 0) / 60
+          }, 0)
+          const avgDuration = monthFlightLogs.length > 0 ? monthHours / monthFlightLogs.length : 0
+
+          const monthPackages = hourPackages.filter(p => p.purchase_date.startsWith(currentMonth))
+          const monthRevenue = monthPackages.reduce((sum, p) => sum + (p.price_paid || 0), 0)
+
+          const defaultRate = rates.length > 0 ? rates[0].rate_per_hour : 0
+
+          return (
+            <div className="space-y-4">
+              <h3 className="text-gray-900 font-bold text-lg">📊 דוח חודשי — {now.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}</h3>
+
+              {/* Aircraft utilization */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <h4 className="text-gray-700 font-semibold text-sm mb-3">🛩️ ניצולת מטוס</h4>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-3xl font-black text-gray-900">{Math.round(monthHours * 10) / 10}</div>
+                    <div className="text-xs text-gray-500">שעות טיסה</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-3xl font-black text-gray-900">{monthFlightLogs.length}</div>
+                    <div className="text-xs text-gray-500">טיסות</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-3xl font-black text-gray-900">{Math.round(avgDuration * 10) / 10}</div>
+                    <div className="text-xs text-gray-500">ממוצע טיסה (h)</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Revenue */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <h4 className="text-gray-700 font-semibold text-sm mb-3">💰 הכנסות</h4>
+                <div className="grid grid-cols-2 gap-3 text-center">
+                  <div className="bg-green-50 rounded-lg p-3">
+                    <div className="text-3xl font-black text-green-700">₪{monthRevenue.toLocaleString()}</div>
+                    <div className="text-xs text-gray-500">שולם החודש</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-3xl font-black text-gray-900">{monthPackages.length}</div>
+                    <div className="text-xs text-gray-500">רכישות חבילות</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Per-pilot breakdown */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <h4 className="text-gray-700 font-semibold text-sm mb-3">👥 פילוח לפי טייס</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">טייס</th>
+                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">טיסות</th>
+                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">שעות</th>
+                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">עלות</th>
+                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">שולם</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pilots.map(p => {
+                        const pilotMonthBookings = monthBookings.filter(b => b.pilot_name === p.name)
+                        if (pilotMonthBookings.length === 0) return null
+                        const pilotMonthLogs = monthFlightLogs.filter(l => pilotMonthBookings.some(b => b.id === l.booking_id))
+                        const pilotHours = pilotMonthLogs.reduce((sum, log) => {
+                          if (log.hobbs_end && log.hobbs_start) return sum + (log.hobbs_end - log.hobbs_start)
+                          return sum + (log.flight_time_hours || 0) + (log.flight_time_minutes || 0) / 60
+                        }, 0)
+                        const pilotCost = Math.round(pilotHours * defaultRate)
+                        const pilotPaid = monthPackages.filter(pkg => pkg.pilot_name === p.name).reduce((s, pkg) => s + (pkg.price_paid || 0), 0)
+                        return (
+                          <tr key={p.id} className="border-b border-gray-100 even:bg-gray-50">
+                            <td className="py-2 px-3 text-gray-900 font-medium">{p.name}</td>
+                            <td className="py-2 px-3 text-gray-700">{pilotMonthBookings.length}</td>
+                            <td className="py-2 px-3 text-gray-700">{Math.round(pilotHours * 10) / 10}</td>
+                            <td className="py-2 px-3 text-gray-700">₪{pilotCost.toLocaleString()}</td>
+                            <td className="py-2 px-3 text-gray-700">₪{pilotPaid.toLocaleString()}</td>
+                          </tr>
+                        )
+                      }).filter(Boolean)}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
       </main>
     </div>
   )
