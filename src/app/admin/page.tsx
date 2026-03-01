@@ -736,11 +736,11 @@ export default function AdminPage() {
                           <div className="text-baron-blue-400 text-xs">הזמנות עתידיות</div>
                         </div>
                         {unreportedCount > 0 && (
-                          <div className="col-span-2 bg-orange-500/15 border border-orange-400/40 rounded-lg p-2 flex items-center gap-2">
+                          <div className="col-span-2 bg-orange-100 border border-orange-500 rounded-lg p-2 flex items-center gap-2">
                             <span>⚠️</span>
                             <div>
-                              <div className="text-orange-300 font-bold text-xs">{unreportedCount} טיסות ללא דיווח</div>
-                              <div className="text-orange-200/60 text-xs">חישוב שעות עלול להיות שגוי</div>
+                              <div className="text-orange-900 font-bold text-xs">{unreportedCount} טיסות ללא דיווח</div>
+                              <div className="text-orange-700 text-xs">חישוב שעות עלול להיות שגוי</div>
                             </div>
                           </div>
                         )}

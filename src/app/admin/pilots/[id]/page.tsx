@@ -362,13 +362,13 @@ export default function PilotDetailPage() {
 
         {/* Unclosed flights warning */}
         {unclosedLogs.length > 0 && (
-          <div className="bg-orange-500/15 border border-orange-400/50 rounded-xl p-4 flex items-start gap-3">
+          <div className="bg-orange-100 border border-orange-500 rounded-xl p-4 flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div>
-              <div className="text-orange-300 font-bold text-sm mb-1">
+              <div className="text-orange-900 font-bold text-sm mb-1">
                 {unclosedLogs.length} טיסה{unclosedLogs.length > 1 ? 'ות' : ''} לא נסגרה{unclosedLogs.length > 1 ? 'ו' : ''} — שעות חסרות!
               </div>
-              <div className="text-orange-200/70 text-xs">
+              <div className="text-orange-800 text-xs">
                 חסרים נתוני Hobbs או זמן טיסה — חישוב השעות עלול להיות שגוי. סגור את הטיסות כדי לקבל מאזן מדויק.
               </div>
             </div>
