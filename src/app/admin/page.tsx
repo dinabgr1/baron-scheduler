@@ -309,7 +309,7 @@ export default function AdminPage() {
 
   const tabs: AdminTab[] = ['הזמנות', 'טייסים', 'תעריפים', 'בנק שעות']
 
-  const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+  const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 
   if (!authed) {
     return (
@@ -354,32 +354,32 @@ export default function AdminPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.totalBookings}</div>
-            <div className="text-gray-500 text-sm">סה&quot;כ הזמנות החודש</div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 border-l-4 border-l-blue-500">
+            <div className="text-3xl font-black text-gray-900">{stats.totalBookings}</div>
+            <div className="text-gray-500 uppercase tracking-wide text-xs">סה&quot;כ הזמנות החודש</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.pendingBookings}</div>
-            <div className="text-gray-500 text-sm">ממתינות לאישור</div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 border-l-4 border-l-blue-500">
+            <div className="text-3xl font-black text-gray-900">{stats.pendingBookings}</div>
+            <div className="text-gray-500 uppercase tracking-wide text-xs">ממתינות לאישור</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.flightHours}</div>
-            <div className="text-gray-500 text-sm">שעות טיסה החודש</div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 border-l-4 border-l-green-500">
+            <div className="text-3xl font-black text-gray-900">{stats.flightHours}</div>
+            <div className="text-gray-500 uppercase tracking-wide text-xs">שעות טיסה החודש</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.lastHobbs}</div>
-            <div className="text-gray-500 text-sm">Hobbs אחרון</div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 border-l-4 border-l-green-500">
+            <div className="text-3xl font-black text-gray-900">{stats.lastHobbs}</div>
+            <div className="text-gray-500 uppercase tracking-wide text-xs">Hobbs אחרון</div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-1 flex gap-1 overflow-x-auto">
           {tabs.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-colors ${
                 activeTab === tab
                   ? 'bg-blue-600 text-white'
-                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  : 'text-gray-600 hover:bg-gray-100'
               }`}>
               {tab}
             </button>
@@ -435,25 +435,25 @@ export default function AdminPage() {
                   <h3 className="text-gray-900 font-bold text-lg">הוספת הזמנה (מנהל)</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">שם הטייס</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">שם הטייס</label>
                       <input type="text" required value={addForm.pilot_name}
                         onChange={e => setAddForm({ ...addForm, pilot_name: e.target.value })}
                         placeholder="שם מלא" className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">תאריך</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">תאריך</label>
                       <input type="date" required value={addForm.date}
                         onChange={e => setAddForm({ ...addForm, date: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">שעת התחלה</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">שעת התחלה</label>
                       <input type="time" required value={addForm.start_time}
                         onChange={e => setAddForm({ ...addForm, start_time: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">שעת סיום</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">שעת סיום</label>
                       <input type="time" required value={addForm.end_time}
                         onChange={e => setAddForm({ ...addForm, end_time: e.target.value })}
                         className={inputClass} />
@@ -477,7 +477,7 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 text-xs font-medium mb-1">סטטוס</label>
+                    <label className="block text-gray-700 text-xs font-semibold mb-1">סטטוס</label>
                     <div className="flex gap-2">
                       {([
                         { value: 'approved', label: 'מאושר', color: 'bg-green-600 hover:bg-green-700' },
@@ -496,7 +496,7 @@ export default function AdminPage() {
                   </div>
 
                   <button type="submit" disabled={addSubmitting}
-                    className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold text-sm transition-colors">
+                    className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold text-base transition-colors">
                     {addSubmitting ? 'יוצר...' : 'צור הזמנה'}
                   </button>
                 </form>
@@ -519,7 +519,7 @@ export default function AdminPage() {
                     const isEditing = editingId === b.id
 
                     return (
-                      <div key={b.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                      <div key={b.id} className={`bg-white rounded-xl border border-gray-200 shadow-sm p-5 pl-4 border-l-4 ${b.status === 'approved' ? 'border-l-green-500' : b.status === 'pending' ? 'border-l-yellow-400' : 'border-l-red-500'}`}>
                         <div className="flex flex-wrap gap-4 justify-between items-start">
                           <div className="flex-1 min-w-[200px]">
                             {isEditing ? (
@@ -548,7 +548,7 @@ export default function AdminPage() {
                             ) : (
                               <>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-gray-900 font-bold text-lg">{b.pilot_name}</span>
+                                  <span className="text-xl font-bold text-gray-900">{b.pilot_name}</span>
                                   {(() => {
                                     const matchedPilot = pilots.find(p => p.name === b.pilot_name)
                                     return matchedPilot ? (
@@ -563,7 +563,7 @@ export default function AdminPage() {
                                     {b.status === 'approved' ? 'מאושר' : b.status === 'pending' ? 'ממתין' : 'נדחה'}
                                   </span>
                                 </div>
-                                <div className="text-gray-500 text-sm space-y-0.5">
+                                <div className="text-base text-gray-700 font-medium space-y-0.5">
                                   <div>{b.date} | {b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</div>
                                   {b.with_instructor && <div>מדריך: {b.instructor_name}</div>}
                                 </div>
@@ -675,7 +675,7 @@ export default function AdminPage() {
                       onChange={e => setPilotForm({ ...pilotForm, license_number: e.target.value })}
                       placeholder="מספר רישיון" className={inputClass} />
                   </div>
-                  <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium">
+                  <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-base font-bold">
                     הוסף טייס
                   </button>
                 </form>
@@ -711,7 +711,7 @@ export default function AdminPage() {
                     <div key={p.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h3 className="text-gray-900 font-bold text-lg">{p.name}</h3>
+                          <h3 className="text-xl font-bold text-gray-900">{p.name}</h3>
                           {p.phone && <div className="text-gray-500 text-sm">{p.phone}</div>}
                           {p.license_number && <div className="text-gray-400 text-xs">רישיון: {p.license_number}</div>}
                         </div>
@@ -722,7 +722,7 @@ export default function AdminPage() {
 
                       <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
                         <div className="bg-gray-50 rounded-lg p-2">
-                          <div className={`font-bold ${balance > 0 ? 'text-green-600' : balance === 0 ? 'text-orange-600' : 'text-red-600'}`}>
+                          <div className={`text-2xl font-black ${balance > 0 ? 'text-green-600' : balance === 0 ? 'text-orange-600' : 'text-red-600'}`}>
                             {Math.round(balance * 10) / 10} שעות
                           </div>
                           <div className="text-gray-500 text-xs">נותרו מתוך {totalPurchased} שנרכשו</div>
@@ -743,7 +743,7 @@ export default function AdminPage() {
                       </div>
 
                       <a href={`/admin/pilots/${p.id}`}
-                        className="block w-full text-center py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors">
+                        className="block w-full text-center py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">
                         פתח כרטיס
                       </a>
                     </div>
@@ -771,7 +771,7 @@ export default function AdminPage() {
                   onChange={e => setRateForm({ ...rateForm, description: e.target.value })}
                   placeholder="תיאור" className={inputClass} />
               </div>
-              <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium">
+              <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-base font-bold">
                 הוסף תעריף
               </button>
             </form>
@@ -781,15 +781,15 @@ export default function AdminPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-gray-600 text-right p-3 font-medium">שם</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">מחיר לשעה (₪)</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">תיאור</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">פעולות</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">שם</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">מחיר לשעה (₪)</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">תיאור</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">פעולות</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rates.map(r => (
-                    <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr key={r.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
                       {editingRateId === r.id ? (
                         <>
                           <td className="p-2"><input type="text" value={editRateForm.name || ''} onChange={e => setEditRateForm({ ...editRateForm, name: e.target.value })} className={inputClass} /></td>
@@ -802,10 +802,10 @@ export default function AdminPage() {
                         </>
                       ) : (
                         <>
-                          <td className="p-3 text-gray-900">{r.name}</td>
-                          <td className="p-3 text-gray-900">{r.rate_per_hour}</td>
-                          <td className="p-3 text-gray-500">{r.description || '-'}</td>
-                          <td className="p-3 flex gap-1">
+                          <td className="py-3 px-4 text-gray-900">{r.name}</td>
+                          <td className="py-3 px-4 text-gray-900">{r.rate_per_hour}</td>
+                          <td className="py-3 px-4 text-gray-500">{r.description || '-'}</td>
+                          <td className="py-3 px-4 flex gap-1">
                             <button onClick={() => { setEditingRateId(r.id); setEditRateForm({ name: r.name, rate_per_hour: r.rate_per_hour, description: r.description }) }}
                               className="px-2 py-1 rounded bg-blue-600 text-white text-xs">ערוך</button>
                             <button onClick={() => deleteRate(r.id)}
@@ -847,7 +847,7 @@ export default function AdminPage() {
               <input type="text" value={packageForm.notes}
                 onChange={e => setPackageForm({ ...packageForm, notes: e.target.value })}
                 placeholder="הערות" className={inputClass} />
-              <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium">
+              <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-base font-bold">
                 הוסף חבילה
               </button>
             </form>
@@ -857,27 +857,27 @@ export default function AdminPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-gray-600 text-right p-3 font-medium">טייס</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">שעות שנרכשו</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">שעות שנוצלו</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">יתרה</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">תשלום</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">תאריך</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">טייס</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">שעות שנרכשו</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">שעות שנוצלו</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">יתרה</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">תשלום</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">תאריך</th>
                   </tr>
                 </thead>
                 <tbody>
                   {hourPackages.map(pkg => {
                     const balance = pkg.hours_purchased - pkg.hours_used
                     return (
-                      <tr key={pkg.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="p-3 text-gray-900">{pkg.pilot_name}</td>
-                        <td className="p-3 text-gray-900">{pkg.hours_purchased}</td>
-                        <td className="p-3 text-gray-900">{pkg.hours_used}</td>
-                        <td className={`p-3 font-bold ${balance > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <tr key={pkg.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-gray-900">{pkg.pilot_name}</td>
+                        <td className="py-3 px-4 text-gray-900">{pkg.hours_purchased}</td>
+                        <td className="py-3 px-4 text-gray-900">{pkg.hours_used}</td>
+                        <td className={`py-3 px-4 font-bold ${balance > 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {balance}
                         </td>
-                        <td className="p-3 text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid}` : '-'}</td>
-                        <td className="p-3 text-gray-500">{pkg.purchase_date}</td>
+                        <td className="py-3 px-4 text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid}` : '-'}</td>
+                        <td className="py-3 px-4 text-gray-500">{pkg.purchase_date}</td>
                       </tr>
                     )
                   })}

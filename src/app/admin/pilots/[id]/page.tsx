@@ -132,7 +132,7 @@ export default function PilotDetailPage() {
   const reportedBookingIds = new Set(flightLogs.map(l => l.booking_id))
   const unclosedLogs = pastBookings.filter(b => !reportedBookingIds.has(b.id))
 
-  const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+  const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 
   async function savePilotEdit() {
     await fetch(`/api/pilots/${pilotId}`, {
@@ -263,25 +263,25 @@ export default function PilotDetailPage() {
                 <div className="flex-1 space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">שם</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">שם</label>
                       <input type="text" value={editForm.name}
                         onChange={e => setEditForm({ ...editForm, name: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">טלפון</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">טלפון</label>
                       <input type="tel" value={editForm.phone}
                         onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">מספר רישיון</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">מספר רישיון</label>
                       <input type="text" value={editForm.license_number}
                         onChange={e => setEditForm({ ...editForm, license_number: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">אימייל</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">אימייל</label>
                       <input type="email" value={editForm.email}
                         onChange={e => setEditForm({ ...editForm, email: e.target.value })}
                         className={inputClass} />
@@ -323,36 +323,36 @@ export default function PilotDetailPage() {
             {/* Quick stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <div className="text-xl font-bold text-gray-900">{bookings.length}</div>
-                <div className="text-gray-500 text-xs">✈️ סה&quot;כ טיסות</div>
+                <div className="text-2xl font-black text-gray-900">{bookings.length}</div>
+                <div className="text-xs uppercase tracking-wide text-gray-500">✈️ סה&quot;כ טיסות</div>
               </div>
               <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <div className="text-xl font-bold text-gray-900">{Math.round(totalFlightHours * 10) / 10}</div>
-                <div className="text-gray-500 text-xs">⏱️ שעות כולל</div>
+                <div className="text-2xl font-black text-gray-900">{Math.round(totalFlightHours * 10) / 10}</div>
+                <div className="text-xs uppercase tracking-wide text-gray-500">⏱️ שעות כולל</div>
               </div>
               <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <div className={`text-xl font-bold ${hoursBalance > 0 ? 'text-green-600' : hoursBalance === 0 ? 'text-orange-600' : 'text-red-600'}`}>
+                <div className={`text-2xl font-black ${hoursBalance > 0 ? 'text-green-600' : hoursBalance === 0 ? 'text-orange-600' : 'text-red-600'}`}>
                   {Math.round(hoursBalance * 10) / 10}
                 </div>
-                <div className="text-gray-500 text-xs">💰 יתרת שעות</div>
+                <div className="text-xs uppercase tracking-wide text-gray-500">💰 יתרת שעות</div>
               </div>
               <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <div className="text-xl font-bold text-gray-900">
+                <div className="text-2xl font-black text-gray-900">
                   {lastFlightBooking ? formatDate(lastFlightBooking.date) : '-'}
                 </div>
-                <div className="text-gray-500 text-xs">📅 טיסה אחרונה</div>
+                <div className="text-xs uppercase tracking-wide text-gray-500">📅 טיסה אחרונה</div>
               </div>
               <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <div className={`text-xl font-bold ${unpaidHours > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                <div className={`text-2xl font-black ${unpaidHours > 0 ? 'text-orange-600' : 'text-green-600'}`}>
                   {Math.round(unpaidHours * 10) / 10}
                 </div>
-                <div className="text-gray-500 text-xs">⚠️ שעות לא שולמו</div>
+                <div className="text-xs uppercase tracking-wide text-gray-500">⚠️ שעות לא שולמו</div>
               </div>
               <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <div className={`text-xl font-bold ${remainingHours > 0 ? 'text-green-600' : remainingHours === 0 ? 'text-orange-600' : 'text-red-600'}`}>
+                <div className={`text-2xl font-black ${remainingHours > 0 ? 'text-green-600' : remainingHours === 0 ? 'text-orange-600' : 'text-red-600'}`}>
                   {Math.round(remainingHours * 10) / 10}
                 </div>
-                <div className="text-gray-500 text-xs">🎟️ שעות שנותרו</div>
+                <div className="text-xs uppercase tracking-wide text-gray-500">🎟️ שעות שנותרו</div>
               </div>
             </div>
           </div>
@@ -379,11 +379,11 @@ export default function PilotDetailPage() {
             <div className="space-y-4">
               {/* Balance display */}
               <div className={`text-center p-4 rounded-xl border ${remainingHours > 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                <div className={`text-4xl font-bold ${remainingHours > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                <div className={`text-5xl font-black ${remainingHours > 0 ? 'text-green-700' : 'text-red-700'}`}>
                   {Math.round(remainingHours * 10) / 10}
                 </div>
-                <div className="text-gray-700 text-sm">שעות נותרו מתוך {Math.round(totalPurchased * 10) / 10} שנרכשו</div>
-                <div className="text-gray-500 text-xs mt-1">{Math.round(totalFlightHours * 10) / 10} שעות נטסו בפועל</div>
+                <div className="text-gray-700 text-base">שעות נותרו מתוך {Math.round(totalPurchased * 10) / 10} שנרכשו</div>
+                <div className="text-gray-500 text-base mt-1">{Math.round(totalFlightHours * 10) / 10} שעות נטסו בפועל</div>
               </div>
 
               {/* Two add buttons */}
@@ -409,7 +409,7 @@ export default function PilotDetailPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">
                         {packageForm.purchase_type === 'package' ? 'שעות בחבילה' : 'מספר שעות'}
                       </label>
                       <input type="number" required step="0.1" value={packageForm.hours_purchased}
@@ -417,25 +417,25 @@ export default function PilotDetailPage() {
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">מחיר ששולם (₪)</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">מחיר ששולם (₪)</label>
                       <input type="number" step="0.01" value={packageForm.price_paid}
                         onChange={e => setPackageForm({ ...packageForm, price_paid: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">תאריך רכישה</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">תאריך רכישה</label>
                       <input type="date" value={packageForm.purchase_date}
                         onChange={e => setPackageForm({ ...packageForm, purchase_date: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-medium mb-1">הערות</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">הערות</label>
                       <input type="text" value={packageForm.notes}
                         onChange={e => setPackageForm({ ...packageForm, notes: e.target.value })}
                         className={inputClass} />
                     </div>
                   </div>
-                  <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium">
+                  <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-base font-bold">
                     הוסף
                   </button>
                 </form>
@@ -446,11 +446,11 @@ export default function PilotDetailPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-gray-600 text-right p-3 font-medium">סוג</th>
-                      <th className="text-gray-600 text-right p-3 font-medium">תאריך</th>
-                      <th className="text-gray-600 text-right p-3 font-medium">שעות שנרכשו</th>
-                      <th className="text-gray-600 text-right p-3 font-medium">מחיר</th>
-                      <th className="text-gray-600 text-right p-3 font-medium">הערות</th>
+                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">סוג</th>
+                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">תאריך</th>
+                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">שעות שנרכשו</th>
+                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">מחיר</th>
+                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">הערות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -458,16 +458,16 @@ export default function PilotDetailPage() {
                       const isIndividual = pkg.notes?.startsWith('[individual]')
                       const displayNotes = isIndividual ? pkg.notes?.replace('[individual]', '').trim() : pkg.notes
                       return (
-                        <tr key={pkg.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="p-3">
+                        <tr key={pkg.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
+                          <td className="py-3 px-4">
                             <span className={`text-xs px-2 py-0.5 rounded font-medium ${isIndividual ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                               {isIndividual ? '🕐 בודדות' : '📦 בנק'}
                             </span>
                           </td>
-                          <td className="p-3 text-gray-500">{formatDate(pkg.purchase_date)}</td>
-                          <td className="p-3 text-gray-900 font-bold">{pkg.hours_purchased}</td>
-                          <td className="p-3 text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid.toLocaleString()}` : '-'}</td>
-                          <td className="p-3 text-gray-500 text-xs">{displayNotes || '-'}</td>
+                          <td className="py-3 px-4 text-base text-gray-500">{formatDate(pkg.purchase_date)}</td>
+                          <td className="py-3 px-4 text-base text-gray-900 font-bold">{pkg.hours_purchased}</td>
+                          <td className="py-3 px-4 text-base text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid.toLocaleString()}` : '-'}</td>
+                          <td className="py-3 px-4 text-base text-gray-500">{displayNotes || '-'}</td>
                         </tr>
                       )
                     })}
@@ -506,17 +506,17 @@ export default function PilotDetailPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-gray-600 text-right p-3 font-medium">תאריך</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">שעות</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">סטטוס</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">עם מדריך</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">תאריך</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">שעות</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">סטטוס</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">עם מדריך</th>
                   </tr>
                 </thead>
                 <tbody>
                   {futureBookings.map(b => (
-                    <tr key={b.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-3 text-gray-900">{formatDate(b.date)}</td>
-                      <td className="p-3 text-gray-500">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
+                    <tr key={b.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-base text-gray-900">{formatDate(b.date)}</td>
+                      <td className="py-3 px-4 text-base text-gray-500">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
                       <td className="p-3">
                         <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                           b.status === 'approved' ? 'bg-green-100 text-green-700' :
@@ -526,7 +526,7 @@ export default function PilotDetailPage() {
                           {b.status === 'approved' ? 'מאושר' : b.status === 'pending' ? 'ממתין' : 'נדחה'}
                         </span>
                       </td>
-                      <td className="p-3 text-gray-500">{b.with_instructor ? (b.instructor_name || 'כן') : 'לא'}</td>
+                      <td className="py-3 px-4 text-base text-gray-500">{b.with_instructor ? (b.instructor_name || 'כן') : 'לא'}</td>
                     </tr>
                   ))}
                   {futureBookings.length === 0 && (
@@ -542,25 +542,25 @@ export default function PilotDetailPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-gray-600 text-right p-3 font-medium">תאריך</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">שעות</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">Hobbs</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">דלק</th>
-                    <th className="text-gray-600 text-right p-3 font-medium">שמן</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">תאריך</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">שעות</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">Hobbs</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">דלק</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">שמן</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pastBookings.map(b => {
                     const log = getFlightLogForBooking(b.id)
                     return (
-                      <tr key={b.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="p-3 text-gray-900">{formatDate(b.date)}</td>
-                        <td className="p-3 text-gray-500">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
+                      <tr key={b.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-base text-gray-900">{formatDate(b.date)}</td>
+                        <td className="py-3 px-4 text-base text-gray-500">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
                         {log ? (
                           <>
-                            <td className="p-3 text-gray-900">{log.hobbs_start} → {log.hobbs_end}</td>
-                            <td className="p-3 text-gray-500">{log.fuel_added_liters}L</td>
-                            <td className="p-3 text-gray-500">{log.oil_engine1}/{log.oil_engine2}qt</td>
+                            <td className="py-3 px-4 text-base text-gray-900">{log.hobbs_start} → {log.hobbs_end}</td>
+                            <td className="py-3 px-4 text-base text-gray-500">{log.fuel_added_liters}L</td>
+                            <td className="py-3 px-4 text-base text-gray-500">{log.oil_engine1}/{log.oil_engine2}qt</td>
                           </>
                         ) : (
                           <td colSpan={3} className="p-3 text-center">
