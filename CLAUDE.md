@@ -57,3 +57,41 @@ Owner: Din (pilot + flight instructor)
 - WhatsApp approval flow (notify on booking)
 - Engine hours tracking
 - Maintenance log
+
+## ⚠️ Quality Rules — MUST FOLLOW
+
+### Before Every Deploy
+1. Run `npm run build` — MUST pass with 0 errors
+2. Run `npm run dev` and verify changed pages load correctly
+3. Test edge cases: empty fields, invalid dates, overlapping bookings
+4. Check mobile responsiveness on changed pages
+
+### Code Quality
+- Always validate user input (server-side, not just client)
+- Handle API errors gracefully — show Hebrew error messages to user
+- Never leave console.log in production code
+- Use TypeScript types strictly — no `any` types
+- RTL support: use logical properties (start/end, not left/right)
+
+### Testing Checklist (per feature)
+- [ ] Happy path works
+- [ ] Empty/missing fields handled
+- [ ] Duplicate/conflicting data handled
+- [ ] Mobile view looks correct
+- [ ] Hebrew text displays correctly (RTL)
+- [ ] Admin panel reflects changes
+- [ ] API returns proper error codes
+
+### Self Code Review
+Before committing, review your own changes:
+- Are there security issues? (exposed keys, missing auth checks)
+- Are there performance issues? (unnecessary re-renders, missing loading states)
+- Is the UI consistent with existing pages?
+- Would a pilot understand how to use this on their phone?
+
+### Change Summary Rule
+Before every commit, output a summary:
+1. **What changed** — list of files and what was modified
+2. **Why** — the reason for each change
+3. **What could break** — potential side effects or regressions
+4. **How I verified** — what tests/checks were run

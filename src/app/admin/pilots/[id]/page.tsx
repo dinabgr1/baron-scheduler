@@ -126,7 +126,8 @@ export default function PilotDetailPage() {
   const lastFlightBooking = bookings.filter(b => b.date < today).sort((a, b) => b.date.localeCompare(a.date))[0]
   const totalBilled = billingRecords.reduce((sum, r) => sum + (r.total_amount || 0), 0)
   const totalBilledHours = billingRecords.reduce((sum, r) => sum + (r.hours_flown || 0), 0)
-  const unpaidHours = Math.max(0, totalFlightHours - totalBilledHours)
+  // Unpaid = hours flown beyond purchased package (package is pre-paid)
+  const unpaidHours = totalPurchased > 0 ? Math.max(0, totalFlightHours - totalPurchased) : Math.max(0, totalFlightHours - totalBilledHours)
   const remainingHours = totalPurchased - totalFlightHours
   const pastBookingIds = pastBookings.map(b => b.id)
   const reportedBookingIds = new Set(flightLogs.map(l => l.booking_id))
