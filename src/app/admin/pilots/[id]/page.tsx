@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import Header from '@/components/Header'
 import { Pilot, Booking, FlightLog, HourPackage, BillingRecord, Rate } from '@/lib/supabase'
 
-type BillingTab = 'שעות' | 'חשבון'
+type BillingTab = 'שעות'
 type FlightTab = 'טיסות עתידיות' | 'טיסות שעברו'
 
 export default function PilotDetailPage() {
@@ -380,26 +380,15 @@ export default function PilotDetailPage() {
 
         {/* Section B - Billing & Hours */}
         <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-5">
-          <div className="flex gap-2 mb-4">
-            {(['שעות', 'חשבון'] as BillingTab[]).map(tab => (
-              <button key={tab} onClick={() => setBillingTab(tab)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  billingTab === tab ? 'bg-baron-blue-500 text-white' : 'bg-baron-blue-800/50 text-baron-blue-300 hover:text-white'
-                }`}>
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {billingTab === 'שעות' && (
+          {true && (
             <div className="space-y-4">
               {/* Balance display */}
-              <div className={`text-center p-4 rounded-xl ${remainingHours > 0 ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
-                <div className={`text-4xl font-bold ${remainingHours > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              <div className={`text-center p-4 rounded-xl ${remainingHours > 0 ? 'bg-green-700/40 border border-green-500' : 'bg-red-700/40 border border-red-500'}`}>
+                <div className="text-4xl font-bold text-white">
                   {Math.round(remainingHours * 10) / 10}
                 </div>
-                <div className="text-baron-blue-300 text-sm">שעות נותרו מתוך {Math.round(totalPurchased * 10) / 10} שנרכשו</div>
-                <div className="text-baron-blue-400 text-xs mt-1">{Math.round(totalFlightHours * 10) / 10} שעות נטסו בפועל</div>
+                <div className="text-white/80 text-sm">שעות נותרו מתוך {Math.round(totalPurchased * 10) / 10} שנרכשו</div>
+                <div className="text-white/60 text-xs mt-1">{Math.round(totalFlightHours * 10) / 10} שעות נטסו בפועל</div>
               </div>
 
               {/* Two add buttons */}
@@ -500,99 +489,6 @@ export default function PilotDetailPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
-
-          {billingTab === 'חשבון' && (
-            <div className="space-y-4">
-              {/* Add billing button + form */}
-              <button onClick={() => setShowBillingForm(!showBillingForm)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  showBillingForm ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-green-600 hover:bg-green-500 text-white'
-                }`}>
-                {showBillingForm ? '✕ סגור' : '+ הוסף חיוב ידני'}
-              </button>
-
-              {showBillingForm && (
-                <form onSubmit={addBilling} className="bg-baron-blue-800/30 rounded-lg p-4 space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">תאריך</label>
-                      <input type="date" value={billingForm.flight_date}
-                        onChange={e => setBillingForm({ ...billingForm, flight_date: e.target.value })}
-                        className={inputClass} />
-                    </div>
-                    <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">שעות</label>
-                      <input type="number" step="0.1" value={billingForm.hours_flown}
-                        onChange={e => setBillingForm({ ...billingForm, hours_flown: e.target.value })}
-                        className={inputClass} />
-                    </div>
-                    <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">תעריף לשעה (₪)</label>
-                      <select value={billingForm.rate_per_hour}
-                        onChange={e => setBillingForm({ ...billingForm, rate_per_hour: e.target.value })}
-                        className={inputClass}>
-                        <option value="">בחר תעריף</option>
-                        {rates.filter(r => r.is_active).map(r => (
-                          <option key={r.id} value={r.rate_per_hour}>{r.name} - ₪{r.rate_per_hour}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">הערות</label>
-                      <input type="text" value={billingForm.notes}
-                        onChange={e => setBillingForm({ ...billingForm, notes: e.target.value })}
-                        className={inputClass} />
-                    </div>
-                  </div>
-                  {billingForm.hours_flown && billingForm.rate_per_hour && (
-                    <div className="text-baron-blue-200 text-sm">
-                      סה&quot;כ: ₪{(parseFloat(billingForm.hours_flown) * parseFloat(billingForm.rate_per_hour)).toLocaleString()}
-                    </div>
-                  )}
-                  <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium">
-                    הוסף חיוב
-                  </button>
-                </form>
-              )}
-
-              {/* Billing records table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-baron-blue-700/50">
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">תאריך</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">שעות</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">תעריף</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">סכום</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">אמצעי תשלום</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {billingRecords.map(r => (
-                      <tr key={r.id} className="border-b border-baron-blue-700/30">
-                        <td className="p-3 text-baron-blue-300">{r.flight_date ? formatDate(r.flight_date) : '-'}</td>
-                        <td className="p-3 text-white">{r.hours_flown || '-'}</td>
-                        <td className="p-3 text-baron-blue-300">{r.rate_per_hour ? `₪${r.rate_per_hour}` : '-'}</td>
-                        <td className="p-3 text-white font-medium">{r.total_amount ? `₪${r.total_amount.toLocaleString()}` : '-'}</td>
-                        <td className="p-3 text-baron-blue-300">{r.payment_method}</td>
-                      </tr>
-                    ))}
-                    {billingRecords.length === 0 && (
-                      <tr><td colSpan={5} className="p-4 text-center text-baron-blue-400">אין חיובים</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Total billed */}
-              {billingRecords.length > 0 && (
-                <div className="text-left border-t border-baron-blue-700/50 pt-3">
-                  <span className="text-baron-blue-300 text-sm">סה&quot;כ חויב: </span>
-                  <span className="text-white font-bold">₪{totalBilled.toLocaleString()}</span>
-                </div>
-              )}
             </div>
           )}
         </div>
