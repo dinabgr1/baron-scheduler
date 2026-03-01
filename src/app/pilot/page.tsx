@@ -20,6 +20,8 @@ export default function PilotPortal() {
 
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [pilotStatus, setPilotStatus] = useState<'idle' | 'checking' | 'found' | 'not_found'>('idle')
+  const [allPilots, setAllPilots] = useState<Pilot[]>([])
+  const [suggestions, setSuggestions] = useState<Pilot[]>([])
 
   // Auto-detect pilot (same logic as BookingForm)
   useEffect(() => {
@@ -31,10 +33,15 @@ export default function PilotPortal() {
       try {
         const res = await fetch('/api/pilots')
         const pilots: Pilot[] = await res.json()
-        const found = pilots.find(p => p.name.trim().toLowerCase() === name.toLowerCase())
-        if (found) {
+        setAllPilots(pilots)
+        const exactMatch = pilots.find(p => p.name.trim().toLowerCase() === name.toLowerCase())
+        if (exactMatch) {
           setPilotStatus('found')
+          setSuggestions([])
         } else {
+          // Partial match suggestions
+          const partial = pilots.filter(p => p.name.toLowerCase().includes(name.toLowerCase()))
+          setSuggestions(partial)
           setPilotStatus('not_found')
         }
       } catch {
@@ -52,7 +59,7 @@ export default function PilotPortal() {
     try {
       const pilotsRes = await fetch('/api/pilots')
       const pilots: Pilot[] = await pilotsRes.json()
-      const found = pilots.find(p => p.name.trim().toLowerCase() === pilotName.trim().toLowerCase())
+      const found = pilots.find(p => p.name.trim().toLowerCase() === pilotName.trim().toLowerCase()) || pilots.find(p => p.name.toLowerCase().includes(pilotName.trim().toLowerCase()))
 
       if (!found) {
         setNotFound(true)
