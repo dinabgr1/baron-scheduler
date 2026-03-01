@@ -5,7 +5,7 @@ import Header from '@/components/Header'
 import WeeklyCalendar from '@/components/WeeklyCalendar'
 import { Booking, FlightLog, Pilot, Rate, HourPackage } from '@/lib/supabase'
 
-type AdminTab = 'הזמנות' | 'טייסים' | 'תעריפים' | 'בנק שעות'
+type AdminTab = 'הזמנות' | 'טייסים' | 'פיננסים'
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
@@ -177,8 +177,8 @@ export default function AdminPage() {
     if (!authed) return
     if (activeTab === 'הזמנות') loadPilots()
     if (activeTab === 'טייסים') { loadPilots(); loadHourPackages(); loadBookings() }
-    if (activeTab === 'תעריפים') loadRates()
-    if (activeTab === 'בנק שעות') loadHourPackages()
+    // rates loaded with פיננסים
+    if (activeTab === 'פיננסים') { loadHourPackages(); loadRates() }
   }, [activeTab, authed])
 
   async function updateBookingStatus(id: string, status: 'approved' | 'rejected') {
@@ -307,7 +307,7 @@ export default function AdminPage() {
     ? bookings
     : bookings.filter((b) => b.status === filter)
 
-  const tabs: AdminTab[] = ['הזמנות', 'טייסים', 'תעריפים', 'בנק שעות']
+  const tabs: AdminTab[] = ['הזמנות', 'טייסים', 'פיננסים']
 
   const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 
@@ -754,8 +754,8 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ====== תעריפים TAB ====== */}
-        {activeTab === 'תעריפים' && (
+        {/* ====== פיננסים TAB - Part 1: Rates ====== */}
+        {activeTab === 'פיננסים' && (
           <div className="space-y-4">
             {/* Add rate form */}
             <form onSubmit={addRate} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
@@ -824,95 +824,78 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ====== בנק שעות TAB ====== */}
-        {activeTab === 'בנק שעות' && (
-          <div className="space-y-4">
-            {/* Add package form */}
-            <form onSubmit={addPackage} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
-              <h3 className="text-gray-900 font-bold">הוספת חבילת שעות</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input type="text" required value={packageForm.pilot_name}
-                  onChange={e => setPackageForm({ ...packageForm, pilot_name: e.target.value })}
-                  placeholder="שם הטייס" className={inputClass} />
-                <input type="number" required step="0.1" value={packageForm.hours_purchased}
-                  onChange={e => setPackageForm({ ...packageForm, hours_purchased: e.target.value })}
-                  placeholder="שעות שנרכשו" className={inputClass} />
-                <input type="number" step="0.01" value={packageForm.price_paid}
-                  onChange={e => setPackageForm({ ...packageForm, price_paid: e.target.value })}
-                  placeholder="תשלום (₪)" className={inputClass} />
-                <input type="date" value={packageForm.purchase_date}
-                  onChange={e => setPackageForm({ ...packageForm, purchase_date: e.target.value })}
-                  className={inputClass} />
-              </div>
-              <input type="text" value={packageForm.notes}
-                onChange={e => setPackageForm({ ...packageForm, notes: e.target.value })}
-                placeholder="הערות" className={inputClass} />
-              <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-base font-bold">
-                הוסף חבילה
-              </button>
-            </form>
-
-            {/* Hour packages table */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">טייס</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">שעות שנרכשו</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">שעות שנוצלו</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">יתרה</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">תשלום</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">תאריך</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(() => {
-                    // Calculate total hours flown per pilot from flight logs
-                    const hoursFlownByPilot: Record<string, number> = {}
-                    bookings.forEach(b => {
-                      const log = flightLogs.find(l => l.booking_id === b.id)
-                      if (log) {
-                        const hrs = log.hobbs_end && log.hobbs_start
-                          ? log.hobbs_end - log.hobbs_start
-                          : (log.flight_time_hours || 0) + (log.flight_time_minutes || 0) / 60
-                        hoursFlownByPilot[b.pilot_name] = (hoursFlownByPilot[b.pilot_name] || 0) + hrs
+        {/* ====== פיננסים TAB - Part 2: Per-pilot financial summary ====== */}
+        {activeTab === 'פיננסים' && (() => {
+          // Build per-pilot financial summary
+          const pilotNamesSet = new Set([...pilots.map(p => p.name), ...hourPackages.map(p => p.pilot_name)])
+          const pilotNames = Array.from(pilotNamesSet)
+          const defaultRate = rates[0]?.rate_per_hour || 0
+          return (
+            <div className="space-y-3">
+              <h3 className="text-gray-700 font-semibold text-sm">📊 סיכום כלכלי לפי טייס</h3>
+              {pilotNames.map(name => {
+                const pilotBookings = bookings.filter(b => b.pilot_name === name)
+                const pilotLogs = flightLogs.filter(l => pilotBookings.some(b => b.id === l.booking_id))
+                const hoursFlown = pilotLogs.reduce((sum, log) => {
+                  const hrs = log.hobbs_end && log.hobbs_start
+                    ? log.hobbs_end - log.hobbs_start
+                    : (log.flight_time_hours || 0) + (log.flight_time_minutes || 0) / 60
+                  return sum + hrs
+                }, 0)
+                const pkgs = hourPackages.filter(p => p.pilot_name === name)
+                const totalPurchased = pkgs.reduce((s, p) => s + p.hours_purchased, 0)
+                const totalPaid = pkgs.reduce((s, p) => s + (p.price_paid || 0), 0)
+                const hoursRemaining = Math.round((totalPurchased - hoursFlown) * 10) / 10
+                const costByRate = Math.round(hoursFlown * defaultRate)
+                const debt = Math.max(0, costByRate - totalPaid)
+                const unreported = pilotBookings.filter(b => {
+                  const today = new Date().toISOString().split('T')[0]
+                  return b.date < today && !flightLogs.some(l => l.booking_id === b.id)
+                }).length
+                return (
+                  <div key={name} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-bold text-gray-900 text-base">{name}</h4>
+                      {debt > 0
+                        ? <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-semibold">חוב: ₪{debt.toLocaleString()}</span>
+                        : <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">מעודכן ✓</span>
                       }
-                    })
-                    // Group packages by pilot for cumulative balance
-                    const purchasedByPilot: Record<string, number> = {}
-                    hourPackages.forEach(pkg => {
-                      purchasedByPilot[pkg.pilot_name] = (purchasedByPilot[pkg.pilot_name] || 0) + pkg.hours_purchased
-                    })
-                    return hourPackages.map(pkg => {
-                      const totalFlown = Math.round((hoursFlownByPilot[pkg.pilot_name] || 0) * 10) / 10
-                      const totalPurchased = purchasedByPilot[pkg.pilot_name] || pkg.hours_purchased
-                      const balance = Math.round((totalPurchased - totalFlown) * 10) / 10
-                      const isIndividual = pkg.notes?.startsWith('[individual]')
-                      return (
-                        <tr key={pkg.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
-                          <td className="py-3 px-4 text-gray-900">
-                            <div>{pkg.pilot_name}</div>
-                            {isIndividual && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">בודדות</span>}
-                          </td>
-                          <td className="py-3 px-4 text-gray-900">{pkg.hours_purchased}</td>
-                          <td className="py-3 px-4 text-gray-900">{totalFlown}</td>
-                          <td className={`py-3 px-4 font-bold ${balance > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {balance}
-                          </td>
-                          <td className="py-3 px-4 text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid}` : '-'}</td>
-                          <td className="py-3 px-4 text-gray-500">{pkg.purchase_date}</td>
-                        </tr>
-                      )
-                    })
-                  })()}
-                  {hourPackages.length === 0 && (
-                    <tr><td colSpan={6} className="p-4 text-center text-gray-500">אין חבילות שעות</td></tr>
-                  )}
-                </tbody>
-              </table>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                      <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="font-bold text-gray-900">{Math.round(hoursFlown * 10) / 10}h</div>
+                        <div className="text-xs text-gray-500">שעות שנטסו</div>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="font-bold text-gray-900">{totalPurchased}h</div>
+                        <div className="text-xs text-gray-500">שעות שנרכשו</div>
+                      </div>
+                      <div className={`rounded-lg p-2 ${hoursRemaining >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                        <div className={`font-bold ${hoursRemaining >= 0 ? 'text-green-700' : 'text-red-700'}`}>{hoursRemaining}h</div>
+                        <div className="text-xs text-gray-500">יתרה</div>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="font-bold text-gray-900">₪{totalPaid.toLocaleString()}</div>
+                        <div className="text-xs text-gray-500">סה"כ שולם</div>
+                      </div>
+                    </div>
+                    {unreported > 0 && (
+                      <div className="mt-2 text-xs text-orange-700 bg-orange-50 rounded px-2 py-1">
+                        ⚠️ {unreported} טיסות ללא דיווח — יתרה עלולה להיות שגויה
+                      </div>
+                    )}
+                    {defaultRate > 0 && (
+                      <div className="mt-2 text-xs text-gray-500">
+                        עלות מחושבת: {Math.round(hoursFlown * 10) / 10}h × ₪{defaultRate.toLocaleString()} = ₪{costByRate.toLocaleString()} | שולם: ₪{totalPaid.toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+              {pilotNames.length === 0 && <p className="text-gray-500 text-center py-4">אין טייסים</p>}
             </div>
-          </div>
-        )}
+          )
+        })()}
       </main>
     </div>
   )
