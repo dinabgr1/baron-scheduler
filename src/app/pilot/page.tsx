@@ -20,6 +20,11 @@ export default function PilotPortal() {
 
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [pilotStatus, setPilotStatus] = useState<'idle' | 'checking' | 'found' | 'not_found'>('idle')
+  const [licenseInput, setLicenseInput] = useState('')
+  const [licenseError, setLicenseError] = useState(false)
+  const [verified, setVerified] = useState(false)
+  const [foundPilotId, setFoundPilotId] = useState<string | null>(null)
+  const [foundPilotLicense, setFoundPilotLicense] = useState<string | null>(null)
   const [allPilots, setAllPilots] = useState<Pilot[]>([])
   const [suggestions, setSuggestions] = useState<Pilot[]>([])
 
@@ -37,6 +42,11 @@ export default function PilotPortal() {
         const exactMatch = pilots.find(p => p.name.trim().toLowerCase() === name.toLowerCase())
         if (exactMatch) {
           setPilotStatus('found')
+          setFoundPilotId(exactMatch.id)
+          setFoundPilotLicense(exactMatch.license_number || null)
+          setVerified(false)
+          setLicenseInput('')
+          setLicenseError(false)
           setSuggestions([])
         } else {
           // Partial match suggestions
@@ -50,47 +60,42 @@ export default function PilotPortal() {
     }, 600)
   }, [pilotName])
 
-  async function search() {
-    if (!pilotName.trim()) return
+  async function verifyLicense() {
+    if (!foundPilotId || !licenseInput.trim()) return
+    if (foundPilotLicense && licenseInput.trim().toLowerCase() === foundPilotLicense.toLowerCase()) {
+      setLicenseError(false)
+      setVerified(true)
+      loadPilotData(foundPilotId)
+    } else {
+      setLicenseError(true)
+    }
+  }
+
+  async function loadPilotData(pilotId: string) {
     setSearching(true)
     setNotFound(false)
-    setPilot(null)
-
     try {
-      const pilotsRes = await fetch('/api/pilots')
-      const pilots: Pilot[] = await pilotsRes.json()
-      const found = pilots.find(p => p.name.trim().toLowerCase() === pilotName.trim().toLowerCase()) || pilots.find(p => p.name.toLowerCase().includes(pilotName.trim().toLowerCase()))
-
-      if (!found) {
-        setNotFound(true)
-        setSearching(false)
-        return
-      }
-
+      const pilotsRes = await fetch(`/api/pilots/${pilotId}`)
+      const found = await pilotsRes.json()
+      if (!found || found.error) { setNotFound(true); return }
       setPilot(found)
-
-      // Load all data
       const [bookingsRes, logsRes, packagesRes] = await Promise.all([
-        fetch(`/api/pilots/${found.id}/bookings`),
-        fetch(`/api/pilots/${found.id}/flight-logs`),
-        fetch(`/api/pilots/${found.id}/packages`),
+        fetch(`/api/pilots/${pilotId}/bookings`),
+        fetch(`/api/pilots/${pilotId}/flight-logs`),
+        fetch(`/api/pilots/${pilotId}/packages`),
       ])
-
       const [bookingsData, logsData, packagesData] = await Promise.all([
-        bookingsRes.json(),
-        logsRes.json(),
-        packagesRes.json(),
+        bookingsRes.json(), logsRes.json(), packagesRes.json(),
       ])
-
       if (Array.isArray(bookingsData)) setBookings(bookingsData.sort((a: Booking, b: Booking) => b.date.localeCompare(a.date)))
       if (Array.isArray(logsData)) setFlightLogs(logsData)
       if (Array.isArray(packagesData)) setPackages(packagesData)
-    } catch {
-      setNotFound(true)
-    } finally {
-      setSearching(false)
-    }
+    } catch { setNotFound(true) }
+    finally { setSearching(false) }
   }
+
+  // Legacy search - no longer used directly, kept for form submit
+  async function search() { if (foundPilotId && verified) loadPilotData(foundPilotId) }
 
   const today = new Date().toISOString().split('T')[0]
   const futureBookings = bookings.filter(b => b.date >= today && (b.status === 'pending' || b.status === 'approved'))
