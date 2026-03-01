@@ -48,7 +48,7 @@ export default function AdminPage() {
 
   // Hour packages state
   const [hourPackages, setHourPackages] = useState<HourPackage[]>([])
-  const [packageForm, setPackageForm] = useState({ pilot_name: '', hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '' })
+  const [packageForm, setPackageForm] = useState({ pilot_name: '', hours_purchased: '', hours_gift: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '' })
 
   // Stats
   const [stats, setStats] = useState({ totalBookings: 0, pendingBookings: 0, flightHours: 0, lastHobbs: 0 })
@@ -288,18 +288,22 @@ export default function AdminPage() {
   // Hour package CRUD
   async function addPackage(e: React.FormEvent) {
     e.preventDefault()
+    const giftHours = parseFloat(packageForm.hours_gift || '0') || 0
+    const totalHours = parseFloat(packageForm.hours_purchased || '0') + giftHours
+    const giftNote = giftHours > 0 ? `[gift:${giftHours}] ` : ''
+    const finalNotes = (giftNote + (packageForm.notes || '')).trim()
     await fetch('/api/hour-packages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         pilot_name: packageForm.pilot_name,
-        hours_purchased: parseFloat(packageForm.hours_purchased),
+        hours_purchased: totalHours,
         price_paid: packageForm.price_paid ? parseFloat(packageForm.price_paid) : null,
         purchase_date: packageForm.purchase_date,
-        notes: packageForm.notes || null,
+        notes: finalNotes || null,
       }),
     })
-    setPackageForm({ pilot_name: '', hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '' })
+    setPackageForm({ pilot_name: '', hours_purchased: '', hours_gift: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '' })
     loadHourPackages()
   }
 
@@ -873,16 +877,25 @@ export default function AdminPage() {
                         onChange={e => setPackageForm({ ...packageForm, price_paid: e.target.value })}
                         placeholder="מחושב אוטומטית" className={inputClass + ' bg-blue-50'} />
                     </div>
-                    <div className="sm:col-span-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">שעות מתנה 🎁 <span className="text-gray-400 font-normal">(אופציונלי)</span></label>
+                      <input type="number" step="0.1" min="0" value={packageForm.hours_gift}
+                        onChange={e => setPackageForm({ ...packageForm, hours_gift: e.target.value })}
+                        placeholder="0" className={inputClass} />
+                    </div>
+                    <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">תאריך רכישה</label>
                       <input type="date" value={packageForm.purchase_date}
                         onChange={e => setPackageForm({ ...packageForm, purchase_date: e.target.value })}
                         className={inputClass} />
                     </div>
                   </div>
-                  {packageForm.hours_purchased && packageForm.price_paid && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800">
-                      💰 {packageForm.hours_purchased} שעות × ₪{rates.find(r => true)?.rate_per_hour?.toLocaleString() || '?'} = <strong>₪{packageForm.price_paid}</strong>
+                  {packageForm.hours_purchased && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800 space-y-0.5">
+                      {packageForm.price_paid && <div>💰 {packageForm.hours_purchased} שעות × ₪{rates[0]?.rate_per_hour?.toLocaleString() || '?'} = <strong>₪{packageForm.price_paid}</strong></div>}
+                      {parseFloat(packageForm.hours_gift || '0') > 0 && (
+                        <div className="text-green-700">🎁 + {packageForm.hours_gift} שעות מתנה | סה"כ: <strong>{(parseFloat(packageForm.hours_purchased||'0') + parseFloat(packageForm.hours_gift||'0'))} שעות</strong></div>
+                      )}
                     </div>
                   )}
                   <button type="submit" className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold">
