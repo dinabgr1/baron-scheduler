@@ -832,19 +832,59 @@ export default function AdminPage() {
                 </div>
                 <form onSubmit={addPackage} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input type="text" required value={packageForm.pilot_name}
-                      onChange={e => setPackageForm({ ...packageForm, pilot_name: e.target.value })}
-                      placeholder="שם הטייס" className={inputClass} />
-                    <input type="number" required step="0.1" value={packageForm.hours_purchased}
-                      onChange={e => setPackageForm({ ...packageForm, hours_purchased: e.target.value })}
-                      placeholder="שעות שנרכשו" className={inputClass} />
-                    <input type="number" step="0.01" value={packageForm.price_paid}
-                      onChange={e => setPackageForm({ ...packageForm, price_paid: e.target.value })}
-                      placeholder="תשלום (₪)" className={inputClass} />
-                    <input type="date" value={packageForm.purchase_date}
-                      onChange={e => setPackageForm({ ...packageForm, purchase_date: e.target.value })}
-                      className={inputClass} />
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">שם הטייס</label>
+                      <select value={packageForm.pilot_name}
+                        onChange={e => setPackageForm({ ...packageForm, pilot_name: e.target.value })}
+                        className={inputClass} required>
+                        <option value="">בחר טייס...</option>
+                        {pilots.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">תעריף</label>
+                      <select className={inputClass}
+                        onChange={e => {
+                          const rate = rates.find(r => String(r.id) === e.target.value)
+                          if (rate && packageForm.hours_purchased) {
+                            setPackageForm(f => ({ ...f, price_paid: String(Math.round(parseFloat(f.hours_purchased) * rate.rate_per_hour)) }))
+                          }
+                        }}>
+                        <option value="">בחר תעריף...</option>
+                        {rates.map(r => <option key={r.id} value={r.id}>{r.name} — ₪{r.rate_per_hour?.toLocaleString()}/שעה</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">מספר שעות</label>
+                      <input type="number" required step="0.1" value={packageForm.hours_purchased}
+                        onChange={e => {
+                          const hrs = e.target.value
+                          setPackageForm(f => {
+                            const currentRate = rates[0]?.rate_per_hour
+                            const auto = currentRate && hrs ? String(Math.round(parseFloat(hrs) * currentRate)) : f.price_paid
+                            return { ...f, hours_purchased: hrs, price_paid: auto }
+                          })
+                        }}
+                        placeholder="0" className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">סכום לתשלום (₪)</label>
+                      <input type="number" step="0.01" value={packageForm.price_paid}
+                        onChange={e => setPackageForm({ ...packageForm, price_paid: e.target.value })}
+                        placeholder="מחושב אוטומטית" className={inputClass + ' bg-blue-50'} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">תאריך רכישה</label>
+                      <input type="date" value={packageForm.purchase_date}
+                        onChange={e => setPackageForm({ ...packageForm, purchase_date: e.target.value })}
+                        className={inputClass} />
+                    </div>
                   </div>
+                  {packageForm.hours_purchased && packageForm.price_paid && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800">
+                      💰 {packageForm.hours_purchased} שעות × ₪{rates.find(r => true)?.rate_per_hour?.toLocaleString() || '?'} = <strong>₪{packageForm.price_paid}</strong>
+                    </div>
+                  )}
                   <button type="submit" className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold">
                     + הוסף רכישת שעות
                   </button>
