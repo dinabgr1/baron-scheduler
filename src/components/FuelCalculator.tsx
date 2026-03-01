@@ -58,7 +58,7 @@ export default function FuelCalculator() {
               onClick={() => { setCurrentMode('quarters'); setCurrentGallons('') }}
               className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
                 currentMode === 'quarters'
-                  ? 'bg-[#1e3a5f] text-white shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -69,7 +69,7 @@ export default function FuelCalculator() {
               onClick={() => { setCurrentMode('gallons'); setCurrentQuarter('') }}
               className={`flex-1 py-2 rounded-xl text-sm font-bold transition-colors ${
                 currentMode === 'gallons'
-                  ? 'bg-[#1e3a5f] text-white shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >

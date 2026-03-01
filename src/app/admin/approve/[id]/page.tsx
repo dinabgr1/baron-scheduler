@@ -51,7 +51,7 @@ export default function ApprovePage({ params }: { params: { id: string } }) {
     return (
       <div className="min-h-screen">
         <Header />
-        <main className="max-w-sm mx-auto px-4 py-20 text-center text-baron-blue-300">
+        <main className="max-w-sm mx-auto px-4 py-20 text-center text-gray-500">
           טוען...
         </main>
       </div>
@@ -64,7 +64,7 @@ export default function ApprovePage({ params }: { params: { id: string } }) {
         <Header />
         <main className="max-w-sm mx-auto px-4 py-20 text-center">
           <div className="text-5xl mb-4">❓</div>
-          <p className="text-baron-blue-300">הזמנה לא נמצאה</p>
+          <p className="text-gray-500">הזמנה לא נמצאה</p>
         </main>
       </div>
     )
@@ -76,9 +76,9 @@ export default function ApprovePage({ params }: { params: { id: string } }) {
         <Header />
         <main className="max-w-sm mx-auto px-4 py-12 space-y-6">
           {/* Show booking summary even before login */}
-          <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-6 text-center">
+          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
             <h3 className="text-white font-bold text-lg mb-3">הזמנה לאישור</h3>
-            <div className="text-baron-blue-200 space-y-1">
+            <div className="text-gray-700 space-y-1">
               <div className="text-xl font-bold text-white">{booking.pilot_name}</div>
               <div>📅 {booking.date}</div>
               <div>🕐 {booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}</div>
@@ -86,7 +86,7 @@ export default function ApprovePage({ params }: { params: { id: string } }) {
             </div>
           </div>
 
-          <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h3 className="text-white font-bold text-center mb-4">🔐 הכנס סיסמת מנהל</h3>
             <form onSubmit={login} className="space-y-4">
               <input
@@ -94,12 +94,12 @@ export default function ApprovePage({ params }: { params: { id: string } }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="סיסמה"
-                className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 focus:outline-none focus:border-baron-blue-400 text-lg text-center"
+                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 text-lg text-center"
                 autoFocus
               />
               <button
                 type="submit"
-                className="w-full py-4 rounded-xl bg-baron-blue-500 hover:bg-baron-blue-400 text-white font-bold text-lg transition-colors"
+                className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg transition-colors"
               >
                 כניסה
               </button>
@@ -117,17 +117,17 @@ export default function ApprovePage({ params }: { params: { id: string } }) {
     <div className="min-h-screen">
       <Header />
       <main className="max-w-sm mx-auto px-4 py-12">
-        <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-6 space-y-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
           <h3 className="text-white font-bold text-xl text-center">אישור הזמנה</h3>
 
           <div className="text-center space-y-2">
             <div className="text-2xl font-bold text-white">{booking.pilot_name}</div>
-            <div className="text-baron-blue-200">📅 {booking.date}</div>
-            <div className="text-baron-blue-200">
+            <div className="text-gray-700">📅 {booking.date}</div>
+            <div className="text-gray-700">
               🕐 {booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}
             </div>
             {booking.with_instructor && (
-              <div className="text-baron-blue-200">👨‍✈️ מדריך: {booking.instructor_name}</div>
+              <div className="text-gray-700">👨‍✈️ מדריך: {booking.instructor_name}</div>
             )}
 
             <div className={`inline-block mt-2 px-3 py-1 rounded text-sm font-medium ${
@@ -163,7 +163,7 @@ export default function ApprovePage({ params }: { params: { id: string } }) {
               </button>
             </div>
           ) : (
-            <p className="text-center text-baron-blue-300">הזמנה זו כבר טופלה.</p>
+            <p className="text-center text-gray-500">הזמנה זו כבר טופלה.</p>
           )}
         </div>
       </main>

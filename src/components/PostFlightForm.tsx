@@ -88,7 +88,7 @@ export default function PostFlightForm() {
   }, [bookingIdParam, editMode])
 
   if (initialLoading) {
-    return <div className="p-8 text-center text-baron-blue-300">טוען הזמנה...</div>
+    return <div className="p-8 text-center text-gray-500">טוען הזמנה...</div>
   }
 
   async function searchBookings() {
@@ -182,20 +182,20 @@ export default function PostFlightForm() {
     return (
       <div className="space-y-4">
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">שם הטייס</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">שם הטייס</label>
           <input
             type="text"
             value={pilotName}
             onChange={(e) => setPilotName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && searchBookings()}
             placeholder="הכנס את שמך"
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 focus:outline-none focus:border-baron-blue-400 text-lg"
+            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           />
         </div>
         <button
           onClick={searchBookings}
           disabled={loading || !pilotName.trim()}
-          className="w-full py-4 rounded-xl bg-baron-blue-500 hover:bg-baron-blue-400 disabled:bg-baron-blue-700 text-white font-bold text-lg transition-colors"
+          className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-gray-300 text-white font-bold text-lg transition-colors"
         >
           {loading ? 'מחפש...' : 'חפש הזמנות 🔍'}
         </button>
@@ -214,17 +214,17 @@ export default function PostFlightForm() {
       <div className="space-y-4">
         <button
           onClick={() => setStep('name')}
-          className="text-baron-blue-300 hover:text-white text-sm transition-colors"
+          className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
         >
           → חזור
         </button>
-        <h3 className="text-white font-bold text-lg">בחר טיסה: {pilotName}</h3>
+        <h3 className="text-gray-900 font-bold text-lg">בחר טיסה: {pilotName}</h3>
         <div className="space-y-2">
           {bookings.map((b) => (
             <button
               key={b.id}
               onClick={() => selectBooking(b)}
-              className="w-full p-4 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 hover:border-baron-blue-400 text-right transition-colors"
+              className="w-full p-4 rounded-lg bg-gray-50 border border-gray-300 hover:border-blue-500 text-right transition-colors"
             >
               <div className="flex justify-between items-center">
                 <span className={`text-xs px-2 py-1 rounded ${
@@ -235,8 +235,8 @@ export default function PostFlightForm() {
                   {b.status === 'approved' ? 'מאושר' : b.status === 'pending' ? 'ממתין' : 'נדחה'}
                 </span>
                 <div>
-                  <div className="text-white font-medium">{b.date}</div>
-                  <div className="text-baron-blue-300 text-sm">
+                  <div className="text-gray-900 font-medium">{b.date}</div>
+                  <div className="text-gray-500 text-sm">
                     {b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}
                     {b.with_instructor && ` | מדריך: ${b.instructor_name}`}
                   </div>
@@ -254,7 +254,7 @@ export default function PostFlightForm() {
     return (
       <div className="text-center space-y-4 py-8">
         <div className="text-5xl">✅</div>
-        <h3 className="text-white font-bold text-xl">
+        <h3 className="text-gray-900 font-bold text-xl">
           {isEditing ? 'הדיווח עודכן בהצלחה!' : 'הנתונים נשמרו בהצלחה!'}
         </h3>
         <button
@@ -264,7 +264,7 @@ export default function PostFlightForm() {
             setSelectedBooking(null)
             setExistingLogId(null)
           }}
-          className="px-6 py-3 rounded-xl bg-baron-blue-500 hover:bg-baron-blue-400 text-white font-bold transition-colors"
+          className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-colors"
         >
           דיווח נוסף
         </button>
@@ -279,7 +279,7 @@ export default function PostFlightForm() {
         <button
           type="button"
           onClick={() => setStep('select')}
-          className="text-baron-blue-300 hover:text-white text-sm transition-colors"
+          className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
         >
           → חזור
         </button>
@@ -291,9 +291,9 @@ export default function PostFlightForm() {
         </div>
       )}
 
-      <div className="bg-baron-blue-800/30 rounded-lg p-3 border border-baron-blue-700/50">
-        <div className="text-white font-medium">{selectedBooking?.date}</div>
-        <div className="text-baron-blue-300 text-sm">
+      <div className="bg-gray-100/30 rounded-lg p-3 border border-gray-200">
+        <div className="text-gray-900 font-medium">{selectedBooking?.date}</div>
+        <div className="text-gray-500 text-sm">
           {selectedBooking?.start_time.slice(0, 5)} - {selectedBooking?.end_time.slice(0, 5)}
         </div>
       </div>
@@ -301,25 +301,25 @@ export default function PostFlightForm() {
       {/* Hobbs */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">Hobbs התחלה</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">Hobbs התחלה</label>
           <input
             type="number"
             step="0.1"
             required
             value={form.hobbs_start}
             onChange={(e) => setForm({ ...form, hobbs_start: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 text-lg"
+            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           />
         </div>
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">Hobbs סיום</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">Hobbs סיום</label>
           <input
             type="number"
             step="0.1"
             required
             value={form.hobbs_end}
             onChange={(e) => setForm({ ...form, hobbs_end: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 text-lg"
+            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           />
         </div>
       </div>
@@ -327,18 +327,18 @@ export default function PostFlightForm() {
       {/* Flight time */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">זמן טיסה (שעות)</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">זמן טיסה (שעות)</label>
           <input
             type="number"
             min="0"
             required
             value={form.flight_time_hours}
             onChange={(e) => setForm({ ...form, flight_time_hours: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 text-lg"
+            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           />
         </div>
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">זמן טיסה (דקות)</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">זמן טיסה (דקות)</label>
           <input
             type="number"
             min="0"
@@ -346,7 +346,7 @@ export default function PostFlightForm() {
             required
             value={form.flight_time_minutes}
             onChange={(e) => setForm({ ...form, flight_time_minutes: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 text-lg"
+            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           />
         </div>
       </div>
@@ -354,22 +354,22 @@ export default function PostFlightForm() {
       {/* Fuel */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">דלק שהוסף (ליטר)</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">דלק שהוסף (ליטר)</label>
           <input
             type="number"
             step="0.1"
             min="0"
             value={form.fuel_added_liters}
             onChange={(e) => setForm({ ...form, fuel_added_liters: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 text-lg"
+            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           />
         </div>
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">מפלס דלק נוכחי</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">מפלס דלק נוכחי</label>
           <select
             value={form.fuel_level_quarters}
             onChange={(e) => setForm({ ...form, fuel_level_quarters: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 text-lg"
+            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           >
             <option value="1">1/4</option>
             <option value="2">2/4</option>
@@ -382,7 +382,7 @@ export default function PostFlightForm() {
       {/* Oil */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">שמן מנוע 1 (quarts)</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">שמן מנוע 1 (quarts)</label>
           <input
             type="number"
             step="0.25"
@@ -390,11 +390,11 @@ export default function PostFlightForm() {
             required
             value={form.oil_engine1}
             onChange={(e) => setForm({ ...form, oil_engine1: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 text-lg"
+            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           />
         </div>
         <div>
-          <label className="block text-baron-blue-200 text-sm font-medium mb-1">שמן מנוע 2 (quarts)</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">שמן מנוע 2 (quarts)</label>
           <input
             type="number"
             step="0.25"
@@ -402,20 +402,20 @@ export default function PostFlightForm() {
             required
             value={form.oil_engine2}
             onChange={(e) => setForm({ ...form, oil_engine2: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white focus:outline-none focus:border-baron-blue-400 text-lg"
+            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           />
         </div>
       </div>
 
       {/* Notes */}
       <div>
-        <label className="block text-baron-blue-200 text-sm font-medium mb-1">הערות</label>
+        <label className="block text-gray-700 text-sm font-medium mb-1">הערות</label>
         <textarea
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           rows={3}
           placeholder="הערות אופציונליות..."
-          className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 focus:outline-none focus:border-baron-blue-400 text-lg resize-none"
+          className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 text-lg resize-none"
         />
       </div>
 
@@ -423,7 +423,7 @@ export default function PostFlightForm() {
       <button
         type="submit"
         disabled={submitting}
-        className={`w-full py-4 rounded-xl text-white font-bold text-lg transition-colors shadow-lg disabled:bg-baron-blue-700 ${
+        className={`w-full py-4 rounded-xl text-white font-bold text-lg transition-colors shadow-lg disabled:bg-gray-300 ${
           isEditing
             ? 'bg-amber-600 hover:bg-amber-500'
             : 'bg-green-600 hover:bg-green-500'
