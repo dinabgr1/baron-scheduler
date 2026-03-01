@@ -17,16 +17,14 @@ export default function AvailabilityPage() {
           <p className="text-slate-500 text-sm">Beechcraft Baron 58 | <span className="font-mono font-bold text-blue-600">4X-DZJ</span></p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <WeeklyCalendar />
-        </div>
-
         {!showBooking ? (
-          <button
-            onClick={() => setShowBooking(true)}
-            className="w-full py-4 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-lg transition-colors shadow-sm flex items-center justify-center gap-2">
-            ✈️ הזמן טיסה
-          </button>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowBooking(true)}
+              className="px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-semibold text-sm transition-colors shadow-sm flex items-center gap-1.5">
+              ✈️ הזמן טיסה
+            </button>
+          </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
             <div className="flex items-center justify-between">
@@ -39,6 +37,10 @@ export default function AvailabilityPage() {
             <BookingForm onSuccess={() => setShowBooking(false)} />
           </div>
         )}
+
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <WeeklyCalendar />
+        </div>
       </main>
     </div>
   )
