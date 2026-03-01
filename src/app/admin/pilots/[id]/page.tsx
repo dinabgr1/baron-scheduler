@@ -34,7 +34,7 @@ export default function PilotDetailPage() {
 
   // Add package form
   const [showPackageForm, setShowPackageForm] = useState(false)
-  const [packageForm, setPackageForm] = useState({ hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '' })
+  const [packageForm, setPackageForm] = useState({ hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '', purchase_type: 'package' as 'package' | 'individual' })
 
   // Add billing form
   const [showBillingForm, setShowBillingForm] = useState(false)
@@ -161,12 +161,15 @@ export default function PilotDetailPage() {
 
   async function addPackage(e: React.FormEvent) {
     e.preventDefault()
+    const notesWithType = packageForm.purchase_type === 'individual'
+      ? `[individual] ${packageForm.notes}`.trim()
+      : packageForm.notes
     await fetch(`/api/pilots/${pilotId}/packages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(packageForm),
+      body: JSON.stringify({ ...packageForm, notes: notesWithType }),
     })
-    setPackageForm({ hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '' })
+    setPackageForm({ hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '', purchase_type: 'package' })
     setShowPackageForm(false)
     loadData()
   }
@@ -391,26 +394,40 @@ export default function PilotDetailPage() {
           {billingTab === 'שעות' && (
             <div className="space-y-4">
               {/* Balance display */}
-              <div className={`text-center p-4 rounded-xl ${hoursBalance > 0 ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
-                <div className={`text-4xl font-bold ${hoursBalance > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {Math.round(hoursBalance * 10) / 10}
+              <div className={`text-center p-4 rounded-xl ${remainingHours > 0 ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
+                <div className={`text-4xl font-bold ${remainingHours > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {Math.round(remainingHours * 10) / 10}
                 </div>
-                <div className="text-baron-blue-300 text-sm">שעות נותרו מתוך {totalPurchased} שנרכשו</div>
+                <div className="text-baron-blue-300 text-sm">שעות נותרו מתוך {Math.round(totalPurchased * 10) / 10} שנרכשו</div>
+                <div className="text-baron-blue-400 text-xs mt-1">{Math.round(totalFlightHours * 10) / 10} שעות נטסו בפועל</div>
               </div>
 
-              {/* Add package button + form */}
-              <button onClick={() => setShowPackageForm(!showPackageForm)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  showPackageForm ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-green-600 hover:bg-green-500 text-white'
-                }`}>
-                {showPackageForm ? '✕ סגור' : '+ הוסף חבילת שעות'}
-              </button>
+              {/* Two add buttons */}
+              <div className="flex gap-2">
+                <button onClick={() => { setShowPackageForm(showPackageForm && packageForm.purchase_type === 'package' ? false : true); setPackageForm(f => ({ ...f, purchase_type: 'package' })) }}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showPackageForm && packageForm.purchase_type === 'package' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-baron-blue-600 hover:bg-baron-blue-500 text-white'
+                  }`}>
+                  {showPackageForm && packageForm.purchase_type === 'package' ? '✕ סגור' : '+ בנק שעות'}
+                </button>
+                <button onClick={() => { setShowPackageForm(showPackageForm && packageForm.purchase_type === 'individual' ? false : true); setPackageForm(f => ({ ...f, purchase_type: 'individual' })) }}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showPackageForm && packageForm.purchase_type === 'individual' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-baron-blue-600 hover:bg-baron-blue-500 text-white'
+                  }`}>
+                  {showPackageForm && packageForm.purchase_type === 'individual' ? '✕ סגור' : '+ שעות בודדות'}
+                </button>
+              </div>
 
               {showPackageForm && (
                 <form onSubmit={addPackage} className="bg-baron-blue-800/30 rounded-lg p-4 space-y-3">
+                  <div className="text-baron-blue-200 text-sm font-medium mb-2">
+                    {packageForm.purchase_type === 'package' ? '📦 הוספת בנק שעות' : '🕐 הוספת שעות בודדות'}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">שעות שנרכשו</label>
+                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">
+                        {packageForm.purchase_type === 'package' ? 'שעות בחבילה' : 'מספר שעות'}
+                      </label>
                       <input type="number" required step="0.1" value={packageForm.hours_purchased}
                         onChange={e => setPackageForm({ ...packageForm, hours_purchased: e.target.value })}
                         className={inputClass} />
@@ -435,38 +452,50 @@ export default function PilotDetailPage() {
                     </div>
                   </div>
                   <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium">
-                    הוסף חבילה
+                    הוסף
                   </button>
                 </form>
               )}
 
-              {/* Packages table */}
+              {/* Unified packages table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-baron-blue-700/50">
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">תאריך רכישה</th>
+                      <th className="text-baron-blue-200 text-right p-3 font-medium">סוג</th>
+                      <th className="text-baron-blue-200 text-right p-3 font-medium">תאריך</th>
                       <th className="text-baron-blue-200 text-right p-3 font-medium">שעות שנרכשו</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">שעות שנוצלו</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">יתרה</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">מחיר ששולם</th>
+                      <th className="text-baron-blue-200 text-right p-3 font-medium">מחיר</th>
+                      <th className="text-baron-blue-200 text-right p-3 font-medium">הערות</th>
                     </tr>
                   </thead>
                   <tbody>
                     {packages.map(pkg => {
-                      const bal = pkg.hours_purchased - pkg.hours_used
+                      const isIndividual = pkg.notes?.startsWith('[individual]')
+                      const displayNotes = isIndividual ? pkg.notes?.replace('[individual]', '').trim() : pkg.notes
                       return (
                         <tr key={pkg.id} className="border-b border-baron-blue-700/30">
+                          <td className="p-3">
+                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${isIndividual ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'}`}>
+                              {isIndividual ? '🕐 בודדות' : '📦 בנק'}
+                            </span>
+                          </td>
                           <td className="p-3 text-baron-blue-300">{formatDate(pkg.purchase_date)}</td>
-                          <td className="p-3 text-white">{pkg.hours_purchased}</td>
-                          <td className="p-3 text-white">{pkg.hours_used}</td>
-                          <td className={`p-3 font-bold ${bal > 0 ? 'text-green-400' : 'text-red-400'}`}>{bal}</td>
+                          <td className="p-3 text-white font-bold">{pkg.hours_purchased}</td>
                           <td className="p-3 text-baron-blue-300">{pkg.price_paid ? `₪${pkg.price_paid.toLocaleString()}` : '-'}</td>
+                          <td className="p-3 text-baron-blue-400 text-xs">{displayNotes || '-'}</td>
                         </tr>
                       )
                     })}
                     {packages.length === 0 && (
-                      <tr><td colSpan={5} className="p-4 text-center text-baron-blue-400">אין חבילות שעות</td></tr>
+                      <tr><td colSpan={5} className="p-4 text-center text-baron-blue-400">אין רכישות שעות</td></tr>
+                    )}
+                    {packages.length > 0 && (
+                      <tr className="border-t-2 border-baron-blue-600">
+                        <td colSpan={2} className="p-3 text-baron-blue-200 font-bold">סה&quot;כ</td>
+                        <td className="p-3 text-white font-bold">{Math.round(totalPurchased * 10) / 10} שעות</td>
+                        <td colSpan={2}></td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
