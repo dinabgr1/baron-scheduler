@@ -124,9 +124,18 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
 
       <div>
         <label className="block text-slate-600 text-sm font-medium mb-1.5">טלפון</label>
-        <input type="tel" required value={form.phone}
-          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          placeholder="050-0000000" className={inputClass} />
+        {pilotStatus === 'found' && form.phone ? (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-slate-700">
+            <span className="text-green-600">📱</span>
+            <span className="flex-1">{form.phone}</span>
+            <button type="button" onClick={() => setPilotStatus('idle')}
+              className="text-xs text-gray-400 hover:text-gray-600 underline">שנה</button>
+          </div>
+        ) : (
+          <input type="tel" required value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            placeholder="050-0000000" className={inputClass} />
+        )}
       </div>
 
       <div>
