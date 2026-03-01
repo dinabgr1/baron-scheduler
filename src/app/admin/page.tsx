@@ -354,19 +354,19 @@ export default function AdminPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 border-l-4 border-l-blue-500">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-300 p-4 border-l-4 border-l-blue-500">
             <div className="text-3xl font-black text-gray-900">{stats.totalBookings}</div>
             <div className="text-gray-500 uppercase tracking-wide text-xs">סה&quot;כ הזמנות החודש</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 border-l-4 border-l-blue-500">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-300 p-4 border-l-4 border-l-blue-500">
             <div className="text-3xl font-black text-gray-900">{stats.pendingBookings}</div>
             <div className="text-gray-500 uppercase tracking-wide text-xs">ממתינות לאישור</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 border-l-4 border-l-green-500">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-300 p-4 border-l-4 border-l-green-500">
             <div className="text-3xl font-black text-gray-900">{stats.flightHours}</div>
             <div className="text-gray-500 uppercase tracking-wide text-xs">שעות טיסה החודש</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 border-l-4 border-l-green-500">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-300 p-4 border-l-4 border-l-green-500">
             <div className="text-3xl font-black text-gray-900">{stats.lastHobbs}</div>
             <div className="text-gray-500 uppercase tracking-wide text-xs">Hobbs אחרון</div>
           </div>
