@@ -55,7 +55,6 @@ export default function PilotDetailPage() {
     }
   }
 
-  // Check auth on mount via API (cookie is httpOnly, can't read via JS)
   useEffect(() => {
     fetch('/api/admin/check').then(res => {
       if (res.ok) setAuthed(true)
@@ -65,8 +64,6 @@ export default function PilotDetailPage() {
   const loadPilot = useCallback(async () => {
     const res = await fetch(`/api/pilots/${pilotId}`)
     if (!res.ok) { setError('טייס לא נמצא'); setLoading(false); return null }
-    // The pilots/[id] route returns from PATCH/DELETE, but we need GET
-    // Use the pilots list and filter
     const listRes = await fetch('/api/pilots')
     const allPilots = await listRes.json()
     const found = Array.isArray(allPilots) ? allPilots.find((p: Pilot) => p.id === pilotId) : null
@@ -130,14 +127,12 @@ export default function PilotDetailPage() {
   const totalBilled = billingRecords.reduce((sum, r) => sum + (r.total_amount || 0), 0)
   const totalBilledHours = billingRecords.reduce((sum, r) => sum + (r.hours_flown || 0), 0)
   const unpaidHours = Math.max(0, totalFlightHours - totalBilledHours)
-  // Hours remaining from purchased packages (actual balance)
   const remainingHours = totalPurchased - totalFlightHours
-  // Unreported flights = past bookings with no flight log at all
   const pastBookingIds = pastBookings.map(b => b.id)
   const reportedBookingIds = new Set(flightLogs.map(l => l.booking_id))
   const unclosedLogs = pastBookings.filter(b => !reportedBookingIds.has(b.id))
 
-  const inputClass = "w-full px-3 py-2 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 text-sm focus:outline-none focus:border-baron-blue-400"
+  const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
 
   async function savePilotEdit() {
     await fetch(`/api/pilots/${pilotId}`, {
@@ -206,22 +201,22 @@ export default function PilotDetailPage() {
 
   if (!authed) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         <Header />
         <main className="max-w-sm mx-auto px-4 py-20 pb-20 md:pb-6">
-          <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-6">
-            <h2 className="text-white font-bold text-xl text-center mb-6">כניסת מנהל</h2>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <h2 className="text-gray-900 font-bold text-xl text-center mb-6">כניסת מנהל</h2>
             <form onSubmit={login} className="space-y-4">
               <input type="password" value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="סיסמה"
-                className="w-full px-4 py-3 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 focus:outline-none focus:border-baron-blue-400 text-lg text-center"
+                className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg text-center"
                 autoFocus />
               <button type="submit"
-                className="w-full py-4 rounded-xl bg-baron-blue-500 hover:bg-baron-blue-400 text-white font-bold text-lg transition-colors">
+                className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition-colors">
                 כניסה
               </button>
-              {loginError && <p className="text-red-400 text-center text-sm">{loginError}</p>}
+              {loginError && <p className="text-red-600 text-center text-sm">{loginError}</p>}
             </form>
           </div>
         </main>
@@ -231,10 +226,10 @@ export default function PilotDetailPage() {
 
   if (loading && !pilot) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         <Header />
         <main className="max-w-4xl mx-auto px-4 py-6">
-          <div className="text-center text-baron-blue-300 py-16">טוען...</div>
+          <div className="text-center text-gray-500 py-16">טוען...</div>
         </main>
       </div>
     )
@@ -242,65 +237,65 @@ export default function PilotDetailPage() {
 
   if (error && !pilot) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         <Header />
         <main className="max-w-4xl mx-auto px-4 py-6">
-          <div className="text-center text-red-400 py-16">{error}</div>
+          <div className="text-center text-red-600 py-16">{error}</div>
         </main>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="max-w-4xl mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
         {/* Back button */}
-        <a href="/admin" className="inline-flex items-center text-baron-blue-300 hover:text-white transition-colors text-sm">
+        <a href="/admin" className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors text-sm">
           ← חזרה לניהול
         </a>
 
         {/* Section A - Pilot Header */}
         {pilot && (
-          <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-5">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
               {editing ? (
                 <div className="flex-1 space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">שם</label>
+                      <label className="block text-gray-700 text-xs font-medium mb-1">שם</label>
                       <input type="text" value={editForm.name}
                         onChange={e => setEditForm({ ...editForm, name: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">טלפון</label>
+                      <label className="block text-gray-700 text-xs font-medium mb-1">טלפון</label>
                       <input type="tel" value={editForm.phone}
                         onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">מספר רישיון</label>
+                      <label className="block text-gray-700 text-xs font-medium mb-1">מספר רישיון</label>
                       <input type="text" value={editForm.license_number}
                         onChange={e => setEditForm({ ...editForm, license_number: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">אימייל</label>
+                      <label className="block text-gray-700 text-xs font-medium mb-1">אימייל</label>
                       <input type="email" value={editForm.email}
                         onChange={e => setEditForm({ ...editForm, email: e.target.value })}
                         className={inputClass} />
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={savePilotEdit} className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium">שמור</button>
-                    <button onClick={() => setEditing(false)} className="px-4 py-2 rounded-lg bg-baron-blue-700 hover:bg-baron-blue-600 text-white text-sm font-medium">ביטול</button>
+                    <button onClick={savePilotEdit} className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium">שמור</button>
+                    <button onClick={() => setEditing(false)} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium">ביטול</button>
                   </div>
                 </div>
               ) : (
                 <div>
                   <div className="flex items-center gap-3 mb-1">
-                    <h1 className="text-white font-bold text-2xl">{pilot.name}</h1>
+                    <h1 className="text-gray-900 font-bold text-2xl">{pilot.name}</h1>
                     <button onClick={() => {
                       setEditing(true)
                       setEditForm({
@@ -309,17 +304,17 @@ export default function PilotDetailPage() {
                         license_number: pilot.license_number || '',
                         email: pilot.email || '',
                       })
-                    }} className="text-baron-blue-400 hover:text-white text-sm">✏️ ערוך</button>
+                    }} className="text-gray-500 hover:text-gray-900 text-sm">✏️ ערוך</button>
                   </div>
-                  {pilot.phone && <div className="text-baron-blue-300 text-sm">{pilot.phone}</div>}
-                  {pilot.license_number && <div className="text-baron-blue-400 text-sm">רישיון: {pilot.license_number}</div>}
-                  {pilot.email && <div className="text-baron-blue-400 text-sm">{pilot.email}</div>}
+                  {pilot.phone && <div className="text-gray-500 text-sm">{pilot.phone}</div>}
+                  {pilot.license_number && <div className="text-gray-500 text-sm">רישיון: {pilot.license_number}</div>}
+                  {pilot.email && <div className="text-gray-500 text-sm">{pilot.email}</div>}
                 </div>
               )}
 
               <button onClick={toggleActive}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  pilot.is_active ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
+                  pilot.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'
                 }`}>
                 {pilot.is_active ? 'פעיל' : 'לא פעיל'}
               </button>
@@ -327,37 +322,37 @@ export default function PilotDetailPage() {
 
             {/* Quick stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-baron-blue-800/50 rounded-lg p-3 text-center">
-                <div className="text-xl font-bold text-white">{bookings.length}</div>
-                <div className="text-baron-blue-400 text-xs">✈️ סה&quot;כ טיסות</div>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-gray-900">{bookings.length}</div>
+                <div className="text-gray-500 text-xs">✈️ סה&quot;כ טיסות</div>
               </div>
-              <div className="bg-baron-blue-800/50 rounded-lg p-3 text-center">
-                <div className="text-xl font-bold text-white">{Math.round(totalFlightHours * 10) / 10}</div>
-                <div className="text-baron-blue-400 text-xs">⏱️ שעות כולל</div>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-gray-900">{Math.round(totalFlightHours * 10) / 10}</div>
+                <div className="text-gray-500 text-xs">⏱️ שעות כולל</div>
               </div>
-              <div className="bg-baron-blue-800/50 rounded-lg p-3 text-center">
-                <div className={`text-xl font-bold ${hoursBalance > 0 ? 'text-green-400' : hoursBalance === 0 ? 'text-yellow-400' : 'text-red-400'}`}>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <div className={`text-xl font-bold ${hoursBalance > 0 ? 'text-green-600' : hoursBalance === 0 ? 'text-orange-600' : 'text-red-600'}`}>
                   {Math.round(hoursBalance * 10) / 10}
                 </div>
-                <div className="text-baron-blue-400 text-xs">💰 יתרת שעות</div>
+                <div className="text-gray-500 text-xs">💰 יתרת שעות</div>
               </div>
-              <div className="bg-baron-blue-800/50 rounded-lg p-3 text-center">
-                <div className="text-xl font-bold text-white">
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-gray-900">
                   {lastFlightBooking ? formatDate(lastFlightBooking.date) : '-'}
                 </div>
-                <div className="text-baron-blue-400 text-xs">📅 טיסה אחרונה</div>
+                <div className="text-gray-500 text-xs">📅 טיסה אחרונה</div>
               </div>
-              <div className="bg-baron-blue-800/50 rounded-lg p-3 text-center">
-                <div className={`text-xl font-bold ${unpaidHours > 0 ? 'text-orange-400' : 'text-green-400'}`}>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <div className={`text-xl font-bold ${unpaidHours > 0 ? 'text-orange-600' : 'text-green-600'}`}>
                   {Math.round(unpaidHours * 10) / 10}
                 </div>
-                <div className="text-baron-blue-400 text-xs">⚠️ שעות לא שולמו</div>
+                <div className="text-gray-500 text-xs">⚠️ שעות לא שולמו</div>
               </div>
-              <div className="bg-baron-blue-800/50 rounded-lg p-3 text-center">
-                <div className={`text-xl font-bold ${remainingHours > 0 ? 'text-green-400' : remainingHours === 0 ? 'text-yellow-400' : 'text-red-400'}`}>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <div className={`text-xl font-bold ${remainingHours > 0 ? 'text-green-600' : remainingHours === 0 ? 'text-orange-600' : 'text-red-600'}`}>
                   {Math.round(remainingHours * 10) / 10}
                 </div>
-                <div className="text-baron-blue-400 text-xs">🎟️ שעות שנותרו</div>
+                <div className="text-gray-500 text-xs">🎟️ שעות שנותרו</div>
               </div>
             </div>
           </div>
@@ -365,13 +360,13 @@ export default function PilotDetailPage() {
 
         {/* Unclosed flights warning */}
         {unclosedLogs.length > 0 && (
-          <div className="bg-orange-100 border border-orange-500 rounded-xl p-4 flex items-start gap-3">
+          <div className="bg-orange-50 border border-orange-300 rounded-xl p-4 flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div>
-              <div className="text-orange-900 font-bold text-sm mb-1">
+              <div className="text-orange-700 font-bold text-sm mb-1">
                 {unclosedLogs.length} טיסה{unclosedLogs.length > 1 ? 'ות' : ''} לא נסגרה{unclosedLogs.length > 1 ? 'ו' : ''} — שעות חסרות!
               </div>
-              <div className="text-orange-800 text-xs">
+              <div className="text-orange-600 text-xs">
                 חסרים נתוני Hobbs או זמן טיסה — חישוב השעות עלול להיות שגוי. סגור את הטיסות כדי לקבל מאזן מדויק.
               </div>
             </div>
@@ -379,42 +374,42 @@ export default function PilotDetailPage() {
         )}
 
         {/* Section B - Billing & Hours */}
-        <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-5">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
           {true && (
             <div className="space-y-4">
               {/* Balance display */}
-              <div className={`text-center p-4 rounded-xl ${remainingHours > 0 ? 'bg-green-700/40 border border-green-500' : 'bg-red-700/40 border border-red-500'}`}>
-                <div className="text-4xl font-bold text-white">
+              <div className={`text-center p-4 rounded-xl border ${remainingHours > 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`text-4xl font-bold ${remainingHours > 0 ? 'text-green-700' : 'text-red-700'}`}>
                   {Math.round(remainingHours * 10) / 10}
                 </div>
-                <div className="text-white/80 text-sm">שעות נותרו מתוך {Math.round(totalPurchased * 10) / 10} שנרכשו</div>
-                <div className="text-white/60 text-xs mt-1">{Math.round(totalFlightHours * 10) / 10} שעות נטסו בפועל</div>
+                <div className="text-gray-700 text-sm">שעות נותרו מתוך {Math.round(totalPurchased * 10) / 10} שנרכשו</div>
+                <div className="text-gray-500 text-xs mt-1">{Math.round(totalFlightHours * 10) / 10} שעות נטסו בפועל</div>
               </div>
 
               {/* Two add buttons */}
               <div className="flex gap-2">
                 <button onClick={() => { setShowPackageForm(showPackageForm && packageForm.purchase_type === 'package' ? false : true); setPackageForm(f => ({ ...f, purchase_type: 'package' })) }}
                   className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    showPackageForm && packageForm.purchase_type === 'package' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-baron-blue-600 hover:bg-baron-blue-500 text-white'
+                    showPackageForm && packageForm.purchase_type === 'package' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}>
                   {showPackageForm && packageForm.purchase_type === 'package' ? '✕ סגור' : '+ בנק שעות'}
                 </button>
                 <button onClick={() => { setShowPackageForm(showPackageForm && packageForm.purchase_type === 'individual' ? false : true); setPackageForm(f => ({ ...f, purchase_type: 'individual' })) }}
                   className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    showPackageForm && packageForm.purchase_type === 'individual' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-baron-blue-600 hover:bg-baron-blue-500 text-white'
+                    showPackageForm && packageForm.purchase_type === 'individual' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}>
                   {showPackageForm && packageForm.purchase_type === 'individual' ? '✕ סגור' : '+ שעות בודדות'}
                 </button>
               </div>
 
               {showPackageForm && (
-                <form onSubmit={addPackage} className="bg-baron-blue-800/30 rounded-lg p-4 space-y-3">
-                  <div className="text-baron-blue-200 text-sm font-medium mb-2">
+                <form onSubmit={addPackage} className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="text-gray-700 text-sm font-medium mb-2">
                     {packageForm.purchase_type === 'package' ? '📦 הוספת בנק שעות' : '🕐 הוספת שעות בודדות'}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">
+                      <label className="block text-gray-700 text-xs font-medium mb-1">
                         {packageForm.purchase_type === 'package' ? 'שעות בחבילה' : 'מספר שעות'}
                       </label>
                       <input type="number" required step="0.1" value={packageForm.hours_purchased}
@@ -422,25 +417,25 @@ export default function PilotDetailPage() {
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">מחיר ששולם (₪)</label>
+                      <label className="block text-gray-700 text-xs font-medium mb-1">מחיר ששולם (₪)</label>
                       <input type="number" step="0.01" value={packageForm.price_paid}
                         onChange={e => setPackageForm({ ...packageForm, price_paid: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">תאריך רכישה</label>
+                      <label className="block text-gray-700 text-xs font-medium mb-1">תאריך רכישה</label>
                       <input type="date" value={packageForm.purchase_date}
                         onChange={e => setPackageForm({ ...packageForm, purchase_date: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-baron-blue-200 text-xs font-medium mb-1">הערות</label>
+                      <label className="block text-gray-700 text-xs font-medium mb-1">הערות</label>
                       <input type="text" value={packageForm.notes}
                         onChange={e => setPackageForm({ ...packageForm, notes: e.target.value })}
                         className={inputClass} />
                     </div>
                   </div>
-                  <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium">
+                  <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium">
                     הוסף
                   </button>
                 </form>
@@ -450,12 +445,12 @@ export default function PilotDetailPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-baron-blue-700/50">
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">סוג</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">תאריך</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">שעות שנרכשו</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">מחיר</th>
-                      <th className="text-baron-blue-200 text-right p-3 font-medium">הערות</th>
+                    <tr className="border-b border-gray-200 bg-gray-50">
+                      <th className="text-gray-600 text-right p-3 font-medium">סוג</th>
+                      <th className="text-gray-600 text-right p-3 font-medium">תאריך</th>
+                      <th className="text-gray-600 text-right p-3 font-medium">שעות שנרכשו</th>
+                      <th className="text-gray-600 text-right p-3 font-medium">מחיר</th>
+                      <th className="text-gray-600 text-right p-3 font-medium">הערות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -463,26 +458,26 @@ export default function PilotDetailPage() {
                       const isIndividual = pkg.notes?.startsWith('[individual]')
                       const displayNotes = isIndividual ? pkg.notes?.replace('[individual]', '').trim() : pkg.notes
                       return (
-                        <tr key={pkg.id} className="border-b border-baron-blue-700/30">
+                        <tr key={pkg.id} className="border-b border-gray-100 hover:bg-gray-50">
                           <td className="p-3">
-                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${isIndividual ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'}`}>
+                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${isIndividual ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                               {isIndividual ? '🕐 בודדות' : '📦 בנק'}
                             </span>
                           </td>
-                          <td className="p-3 text-baron-blue-300">{formatDate(pkg.purchase_date)}</td>
-                          <td className="p-3 text-white font-bold">{pkg.hours_purchased}</td>
-                          <td className="p-3 text-baron-blue-300">{pkg.price_paid ? `₪${pkg.price_paid.toLocaleString()}` : '-'}</td>
-                          <td className="p-3 text-baron-blue-400 text-xs">{displayNotes || '-'}</td>
+                          <td className="p-3 text-gray-500">{formatDate(pkg.purchase_date)}</td>
+                          <td className="p-3 text-gray-900 font-bold">{pkg.hours_purchased}</td>
+                          <td className="p-3 text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid.toLocaleString()}` : '-'}</td>
+                          <td className="p-3 text-gray-500 text-xs">{displayNotes || '-'}</td>
                         </tr>
                       )
                     })}
                     {packages.length === 0 && (
-                      <tr><td colSpan={5} className="p-4 text-center text-baron-blue-400">אין רכישות שעות</td></tr>
+                      <tr><td colSpan={5} className="p-4 text-center text-gray-500">אין רכישות שעות</td></tr>
                     )}
                     {packages.length > 0 && (
-                      <tr className="border-t-2 border-baron-blue-600">
-                        <td colSpan={2} className="p-3 text-baron-blue-200 font-bold">סה&quot;כ</td>
-                        <td className="p-3 text-white font-bold">{Math.round(totalPurchased * 10) / 10} שעות</td>
+                      <tr className="border-t-2 border-gray-300">
+                        <td colSpan={2} className="p-3 text-gray-700 font-bold">סה&quot;כ</td>
+                        <td className="p-3 text-gray-900 font-bold">{Math.round(totalPurchased * 10) / 10} שעות</td>
                         <td colSpan={2}></td>
                       </tr>
                     )}
@@ -494,12 +489,12 @@ export default function PilotDetailPage() {
         </div>
 
         {/* Section C - Flights History */}
-        <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-5">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
           <div className="flex gap-2 mb-4">
             {(['טיסות עתידיות', 'טיסות שעברו'] as FlightTab[]).map(tab => (
               <button key={tab} onClick={() => setFlightTab(tab)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  flightTab === tab ? 'bg-baron-blue-500 text-white' : 'bg-baron-blue-800/50 text-baron-blue-300 hover:text-white'
+                  flightTab === tab ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}>
                 {tab}
               </button>
@@ -510,32 +505,32 @@ export default function PilotDetailPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-baron-blue-700/50">
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">תאריך</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">שעות</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">סטטוס</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">עם מדריך</th>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="text-gray-600 text-right p-3 font-medium">תאריך</th>
+                    <th className="text-gray-600 text-right p-3 font-medium">שעות</th>
+                    <th className="text-gray-600 text-right p-3 font-medium">סטטוס</th>
+                    <th className="text-gray-600 text-right p-3 font-medium">עם מדריך</th>
                   </tr>
                 </thead>
                 <tbody>
                   {futureBookings.map(b => (
-                    <tr key={b.id} className="border-b border-baron-blue-700/30">
-                      <td className="p-3 text-white">{formatDate(b.date)}</td>
-                      <td className="p-3 text-baron-blue-300">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
+                    <tr key={b.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="p-3 text-gray-900">{formatDate(b.date)}</td>
+                      <td className="p-3 text-gray-500">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
                       <td className="p-3">
-                        <span className={`text-xs px-2 py-0.5 rounded ${
-                          b.status === 'approved' ? 'bg-green-500/20 text-green-300' :
-                          b.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' :
-                          'bg-red-500/20 text-red-300'
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                          b.status === 'approved' ? 'bg-green-100 text-green-700' :
+                          b.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
                         }`}>
                           {b.status === 'approved' ? 'מאושר' : b.status === 'pending' ? 'ממתין' : 'נדחה'}
                         </span>
                       </td>
-                      <td className="p-3 text-baron-blue-300">{b.with_instructor ? (b.instructor_name || 'כן') : 'לא'}</td>
+                      <td className="p-3 text-gray-500">{b.with_instructor ? (b.instructor_name || 'כן') : 'לא'}</td>
                     </tr>
                   ))}
                   {futureBookings.length === 0 && (
-                    <tr><td colSpan={4} className="p-4 text-center text-baron-blue-400">אין טיסות עתידיות</td></tr>
+                    <tr><td colSpan={4} className="p-4 text-center text-gray-500">אין טיסות עתידיות</td></tr>
                   )}
                 </tbody>
               </table>
@@ -546,37 +541,37 @@ export default function PilotDetailPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-baron-blue-700/50">
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">תאריך</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">שעות</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">Hobbs</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">דלק</th>
-                    <th className="text-baron-blue-200 text-right p-3 font-medium">שמן</th>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="text-gray-600 text-right p-3 font-medium">תאריך</th>
+                    <th className="text-gray-600 text-right p-3 font-medium">שעות</th>
+                    <th className="text-gray-600 text-right p-3 font-medium">Hobbs</th>
+                    <th className="text-gray-600 text-right p-3 font-medium">דלק</th>
+                    <th className="text-gray-600 text-right p-3 font-medium">שמן</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pastBookings.map(b => {
                     const log = getFlightLogForBooking(b.id)
                     return (
-                      <tr key={b.id} className="border-b border-baron-blue-700/30">
-                        <td className="p-3 text-white">{formatDate(b.date)}</td>
-                        <td className="p-3 text-baron-blue-300">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
+                      <tr key={b.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="p-3 text-gray-900">{formatDate(b.date)}</td>
+                        <td className="p-3 text-gray-500">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
                         {log ? (
                           <>
-                            <td className="p-3 text-white">{log.hobbs_start} → {log.hobbs_end}</td>
-                            <td className="p-3 text-baron-blue-300">{log.fuel_added_liters}L</td>
-                            <td className="p-3 text-baron-blue-300">{log.oil_engine1}/{log.oil_engine2}qt</td>
+                            <td className="p-3 text-gray-900">{log.hobbs_start} → {log.hobbs_end}</td>
+                            <td className="p-3 text-gray-500">{log.fuel_added_liters}L</td>
+                            <td className="p-3 text-gray-500">{log.oil_engine1}/{log.oil_engine2}qt</td>
                           </>
                         ) : (
                           <td colSpan={3} className="p-3 text-center">
-                            <span className="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">אין דיווח</span>
+                            <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">אין דיווח</span>
                           </td>
                         )}
                       </tr>
                     )
                   })}
                   {pastBookings.length === 0 && (
-                    <tr><td colSpan={5} className="p-4 text-center text-baron-blue-400">אין טיסות שעברו</td></tr>
+                    <tr><td colSpan={5} className="p-4 text-center text-gray-500">אין טיסות שעברו</td></tr>
                   )}
                 </tbody>
               </table>
@@ -585,9 +580,9 @@ export default function PilotDetailPage() {
 
           {/* Total hours from flight logs */}
           {flightTab === 'טיסות שעברו' && flightLogs.length > 0 && (
-            <div className="border-t border-baron-blue-700/50 pt-3 mt-3">
-              <span className="text-baron-blue-300 text-sm">סה&quot;כ שעות טיסה (מ-flight logs): </span>
-              <span className="text-white font-bold">{Math.round(totalFlightHours * 10) / 10}</span>
+            <div className="border-t border-gray-200 pt-3 mt-3">
+              <span className="text-gray-500 text-sm">סה&quot;כ שעות טיסה (מ-flight logs): </span>
+              <span className="text-gray-900 font-bold">{Math.round(totalFlightHours * 10) / 10}</span>
             </div>
           )}
         </div>

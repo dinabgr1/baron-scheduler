@@ -13,13 +13,13 @@ function PostFlightContent() {
   return (
     <>
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-white">{title}</h2>
-        <p className="text-baron-blue-300">
+        <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
+        <p className="text-gray-500">
           Baron 4X-DZJ | מילוי נתוני טיסה
         </p>
       </div>
 
-      <div className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-6">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <PostFlightForm />
       </div>
     </>
@@ -28,10 +28,10 @@ function PostFlightContent() {
 
 export default function PostFlightPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="max-w-lg mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
-        <Suspense fallback={<div className="p-8 text-center text-baron-blue-300">טוען...</div>}>
+        <Suspense fallback={<div className="p-8 text-center text-gray-500">טוען...</div>}>
           <PostFlightContent />
         </Suspense>
       </main>
