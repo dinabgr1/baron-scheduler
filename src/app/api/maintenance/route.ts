@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = getServiceClient()
-  // Get maintenance records
-  const { data: records, error } = await supabase.from('maintenance_records').select('*')
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const pilotsOnly = request.nextUrl.searchParams.get('pilots_only') === 'true'
 
-  // Get current hobbs (latest flight log hobbs_end)
+  let query = supabase.from('maintenance_records').select('*')
+  if (pilotsOnly) query = query.eq('visible_to_pilots', true)
+  const { data: records, error } = await query
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   const { data: logs } = await supabase.from('flight_logs').select('hobbs_end').order('created_at', { ascending: false }).limit(1)
   const currentHobbs = logs?.[0]?.hobbs_end || 0
-
   return NextResponse.json({ records, currentHobbs })
 }
 
@@ -28,4 +29,11 @@ export async function POST(req: NextRequest) {
   const { data, error } = await getServiceClient().from('maintenance_records').insert(body).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data, { status: 201 })
+}
+
+export async function DELETE(req: NextRequest) {
+  const { id } = await req.json()
+  const { error } = await getServiceClient().from('maintenance_records').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
 }

@@ -62,7 +62,7 @@ export default function AdminPage() {
   // Maintenance state
   type MaintenanceRecord = {
     id: string; maintenance_type: string; last_done_date: string | null;
-    last_done_hobbs: number; interval_hours: number; interval_months: number | null; notes: string | null
+    last_done_hobbs: number; interval_hours: number; interval_months: number | null; notes: string | null; visible_to_pilots: boolean
   }
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([])
   const [currentHobbs, setCurrentHobbs] = useState(0)
@@ -79,6 +79,17 @@ export default function AdminPage() {
     const data = await res.json()
     if (data.records) setMaintenanceRecords(data.records)
     if (data.currentHobbs) setCurrentHobbs(data.currentHobbs)
+  }
+
+  async function deleteMaintItem(id: string) {
+    if (!confirm('למחוק פריט תחזוקה זה?')) return
+    await fetch('/api/maintenance', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+    loadMaintenance()
+  }
+
+  async function toggleMaintVisibility(id: string, current: boolean) {
+    await fetch('/api/maintenance', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, visible_to_pilots: !current }) })
+    loadMaintenance()
   }
 
   async function saveMaintEdit(id: string) {
@@ -1101,15 +1112,25 @@ export default function AdminPage() {
                         </div>
                       </div>
                     ) : (
-                      <button onClick={() => {
-                        setEditingMaintId(rec.id)
-                        setMaintEditForm({
-                          last_done_hobbs: String(currentHobbs),
-                          last_done_date: new Date().toISOString().split('T')[0],
-                        })
-                      }} className="text-blue-600 hover:text-blue-800 text-xs font-medium">
-                        ✏️ עדכן תחזוקה
-                      </button>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <button onClick={() => {
+                          setEditingMaintId(rec.id)
+                          setMaintEditForm({
+                            last_done_hobbs: String(currentHobbs),
+                            last_done_date: new Date().toISOString().split('T')[0],
+                          })
+                        }} className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                          ✏️ עדכן תחזוקה
+                        </button>
+                        <button onClick={() => toggleMaintVisibility(rec.id, rec.visible_to_pilots)}
+                          className={`text-xs font-medium ${rec.visible_to_pilots ? 'text-green-600 hover:text-green-800' : 'text-gray-400 hover:text-gray-600'}`}>
+                          {rec.visible_to_pilots ? '👁️ מוצג לטייסים' : '🚫 מוסתר מטייסים'}
+                        </button>
+                        <button onClick={() => deleteMaintItem(rec.id)}
+                          className="text-red-500 hover:text-red-700 text-xs font-medium">
+                          🗑️ מחק
+                        </button>
+                      </div>
                     )}
                   </div>
                 )

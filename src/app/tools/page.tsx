@@ -17,7 +17,7 @@ export default function ToolsPage() {
   const [unreportedCount, setUnreportedCount] = useState(0)
 
   useEffect(() => {
-    fetch('/api/maintenance').then(r => r.json()).then(setMaintenance).catch(() => {})
+    fetch('/api/maintenance?pilots_only=true').then(r => r.json()).then(setMaintenance).catch(() => {})
   }, [])
 
   async function searchPilot() {
