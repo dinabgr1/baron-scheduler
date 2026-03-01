@@ -754,77 +754,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ====== פיננסים TAB - Part 1: Rates ====== */}
-        {activeTab === 'פיננסים' && (
-          <div className="space-y-4">
-            {/* Add rate form */}
-            <form onSubmit={addRate} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
-              <h3 className="text-gray-900 font-bold">הוספת תעריף</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input type="text" required value={rateForm.name}
-                  onChange={e => setRateForm({ ...rateForm, name: e.target.value })}
-                  placeholder="שם התעריף" className={inputClass} />
-                <input type="number" required step="0.01" value={rateForm.rate_per_hour}
-                  onChange={e => setRateForm({ ...rateForm, rate_per_hour: e.target.value })}
-                  placeholder="מחיר לשעה (₪)" className={inputClass} />
-                <input type="text" value={rateForm.description}
-                  onChange={e => setRateForm({ ...rateForm, description: e.target.value })}
-                  placeholder="תיאור" className={inputClass} />
-              </div>
-              <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-base font-bold">
-                הוסף תעריף
-              </button>
-            </form>
-
-            {/* Rates table */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">שם</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">מחיר לשעה (₪)</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">תיאור</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-3 px-4">פעולות</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rates.map(r => (
-                    <tr key={r.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
-                      {editingRateId === r.id ? (
-                        <>
-                          <td className="p-2"><input type="text" value={editRateForm.name || ''} onChange={e => setEditRateForm({ ...editRateForm, name: e.target.value })} className={inputClass} /></td>
-                          <td className="p-2"><input type="number" step="0.01" value={editRateForm.rate_per_hour || ''} onChange={e => setEditRateForm({ ...editRateForm, rate_per_hour: parseFloat(e.target.value) })} className={inputClass} /></td>
-                          <td className="p-2"><input type="text" value={editRateForm.description || ''} onChange={e => setEditRateForm({ ...editRateForm, description: e.target.value })} className={inputClass} /></td>
-                          <td className="p-2 flex gap-1">
-                            <button onClick={() => saveRateEdit(r.id)} className="px-2 py-1 rounded bg-green-600 text-white text-xs">שמור</button>
-                            <button onClick={() => setEditingRateId(null)} className="px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">ביטול</button>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="py-3 px-4 text-gray-900">{r.name}</td>
-                          <td className="py-3 px-4 text-gray-900">{r.rate_per_hour}</td>
-                          <td className="py-3 px-4 text-gray-500">{r.description || '-'}</td>
-                          <td className="py-3 px-4 flex gap-1">
-                            <button onClick={() => { setEditingRateId(r.id); setEditRateForm({ name: r.name, rate_per_hour: r.rate_per_hour, description: r.description }) }}
-                              className="px-2 py-1 rounded bg-blue-600 text-white text-xs">ערוך</button>
-                            <button onClick={() => deleteRate(r.id)}
-                              className="px-2 py-1 rounded bg-red-600 text-white text-xs">מחק</button>
-                          </td>
-                        </>
-                      )}
-                    </tr>
-                  ))}
-                  {rates.length === 0 && (
-                    <tr><td colSpan={4} className="p-4 text-center text-gray-500">אין תעריפים</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ====== פיננסים TAB - Part 2: Per-pilot financial summary ====== */}
+        {/* ====== פיננסים TAB ====== */}
         {activeTab === 'פיננסים' && (() => {
           // Build per-pilot financial summary
           const pilotNamesSet = new Set([...pilots.map(p => p.name), ...hourPackages.map(p => p.pilot_name)])
@@ -893,6 +823,82 @@ export default function AdminPage() {
                 )
               })}
               {pilotNames.length === 0 && <p className="text-gray-500 text-center py-4">אין טייסים</p>}
+
+              {/* Divider + Add package */}
+              <div className="border-t border-gray-200 pt-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-gray-700 font-semibold text-sm">💼 הוספת רכישת שעות</h3>
+                  {rates.length > 0 && <span className="text-xs text-gray-500">תעריף: ₪{rates[0]?.rate_per_hour?.toLocaleString()}/שעה</span>}
+                </div>
+                <form onSubmit={addPackage} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input type="text" required value={packageForm.pilot_name}
+                      onChange={e => setPackageForm({ ...packageForm, pilot_name: e.target.value })}
+                      placeholder="שם הטייס" className={inputClass} />
+                    <input type="number" required step="0.1" value={packageForm.hours_purchased}
+                      onChange={e => setPackageForm({ ...packageForm, hours_purchased: e.target.value })}
+                      placeholder="שעות שנרכשו" className={inputClass} />
+                    <input type="number" step="0.01" value={packageForm.price_paid}
+                      onChange={e => setPackageForm({ ...packageForm, price_paid: e.target.value })}
+                      placeholder="תשלום (₪)" className={inputClass} />
+                    <input type="date" value={packageForm.purchase_date}
+                      onChange={e => setPackageForm({ ...packageForm, purchase_date: e.target.value })}
+                      className={inputClass} />
+                  </div>
+                  <button type="submit" className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold">
+                    + הוסף רכישת שעות
+                  </button>
+                </form>
+              </div>
+
+              {/* Rate management */}
+              <div className="border-t border-gray-200 pt-4 space-y-3">
+                <h3 className="text-gray-700 font-semibold text-sm">⚙️ ניהול תעריפים</h3>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">שם</th>
+                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">₪/שעה</th>
+                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">פעולות</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rates.map(r => (
+                        <tr key={r.id} className="border-b border-gray-100">
+                          {editingRateId === r.id ? (
+                            <>
+                              <td className="p-2"><input type="text" value={editRateForm.name || ''} onChange={e => setEditRateForm({ ...editRateForm, name: e.target.value })} className={inputClass} /></td>
+                              <td className="p-2"><input type="number" step="0.01" value={editRateForm.rate_per_hour || ''} onChange={e => setEditRateForm({ ...editRateForm, rate_per_hour: parseFloat(e.target.value) })} className={inputClass} /></td>
+                              <td className="p-2 flex gap-1">
+                                <button onClick={() => saveRateEdit(r.id)} className="px-2 py-1 rounded bg-green-600 text-white text-xs">שמור</button>
+                                <button onClick={() => setEditingRateId(null)} className="px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">ביטול</button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="py-2 px-3 text-gray-900 font-medium">{r.name}</td>
+                              <td className="py-2 px-3 text-gray-900">₪{r.rate_per_hour?.toLocaleString()}</td>
+                              <td className="py-2 px-3 flex gap-1">
+                                <button onClick={() => { setEditingRateId(r.id); setEditRateForm({ name: r.name, rate_per_hour: r.rate_per_hour, description: r.description }) }}
+                                  className="px-2 py-1 rounded bg-blue-600 text-white text-xs">ערוך</button>
+                                <button onClick={() => deleteRate(r.id)}
+                                  className="px-2 py-1 rounded bg-red-600 text-white text-xs">מחק</button>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                      {rates.length === 0 && <tr><td colSpan={3} className="p-3 text-center text-gray-500 text-xs">אין תעריפים</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+                <form onSubmit={addRate} className="flex gap-2 flex-wrap">
+                  <input type="text" required value={rateForm.name} onChange={e => setRateForm({ ...rateForm, name: e.target.value })} placeholder="שם תעריף" className={inputClass + ' flex-1 min-w-24'} />
+                  <input type="number" required step="0.01" value={rateForm.rate_per_hour} onChange={e => setRateForm({ ...rateForm, rate_per_hour: e.target.value })} placeholder="₪/שעה" className={inputClass + ' w-28'} />
+                  <button type="submit" className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold">+ הוסף</button>
+                </form>
+              </div>
             </div>
           )
         })()}
