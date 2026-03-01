@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "npx playwright test",
+    "lighthouse": "lhci autorun",
+    "prepare": "husky"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -15,11 +18,18 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
+  "lint-staged": {
+    "*.{ts,tsx}": "tsc --noEmit"
+  },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.58.2",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.47",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.16",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.1",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"

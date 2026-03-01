@@ -95,3 +95,118 @@ Before every commit, output a summary:
 2. **Why** — the reason for each change
 3. **What could break** — potential side effects or regressions
 4. **How I verified** — what tests/checks were run
+
+## 🔴 MANDATORY — Browser Testing After Every Change
+
+You MUST test every change through the browser. No exceptions. No skipping.
+
+### How to test
+1. Start dev server: `npm run dev`
+2. Use Playwright's browser to navigate to http://localhost:3000
+3. Actually interact with the UI — click buttons, fill forms, navigate pages
+4. Take screenshots of what you see to verify layout and design
+
+### What to test (every time)
+- Open the page you changed — does it load? does it look right?
+- Fill forms with VALID data — does it submit correctly?
+- Fill forms with INVALID data — empty fields, wrong formats, past dates
+- Click every button on the page — does each one work?
+- Try the flow on mobile viewport (375px wide)
+- Check Hebrew text is aligned correctly (RTL)
+- Try double-clicking submit buttons — does it handle it?
+- Navigate away and back — does state persist correctly?
+
+### Test scenarios to try
+- New booking: pick a date, time, pilot name → verify it appears in calendar
+- Overlapping booking: try to book same time slot twice → should show error
+- Post-flight form: enter Hobbs, fuel, oil → verify it saves
+- Admin login: wrong password → error; correct password → success
+- Fuel calculator: enter gallons → verify liters conversion is correct
+- Empty form submission → should show validation errors
+- Very long pilot name → should not break layout
+
+### Proof of testing
+After testing, include in your commit message:
+```
+Tested:
+- [x] Page loads correctly (screenshot taken)
+- [x] Form validation works (empty + invalid)
+- [x] Happy path works (full flow)
+- [x] Mobile viewport checked
+- [x] RTL layout correct
+```
+
+### ❌ NEVER commit if:
+- You haven't opened the app in a browser
+- You haven't tried at least 3 different scenarios
+- You haven't checked mobile viewport
+- `npm run build` hasn't passed
+
+## 📋 Development Standards
+
+### Testing Discipline
+- After every change — run `npm run build` and show me it passed
+- Write a Playwright test for every new feature BEFORE moving on
+- Test on mobile viewport (375px) — most users are on phones
+- Test edge cases: empty fields, special characters, double-click on buttons
+
+### Security
+- Every API route MUST check permissions server-side — never trust the client
+- Never expose keys or passwords in code
+- Always validate input — even if there's form validation on the client
+
+### UX Rules
+- Every action that takes time → show loading state (spinner/skeleton)
+- Every error → show a message IN HEBREW that a regular user would understand
+- Every success → visual confirmation (toast / redirect / animation)
+- Never break existing navigation when adding a new page
+- Disable submit buttons after click to prevent double submission
+
+### Code Standards
+- No `console.log` left in production code — remove before commit
+- No `any` in TypeScript — use proper types
+- Functions shorter than 50 lines — split if longer
+- Clear variable names in English
+- Comments in English for complex logic
+
+### Git Hygiene
+- One commit per feature — not one giant commit with 20 changes
+- Commit message format: `type: description` (feat/fix/refactor/test/chore)
+- Commit message must describe WHAT and WHY
+
+## 🧠 Planning & Thinking Process
+
+### Plan Before Code
+- If a task affects more than 2 files — write a plan FIRST
+- List which files will change and why
+- Identify potential side effects BEFORE making changes
+- Only start coding after the plan makes sense
+
+### Test-Driven Development
+- Write the test BEFORE writing the feature code
+- The test should fail first, then make it pass
+- This ensures you actually understand what the feature should do
+
+### Regression Tests
+- When fixing a bug — write a test that reproduces the bug FIRST
+- Then fix the bug and verify the test passes
+- This prevents the same bug from coming back
+
+## 🔒 Security Checklist (per change)
+- [ ] No API keys, passwords, or secrets in code
+- [ ] All user input is validated and sanitized server-side
+- [ ] API routes check authorization (not just authentication)
+- [ ] No SQL injection possible (use parameterized queries)
+- [ ] Rate limiting on sensitive endpoints (login, booking)
+- [ ] Error messages don't expose internal details to users
+
+## 🧹 Before You Say "Done"
+1. `npm run build` passes ✅
+2. Opened the app in browser and tested the feature ✅
+3. Tested at least 3 edge cases ✅
+4. Checked mobile viewport (375px) ✅
+5. No `console.log` left in code ✅
+6. No TypeScript `any` types ✅
+7. Commit message is clear and descriptive ✅
+
+If ANY of these fail — you are NOT done. Fix it first.

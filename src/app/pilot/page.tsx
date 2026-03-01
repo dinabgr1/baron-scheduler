@@ -40,18 +40,21 @@ export default function PilotPortal() {
         const pilots: Pilot[] = await res.json()
         setAllPilots(pilots)
         const exactMatch = pilots.find(p => p.name.trim().toLowerCase() === name.toLowerCase())
-        if (exactMatch) {
+        const partial = pilots.filter(p => p.name.toLowerCase().includes(name.toLowerCase()))
+        const match = exactMatch || (partial.length === 1 ? partial[0] : null)
+        if (match) {
           setPilotStatus('found')
-          setFoundPilotId(exactMatch.id)
-          setFoundPilotLicense(exactMatch.license_number || null)
+          setFoundPilotId(match.id)
+          setFoundPilotLicense(match.license_number || null)
           setVerified(false)
           setLicenseInput('')
           setLicenseError(false)
           setSuggestions([])
-        } else {
-          // Partial match suggestions
-          const partial = pilots.filter(p => p.name.toLowerCase().includes(name.toLowerCase()))
+        } else if (partial.length > 1) {
           setSuggestions(partial)
+          setPilotStatus('not_found')
+        } else {
+          setSuggestions([])
           setPilotStatus('not_found')
         }
       } catch {
