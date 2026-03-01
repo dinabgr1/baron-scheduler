@@ -128,6 +128,10 @@ export default function PilotDetailPage() {
 
   const lastFlightBooking = bookings.filter(b => b.date < today).sort((a, b) => b.date.localeCompare(a.date))[0]
   const totalBilled = billingRecords.reduce((sum, r) => sum + (r.total_amount || 0), 0)
+  const totalBilledHours = billingRecords.reduce((sum, r) => sum + (r.hours_flown || 0), 0)
+  const unpaidHours = Math.max(0, totalFlightHours - totalBilledHours)
+  // Hours remaining from purchased packages (actual balance)
+  const remainingHours = totalPurchased - totalFlightHours
 
   const inputClass = "w-full px-3 py-2 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 text-sm focus:outline-none focus:border-baron-blue-400"
 
@@ -335,6 +339,18 @@ export default function PilotDetailPage() {
                   {lastFlightBooking ? formatDate(lastFlightBooking.date) : '-'}
                 </div>
                 <div className="text-baron-blue-400 text-xs">📅 טיסה אחרונה</div>
+              </div>
+              <div className="bg-baron-blue-800/50 rounded-lg p-3 text-center">
+                <div className={`text-xl font-bold ${unpaidHours > 0 ? 'text-orange-400' : 'text-green-400'}`}>
+                  {Math.round(unpaidHours * 10) / 10}
+                </div>
+                <div className="text-baron-blue-400 text-xs">⚠️ שעות לא שולמו</div>
+              </div>
+              <div className="bg-baron-blue-800/50 rounded-lg p-3 text-center">
+                <div className={`text-xl font-bold ${remainingHours > 0 ? 'text-green-400' : remainingHours === 0 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  {Math.round(remainingHours * 10) / 10}
+                </div>
+                <div className="text-baron-blue-400 text-xs">🎟️ שעות שנותרו</div>
               </div>
             </div>
           </div>
