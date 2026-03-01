@@ -49,9 +49,9 @@ test('admin login with wrong password shows error', async ({ page }) => {
   await expect(page.getByText('סיסמה שגויה')).toBeVisible();
 });
 
-test('admin login with BaronAdmin succeeds', async ({ page }) => {
+test('admin login with correct password succeeds', async ({ page }) => {
   await page.goto('/admin');
-  await page.getByPlaceholder('סיסמה').fill('BaronAdmin');
+  await page.getByPlaceholder('סיסמה').fill(process.env.ADMIN_PASSWORD || 'BaronAdmin');
   await page.getByRole('button', { name: 'כניסה' }).click();
   await expect(page.getByText('פאנל ניהול')).toBeVisible({ timeout: 15000 });
 });
