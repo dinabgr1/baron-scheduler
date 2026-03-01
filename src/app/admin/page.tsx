@@ -866,21 +866,45 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {hourPackages.map(pkg => {
-                    const balance = pkg.hours_purchased - pkg.hours_used
-                    return (
-                      <tr key={pkg.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
-                        <td className="py-3 px-4 text-gray-900">{pkg.pilot_name}</td>
-                        <td className="py-3 px-4 text-gray-900">{pkg.hours_purchased}</td>
-                        <td className="py-3 px-4 text-gray-900">{pkg.hours_used}</td>
-                        <td className={`py-3 px-4 font-bold ${balance > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {balance}
-                        </td>
-                        <td className="py-3 px-4 text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid}` : '-'}</td>
-                        <td className="py-3 px-4 text-gray-500">{pkg.purchase_date}</td>
-                      </tr>
-                    )
-                  })}
+                  {(() => {
+                    // Calculate total hours flown per pilot from flight logs
+                    const hoursFlownByPilot: Record<string, number> = {}
+                    bookings.forEach(b => {
+                      const log = flightLogs.find(l => l.booking_id === b.id)
+                      if (log) {
+                        const hrs = log.hobbs_end && log.hobbs_start
+                          ? log.hobbs_end - log.hobbs_start
+                          : (log.flight_time_hours || 0) + (log.flight_time_minutes || 0) / 60
+                        hoursFlownByPilot[b.pilot_name] = (hoursFlownByPilot[b.pilot_name] || 0) + hrs
+                      }
+                    })
+                    // Group packages by pilot for cumulative balance
+                    const purchasedByPilot: Record<string, number> = {}
+                    hourPackages.forEach(pkg => {
+                      purchasedByPilot[pkg.pilot_name] = (purchasedByPilot[pkg.pilot_name] || 0) + pkg.hours_purchased
+                    })
+                    return hourPackages.map(pkg => {
+                      const totalFlown = Math.round((hoursFlownByPilot[pkg.pilot_name] || 0) * 10) / 10
+                      const totalPurchased = purchasedByPilot[pkg.pilot_name] || pkg.hours_purchased
+                      const balance = Math.round((totalPurchased - totalFlown) * 10) / 10
+                      const isIndividual = pkg.notes?.startsWith('[individual]')
+                      return (
+                        <tr key={pkg.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
+                          <td className="py-3 px-4 text-gray-900">
+                            <div>{pkg.pilot_name}</div>
+                            {isIndividual && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">בודדות</span>}
+                          </td>
+                          <td className="py-3 px-4 text-gray-900">{pkg.hours_purchased}</td>
+                          <td className="py-3 px-4 text-gray-900">{totalFlown}</td>
+                          <td className={`py-3 px-4 font-bold ${balance > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {balance}
+                          </td>
+                          <td className="py-3 px-4 text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid}` : '-'}</td>
+                          <td className="py-3 px-4 text-gray-500">{pkg.purchase_date}</td>
+                        </tr>
+                      )
+                    })
+                  })()}
                   {hourPackages.length === 0 && (
                     <tr><td colSpan={6} className="p-4 text-center text-gray-500">אין חבילות שעות</td></tr>
                   )}
