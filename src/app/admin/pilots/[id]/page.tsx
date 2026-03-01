@@ -132,10 +132,10 @@ export default function PilotDetailPage() {
   const unpaidHours = Math.max(0, totalFlightHours - totalBilledHours)
   // Hours remaining from purchased packages (actual balance)
   const remainingHours = totalPurchased - totalFlightHours
-  // Unclosed flights = past flights with no hobbs_end and no flight_time
-  const unclosedLogs = flightLogs.filter(log =>
-    !log.hobbs_end && !log.hobbs_start && !(log.flight_time_hours || log.flight_time_minutes)
-  )
+  // Unreported flights = past bookings with no flight log at all
+  const pastBookingIds = pastBookings.map(b => b.id)
+  const reportedBookingIds = new Set(flightLogs.map(l => l.booking_id))
+  const unclosedLogs = pastBookings.filter(b => !reportedBookingIds.has(b.id))
 
   const inputClass = "w-full px-3 py-2 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 text-sm focus:outline-none focus:border-baron-blue-400"
 

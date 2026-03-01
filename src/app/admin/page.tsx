@@ -691,12 +691,25 @@ export default function AdminPage() {
                 {pilots.map(p => {
                   const pilotPackages = hourPackages.filter(pkg => pkg.pilot_name === p.name)
                   const totalPurchased = pilotPackages.reduce((sum, pkg) => sum + pkg.hours_purchased, 0)
-                  const totalUsed = pilotPackages.reduce((sum, pkg) => sum + pkg.hours_used, 0)
-                  const balance = totalPurchased - totalUsed
                   const today = new Date().toISOString().split('T')[0]
                   const futureBookings = bookings.filter(b =>
                     b.pilot_name === p.name && b.date >= today && (b.status === 'pending' || b.status === 'approved')
                   ).length
+                  // Past bookings for this pilot
+                  const pilotPastBookings = bookings.filter(b => b.pilot_name === p.name && b.date < today)
+                  // Reported booking IDs (have a flight log)
+                  const pilotReportedIds = new Set(flightLogs.filter(l =>
+                    pilotPastBookings.some(b => b.id === l.booking_id)
+                  ).map(l => l.booking_id))
+                  const unreportedCount = pilotPastBookings.filter(b => !pilotReportedIds.has(b.id)).length
+                  // Hours flown = sum from flight logs
+                  const pilotFlightHours = flightLogs.filter(l =>
+                    pilotPastBookings.some(b => b.id === l.booking_id)
+                  ).reduce((sum, log) => {
+                    if (log.hobbs_end && log.hobbs_start) return sum + (log.hobbs_end - log.hobbs_start)
+                    return sum + (log.flight_time_hours || 0) + (log.flight_time_minutes || 0) / 60
+                  }, 0)
+                  const balance = totalPurchased - pilotFlightHours
 
                   return (
                     <div key={p.id} className="bg-baron-blue-900/50 rounded-xl border border-baron-blue-700/50 p-4">
@@ -714,7 +727,7 @@ export default function AdminPage() {
                       <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
                         <div className="bg-baron-blue-800/50 rounded-lg p-2">
                           <div className={`font-bold ${balance > 0 ? 'text-green-400' : balance === 0 ? 'text-yellow-400' : 'text-red-400'}`}>
-                            {balance} שעות
+                            {Math.round(balance * 10) / 10} שעות
                           </div>
                           <div className="text-baron-blue-400 text-xs">נותרו מתוך {totalPurchased} שנרכשו</div>
                         </div>
@@ -722,6 +735,15 @@ export default function AdminPage() {
                           <div className="text-white font-bold">{futureBookings}</div>
                           <div className="text-baron-blue-400 text-xs">הזמנות עתידיות</div>
                         </div>
+                        {unreportedCount > 0 && (
+                          <div className="col-span-2 bg-orange-500/15 border border-orange-400/40 rounded-lg p-2 flex items-center gap-2">
+                            <span>⚠️</span>
+                            <div>
+                              <div className="text-orange-300 font-bold text-xs">{unreportedCount} טיסות ללא דיווח</div>
+                              <div className="text-orange-200/60 text-xs">חישוב שעות עלול להיות שגוי</div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <a href={`/admin/pilots/${p.id}`}
