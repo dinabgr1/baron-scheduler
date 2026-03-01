@@ -330,12 +330,7 @@ export default function PilotDetailPage() {
                 <div className="text-2xl font-black text-gray-900">{Math.round(totalFlightHours * 10) / 10}</div>
                 <div className="text-xs uppercase tracking-wide text-gray-500">⏱️ שעות כולל</div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <div className={`text-2xl font-black ${hoursBalance > 0 ? 'text-green-600' : hoursBalance === 0 ? 'text-orange-600' : 'text-red-600'}`}>
-                  {Math.round(hoursBalance * 10) / 10}
-                </div>
-                <div className="text-xs uppercase tracking-wide text-gray-500">💰 יתרת שעות</div>
-              </div>
+
               <div className="bg-gray-50 rounded-lg p-3 text-center">
                 <div className="text-2xl font-black text-gray-900">
                   {lastFlightBooking ? formatDate(lastFlightBooking.date) : '-'}
