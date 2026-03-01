@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const navItems = [
   { href: '/availability', label: 'הזמנה', icon: '✈️' },
-  { href: '/post-flight', label: 'דיווח', icon: '📝' },
+  { href: '/post-flight', label: 'לאחר טיסה', icon: '📝' },
   { href: '/pilot', label: 'הטייס שלי', icon: '👤' },
   { href: '/tools', label: 'כלים', icon: '🔧' },
   { href: '/admin', label: 'ניהול', icon: '⚙️' },
