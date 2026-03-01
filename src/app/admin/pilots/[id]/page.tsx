@@ -364,10 +364,10 @@ export default function PilotDetailPage() {
             <span className="text-2xl">⚠️</span>
             <div>
               <div className="text-orange-700 font-bold text-sm mb-1">
-                {unclosedLogs.length} טיסה{unclosedLogs.length > 1 ? 'ות' : ''} לא נסגרה{unclosedLogs.length > 1 ? 'ו' : ''} — שעות חסרות!
+                {unclosedLogs.length} טיסה{unclosedLogs.length > 1 ? 'ות' : ''} ללא דיווח — שעות חסרות!
               </div>
               <div className="text-orange-600 text-xs">
-                חסרים נתוני Hobbs או זמן טיסה — חישוב השעות עלול להיות שגוי. סגור את הטיסות כדי לקבל מאזן מדויק.
+                הזמנות עבר שעדיין לא קיבלו דיווח טיסה — חישוב השעות עלול להיות חלקי.
               </div>
             </div>
           </div>
@@ -449,8 +449,8 @@ export default function PilotDetailPage() {
                       <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">סוג</th>
                       <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">תאריך</th>
                       <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">שעות שנרכשו</th>
-                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">מחיר</th>
-                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">הערות</th>
+                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-3">מחיר</th>
+                      <th className="hidden sm:table-cell text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">הערות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -466,8 +466,8 @@ export default function PilotDetailPage() {
                           </td>
                           <td className="py-3 px-4 text-base text-gray-500">{formatDate(pkg.purchase_date)}</td>
                           <td className="py-3 px-4 text-base text-gray-900 font-bold">{pkg.hours_purchased}</td>
-                          <td className="py-3 px-4 text-base text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid.toLocaleString()}` : '-'}</td>
-                          <td className="py-3 px-4 text-base text-gray-500">{displayNotes || '-'}</td>
+                          <td className="py-3 px-3 text-sm text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid.toLocaleString()}` : '-'}</td>
+                          <td className="hidden sm:table-cell py-3 px-4 text-base text-gray-500">{displayNotes || '-'}</td>
                         </tr>
                       )
                     })}
