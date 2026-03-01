@@ -9,60 +9,39 @@ type MaintenanceRecord = {
   last_done_hobbs: number; interval_hours: number; interval_months: number | null; notes: string | null
 }
 
+type LastFlight = {
+  pilot_name: string; date: string; hobbs_start: number; hobbs_end: number;
+  flight_hours: number; fuel_level: string; oil: string
+}
+
 export default function ToolsPage() {
-  const [pilotName, setPilotName] = useState('')
-  const [lastFlight, setLastFlight] = useState<{ date: string; start_time: string; end_time: string; hobbs_start: number; hobbs_end: number; flight_hours: number } | null>(null)
-  const [searchDone, setSearchDone] = useState(false)
+  const [lastFlight, setLastFlight] = useState<LastFlight | null>(null)
   const [maintenance, setMaintenance] = useState<{ records: MaintenanceRecord[]; currentHobbs: number } | null>(null)
-  const [unreportedCount, setUnreportedCount] = useState(0)
 
   useEffect(() => {
     fetch('/api/maintenance?pilots_only=true').then(r => r.json()).then(setMaintenance).catch(() => {})
-  }, [])
 
-  async function searchPilot() {
-    if (!pilotName.trim()) return
-    setSearchDone(false)
-    try {
-      const bRes = await fetch('/api/bookings')
-      const bookings = await bRes.json()
-      const pilotBookings = bookings.filter((b: { pilot_name: string; date: string }) =>
-        b.pilot_name.toLowerCase() === pilotName.trim().toLowerCase()
-      ).sort((a: { date: string }, b: { date: string }) => b.date.localeCompare(a.date))
-
-      if (pilotBookings.length === 0) {
-        setLastFlight(null)
-        setSearchDone(true)
-        return
-      }
-
-      const lastBooking = pilotBookings[0]
-      const lRes = await fetch('/api/flight-logs')
+    // Load last flight of the aircraft (not pilot-specific)
+    Promise.all([fetch('/api/flight-logs'), fetch('/api/bookings')]).then(async ([lRes, bRes]) => {
       const logs = await lRes.json()
-      const log = logs.find((l: { booking_id: string }) => l.booking_id === lastBooking.id)
-
-      // Check for unreported flights
-      const today = new Date().toISOString().split('T')[0]
-      const pastBookings = pilotBookings.filter((b: { date: string; status: string }) => b.date < today && b.status === 'approved')
-      const reportedIds = new Set(logs.filter((l: { booking_id: string }) => pastBookings.some((b: { id: string }) => b.id === l.booking_id)).map((l: { booking_id: string }) => l.booking_id))
-      const unreported = pastBookings.filter((b: { id: string }) => !reportedIds.has(b.id)).length
-      setUnreportedCount(unreported)
-
+      const bookings = await bRes.json()
+      if (!Array.isArray(logs) || logs.length === 0) return
+      const lastLog = logs[0]
+      const booking = Array.isArray(bookings) ? bookings.find((b: { id: string }) => b.id === lastLog.booking_id) : null
+      const fuelLabels: Record<string, string> = { '1': '¼', '2': '½', '3': '¾', '4': 'מלא' }
       setLastFlight({
-        date: lastBooking.date,
-        start_time: lastBooking.start_time,
-        end_time: lastBooking.end_time,
-        hobbs_start: log?.hobbs_start || 0,
-        hobbs_end: log?.hobbs_end || 0,
-        flight_hours: log ? (log.hobbs_end && log.hobbs_start ? Math.round((log.hobbs_end - log.hobbs_start) * 10) / 10 : (log.flight_time_hours || 0) + (log.flight_time_minutes || 0) / 60) : 0,
+        pilot_name: booking?.pilot_name || '-',
+        date: booking?.date || '-',
+        hobbs_start: lastLog.hobbs_start || 0,
+        hobbs_end: lastLog.hobbs_end || 0,
+        flight_hours: lastLog.hobbs_end && lastLog.hobbs_start
+          ? Math.round((lastLog.hobbs_end - lastLog.hobbs_start) * 10) / 10
+          : (lastLog.flight_time_hours || 0) + (lastLog.flight_time_minutes || 0) / 60,
+        fuel_level: fuelLabels[String(lastLog.fuel_level_quarters)] || String(lastLog.fuel_level_quarters || '-'),
+        oil: `${lastLog.oil_engine1 || '-'} / ${lastLog.oil_engine2 || '-'} qt`,
       })
-      setSearchDone(true)
-    } catch {
-      setSearchDone(true)
-    }
-  }
-
-  const inputClass = "w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    }).catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,42 +86,19 @@ export default function ToolsPage() {
           </div>
         )}
 
-        {/* ===== Last Flight Lookup ===== */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
-          <h3 className="font-bold text-gray-900 flex items-center gap-2">🛩️ הטיסה האחרונה שלי</h3>
-          <div className="flex gap-2">
-            <input type="text" value={pilotName} onChange={e => setPilotName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && searchPilot()}
-              placeholder="הכנס את שמך" className={inputClass} />
-            <button onClick={searchPilot}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm whitespace-nowrap">
-              חפש
-            </button>
-          </div>
-          {searchDone && !lastFlight && (
-            <p className="text-gray-500 text-sm text-center py-2">לא נמצאו טיסות</p>
-          )}
-          {unreportedCount > 0 && (
-            <a href="/post-flight" className="block">
-              <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 flex items-center gap-2">
-                <span className="text-xl">⚠️</span>
-                <div>
-                  <div className="text-red-700 font-bold text-sm">יש לך {unreportedCount} טיסות שלא דווחו!</div>
-                  <div className="text-red-600 text-xs">לחץ כאן לדווח</div>
-                </div>
-              </div>
-            </a>
-          )}
-          {lastFlight && (
-            <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+        {/* ===== Last Flight of Aircraft ===== */}
+        {lastFlight && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2">🛩️ טיסה אחרונה של המטוס</h3>
+            <div className="bg-gray-50 rounded-xl p-4">
               <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-gray-500">טייס</p>
+                  <p className="font-bold text-gray-900">{lastFlight.pilot_name}</p>
+                </div>
                 <div>
                   <p className="text-xs text-gray-500">תאריך</p>
                   <p className="font-bold text-gray-900">{lastFlight.date}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">שעות</p>
-                  <p className="font-bold text-gray-900">{lastFlight.start_time} - {lastFlight.end_time}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Hobbs</p>
@@ -152,10 +108,18 @@ export default function ToolsPage() {
                   <p className="text-xs text-gray-500">זמן באוויר</p>
                   <p className="font-bold text-green-600">{lastFlight.flight_hours}h</p>
                 </div>
+                <div>
+                  <p className="text-xs text-gray-500">מפלס דלק</p>
+                  <p className="font-bold text-gray-900">{lastFlight.fuel_level}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">שמן (מנוע 1 / 2)</p>
+                  <p className="font-bold text-gray-900">{lastFlight.oil}</p>
+                </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <FuelCalculator />
       </main>
