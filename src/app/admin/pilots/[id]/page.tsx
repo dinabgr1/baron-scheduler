@@ -55,12 +55,11 @@ export default function PilotDetailPage() {
     }
   }
 
-  // Check auth on mount
+  // Check auth on mount via API (cookie is httpOnly, can't read via JS)
   useEffect(() => {
-    // Check if admin cookie exists by trying a simple admin operation
-    // For simplicity, check localStorage flag or just show login
-    const adminAuth = document.cookie.includes('admin_auth=')
-    if (adminAuth) setAuthed(true)
+    fetch('/api/admin/check').then(res => {
+      if (res.ok) setAuthed(true)
+    })
   }, [])
 
   const loadPilot = useCallback(async () => {

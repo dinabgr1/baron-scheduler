@@ -1,32 +1,59 @@
-# Baron Scheduler - Project Context
+# Baron Scheduler — Project Context
 
 ## About
-Web app for scheduling flights on Beechcraft Baron 58, registration 4X-DZJ.
+Flight scheduling web app for Beechcraft Baron 58, registration 4X-DZJ.
+Owner: Din (pilot + flight instructor)
 
-## Live URL
-https://baron-scheduler.vercel.app
+## URLs
+- Production: https://baron-scheduler.vercel.app
+- Admin panel: https://baron-scheduler.vercel.app/admin (password: BaronAdmin)
+- Availability: https://baron-scheduler.vercel.app/availability
 
 ## Tech Stack
 - Next.js 14 (App Router)
-- Supabase (DB): project wqethdnkquhfxjelwtqw
-- Vercel (hosting)
+- Supabase: project ID wqethdnkquhfxjelwtqw
+- Vercel (hosting, free tier)
 - Tailwind CSS
 
 ## Key Files
-- src/components/WeeklyCalendar.tsx — main calendar (Google Calendar style)
-- src/components/BookingForm.tsx — booking form
-- src/components/PostFlightForm.tsx — post-flight log
-- src/app/admin/page.tsx — admin panel (password: BaronAdmin)
-- src/app/availability/page.tsx — availability view
+- src/components/WeeklyCalendar.tsx — Google Calendar style, views: day/3-day/week/month, zoom +/-
+- src/components/BookingForm.tsx — public booking form
+- src/components/PostFlightForm.tsx — post-flight log (Hobbs, fuel, oil)
+- src/components/FuelCalculator.tsx — liters↔gallons calculator
+- src/app/admin/page.tsx — admin panel
+- src/app/availability/page.tsx — availability calendar page
+- src/app/api/bookings/route.ts — bookings API
+- src/app/api/flight-logs/route.ts — flight logs API
+- supabase-setup.sql — DB schema
 
-## Instructors
-- שני שגיב (main instructor + co-manager)
+## Database Tables
+- bookings: id, pilot_name, date, start_time, end_time, with_instructor, instructor_name, status (pending/approved/rejected), google_event_id
+- flight_logs: id, booking_id, hobbs_start, hobbs_end, flight_time_hours, flight_time_minutes, fuel_added_liters, fuel_level_quarters, oil_engine1, oil_engine2, notes, created_at
 
-## Admin
-- Admin names: Din, שני שגיב
-- Password: BaronAdmin
+## Business Rules
+- Aircraft: Baron 58, 4X-DZJ, 166 gallons fuel capacity
+- Instructor: שני שגיב (also co-manager/admin)
+- Admin names: Din, שני שגיב — password: BaronAdmin
+- Booking colors: blue = with instructor, yellow = without instructor
+- Post-flight submission: up to 7 days after flight
+- Post-flight editing: up to 1 hour after submission (then admin only)
+- Clicking booking in calendar → goes to post-flight form (if within time window)
 
-## Development
+## Environment Variables (.env.local + Vercel)
+- NEXT_PUBLIC_SUPABASE_URL=https://wqethdnkquhfxjelwtqw.supabase.co
+- SUPABASE_SERVICE_ROLE_KEY=set in Vercel
+- ADMIN_NAME=Din
+- ADMIN_PASSWORD=BaronAdmin
+- WHATSAPP_NOTIFY_NUMBER=972526525524
+
+## Development Workflow
 - tmux session: baron
-- Always use Claude Code in tmux session 'baron' for code changes
-- After changes: git add -A && git commit && npx vercel --prod --yes
+- Always run Claude Code inside tmux 'baron' session
+- Deploy: git add -A && git commit -m "..." && npx vercel --prod --yes
+- Never edit files manually when Claude Code is available
+
+## Pending / Ideas
+- Google Calendar sync (API ready, needs credentials)
+- WhatsApp approval flow (notify on booking)
+- Engine hours tracking
+- Maintenance log
