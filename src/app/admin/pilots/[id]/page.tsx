@@ -132,6 +132,10 @@ export default function PilotDetailPage() {
   const unpaidHours = Math.max(0, totalFlightHours - totalBilledHours)
   // Hours remaining from purchased packages (actual balance)
   const remainingHours = totalPurchased - totalFlightHours
+  // Unclosed flights = past flights with no hobbs_end and no flight_time
+  const unclosedLogs = flightLogs.filter(log =>
+    !log.hobbs_end && !log.hobbs_start && !(log.flight_time_hours || log.flight_time_minutes)
+  )
 
   const inputClass = "w-full px-3 py-2 rounded-lg bg-baron-blue-800/50 border border-baron-blue-600/50 text-white placeholder-baron-blue-400 text-sm focus:outline-none focus:border-baron-blue-400"
 
@@ -351,6 +355,21 @@ export default function PilotDetailPage() {
                   {Math.round(remainingHours * 10) / 10}
                 </div>
                 <div className="text-baron-blue-400 text-xs">🎟️ שעות שנותרו</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Unclosed flights warning */}
+        {unclosedLogs.length > 0 && (
+          <div className="bg-orange-500/15 border border-orange-400/50 rounded-xl p-4 flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <div className="text-orange-300 font-bold text-sm mb-1">
+                {unclosedLogs.length} טיסה{unclosedLogs.length > 1 ? 'ות' : ''} לא נסגרה{unclosedLogs.length > 1 ? 'ו' : ''} — שעות חסרות!
+              </div>
+              <div className="text-orange-200/70 text-xs">
+                חסרים נתוני Hobbs או זמן טיסה — חישוב השעות עלול להיות שגוי. סגור את הטיסות כדי לקבל מאזן מדויק.
               </div>
             </div>
           </div>
