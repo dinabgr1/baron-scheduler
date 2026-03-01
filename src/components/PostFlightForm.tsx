@@ -371,10 +371,10 @@ export default function PostFlightForm() {
             onChange={(e) => setForm({ ...form, fuel_level_quarters: e.target.value })}
             className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg"
           >
-            <option value="1">1/4</option>
-            <option value="2">2/4</option>
-            <option value="3">3/4</option>
-            <option value="4">4/4 (מלא)</option>
+            <option value="1">¼ (כ-41 גלון)</option>
+            <option value="2">½ (כ-83 גלון)</option>
+            <option value="3">¾ (כ-125 גלון)</option>
+            <option value="4">מלא (166 גלון)</option>
           </select>
         </div>
       </div>
@@ -415,7 +415,7 @@ export default function PostFlightForm() {
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           rows={3}
           placeholder="הערות אופציונליות..."
-          className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 text-lg resize-none"
+          className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg resize-none"
         />
       </div>
 
