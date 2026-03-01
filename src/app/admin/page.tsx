@@ -10,6 +10,14 @@ type AdminTab = 'הזמנות' | 'טייסים' | 'פיננסים' | 'תחזוק
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  // Check existing auth cookie on mount
+  useEffect(() => {
+    fetch('/api/admin/check').then(res => {
+      if (res.ok) setAuthed(true)
+    }).finally(() => setCheckingAuth(false))
+  }, [])
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -366,6 +374,7 @@ export default function AdminPage() {
 
   const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 
+  if (checkingAuth) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p className="text-gray-400">⏳</p></div>
   if (!authed) {
     return (
       <div className="min-h-screen bg-gray-50">
