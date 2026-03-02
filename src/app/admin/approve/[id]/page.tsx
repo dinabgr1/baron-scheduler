@@ -1,10 +1,12 @@
 'use client'
+export const runtime = 'edge'
 
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
 import { Booking } from '@/lib/supabase'
 
-export default function ApprovePage({ params }: { params: { id: string } }) {
+export default function ApprovePage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const { id } = require('react').use(paramsPromise) as { id: string }
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
   const [authed, setAuthed] = useState(false)
@@ -13,14 +15,14 @@ export default function ApprovePage({ params }: { params: { id: string } }) {
   const [actionDone, setActionDone] = useState<'approved' | 'rejected' | null>(null)
 
   useEffect(() => {
-    fetch(`/api/bookings/${params.id}`)
+    fetch(`/api/bookings/${id}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.id) setBooking(data)
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [params.id])
+  }, [id])
 
   async function login(e: React.FormEvent) {
     e.preventDefault()
@@ -38,7 +40,7 @@ export default function ApprovePage({ params }: { params: { id: string } }) {
   }
 
   async function handleAction(status: 'approved' | 'rejected') {
-    await fetch(`/api/bookings/${params.id}`, {
+    await fetch(`/api/bookings/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),

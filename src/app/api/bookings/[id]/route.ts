@@ -1,3 +1,4 @@
+export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/supabase'
 import { updateCalendarEvent, deleteCalendarEvent } from '@/lib/google-calendar'
@@ -6,14 +7,15 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = getServiceClient()
 
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error) {
@@ -25,8 +27,9 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = getServiceClient()
   const body = await request.json()
 
@@ -34,7 +37,7 @@ export async function PATCH(
   const { data: existing } = await supabase
     .from('bookings')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!existing) {
@@ -57,7 +60,7 @@ export async function PATCH(
   const { data, error } = await supabase
     .from('bookings')
     .update(body)
-    .eq('id', params.id)
+    .eq('id', id)
     .select()
     .single()
 
@@ -70,15 +73,16 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = getServiceClient()
 
   // Get booking for calendar deletion
   const { data: existing } = await supabase
     .from('bookings')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (existing?.google_event_id) {
@@ -92,7 +96,7 @@ export async function DELETE(
   const { error } = await supabase
     .from('bookings')
     .delete()
-    .eq('id', params.id)
+    .eq('id', id)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
