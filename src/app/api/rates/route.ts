@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const { data, error } = await getServiceClient().from('rates').select('*').order('name')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+  return NextResponse.json(data, { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } })
 }
 export async function POST(req: NextRequest) {
   const body = await req.json()

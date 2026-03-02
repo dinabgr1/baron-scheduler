@@ -167,26 +167,28 @@ export default function AdminPage() {
     }
   }
 
-  async function loadBookings() {
-    setLoading(true)
-    const res = await fetch('/api/bookings')
-    const data = await res.json()
-    if (Array.isArray(data)) {
-      setBookings(data.sort((a: Booking, b: Booking) => {
-        const dateComp = b.date.localeCompare(a.date)
-        if (dateComp !== 0) return dateComp
-        return b.start_time.localeCompare(a.start_time)
-      }))
-    }
-    setLoading(false)
-  }
+  async function loadBookings() { await loadAllData() }
+  async function loadFlightLogs() { await loadAllData() }
 
-  async function loadFlightLogs() {
-    const res = await fetch('/api/flight-logs')
-    const data = await res.json()
-    if (Array.isArray(data)) {
-      setFlightLogs(data)
-    }
+  async function loadAllData() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/data')
+      const d = await res.json()
+      if (d.bookings) setBookings(d.bookings.sort((a: Booking, b: Booking) => {
+        if (a.date !== b.date) return b.date.localeCompare(a.date)
+        return a.start_time.localeCompare(b.start_time)
+      }))
+      if (d.flightLogs) setFlightLogs(d.flightLogs)
+      if (d.pilots) setPilots(d.pilots)
+      if (d.packages) setHourPackages(d.packages)
+      if (d.rates) setRates(d.rates)
+      if (d.maintenance) {
+        setMaintenanceRecords(d.maintenance.records)
+        setCurrentHobbs(d.maintenance.currentHobbs)
+      }
+    } catch(e) { console.error(e) }
+    setLoading(false)
   }
 
   async function loadPilots() {
