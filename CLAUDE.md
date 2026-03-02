@@ -210,3 +210,36 @@ Tested:
 7. Commit message is clear and descriptive ✅
 
 If ANY of these fail — you are NOT done. Fix it first.
+
+
+## 🤖 QA Flow — ClawBot Reviews Your Work
+
+You are the DEVELOPER. ClawBot (OpenClaw) is the QA TESTER.
+
+### After every change:
+1. Run `npm run build` — must pass
+2. Commit your changes with a clear message
+3. Push to GitHub
+4. **STOP and notify**: send a message saying what you changed and what pages to test
+5. **WAIT for ClawBot to approve** before deploying to production
+
+### ClawBot will:
+- Open the app in a real browser (mobile + desktop)
+- Click through all changed pages
+- Test forms with valid and invalid data
+- Check RTL, Hebrew text, layout
+- Take screenshots and verify design
+- Test edge cases you might have missed
+- Test security: access pages without permission, inject malicious input
+- Run Lighthouse scan for performance and accessibility
+- Run regression tests: verify old features still work after your change
+- Produce a QA report: what passed, what failed, with screenshots
+- Deploy to production ONLY after full approval
+
+### If ClawBot finds issues:
+- You will receive a list of bugs/issues to fix
+- Fix them ALL, then notify again
+- Repeat until ClawBot approves
+
+### ❌ NEVER deploy to production without ClawBot approval
+### ✅ ClawBot says "approved" → run `npx vercel --prod --yes`

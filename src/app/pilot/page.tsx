@@ -145,8 +145,7 @@ export default function PilotPortal() {
                 <input
                   type="text"
                   value={pilotName}
-                  onChange={e => setPilotName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && search()}
+                  onChange={e => { setPilotName(e.target.value); setVerified(false); setPilot(null) }}
                   placeholder="הכנס את שמך"
                   className={inputClass}
                 />
@@ -154,15 +153,53 @@ export default function PilotPortal() {
                 {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 font-bold">✓</span>}
               </div>
               {pilotStatus === 'found' && <p className="text-green-600 text-xs mt-1 font-medium">✓ טייס קיים במערכת</p>}
-              {pilotStatus === 'not_found' && <p className="text-orange-600 text-xs mt-1 font-medium">טייס לא נמצא במערכת</p>}
+              {pilotStatus === 'not_found' && (
+                <div>
+                  <p className="text-orange-600 text-xs mt-1 font-medium">טייס לא נמצא במערכת</p>
+                  {suggestions.length > 0 && (
+                    <div className="mt-1 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                      {suggestions.slice(0, 5).map(s => (
+                        <button key={s.id} onClick={() => { setPilotName(s.name); setSuggestions([]) }}
+                          className="block w-full text-right px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 border-b border-gray-100 last:border-0">
+                          {s.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <button
-              onClick={search}
-              disabled={searching || !pilotName.trim()}
-              className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold text-lg transition-colors"
-            >
-              {searching ? 'מחפש...' : 'כניסה 🔍'}
-            </button>
+
+            {/* License verification - shows after pilot is found */}
+            {pilotStatus === 'found' && !verified && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🔐</span>
+                  <div>
+                    <p className="text-blue-800 font-bold text-sm">אימות זהות</p>
+                    <p className="text-blue-600 text-xs">הכנס את מספר הרישיון שלך</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <input type="text" value={licenseInput}
+                    onChange={e => { setLicenseInput(e.target.value); setLicenseError(false) }}
+                    onKeyDown={e => e.key === 'Enter' && verifyLicense()}
+                    placeholder="מספר רישיון טיס"
+                    className={"flex-1 px-3 py-2.5 rounded-lg border text-sm " + (licenseError ? 'border-red-400 bg-red-50' : 'border-blue-300 bg-white') + " text-gray-900 focus:outline-none focus:border-blue-500"} />
+                  <button onClick={verifyLicense}
+                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm">
+                    אמת
+                  </button>
+                </div>
+                {licenseError && <p className="text-red-600 text-xs font-medium">מספר רישיון שגוי</p>}
+                {!foundPilotLicense && <p className="text-orange-600 text-xs">⚠️ לא הוגדר רישיון לטייס זה. פנה למנהל.</p>}
+              </div>
+            )}
+
+            {verified && (
+              <p className="text-green-600 text-xs font-medium">✓ זהות אומתה</p>
+            )}
+
             {notFound && (
               <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-center text-sm">
                 לא נמצא טייס בשם זה
