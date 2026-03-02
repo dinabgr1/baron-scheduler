@@ -28,6 +28,38 @@ export default function PilotPortal() {
   const [allPilots, setAllPilots] = useState<Pilot[]>([])
   const [suggestions, setSuggestions] = useState<Pilot[]>([])
 
+  // Edit booking state
+  const [editingBookingId, setEditingBookingId] = useState<string | null>(null)
+  const [editBookingForm, setEditBookingForm] = useState({ date: '', start_time: '', end_time: '' })
+  const [editSaving, setEditSaving] = useState(false)
+
+  async function cancelBooking(id: string) {
+    if (!confirm('בטוח שברצונך לבטל הזמנה זו?')) return
+    try {
+      const res = await fetch(`/api/bookings/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setBookings(prev => prev.filter(b => b.id !== id))
+      }
+    } catch { /* ignore */ }
+  }
+
+  async function saveBookingEdit(id: string) {
+    setEditSaving(true)
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editBookingForm),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updated } : b))
+        setEditingBookingId(null)
+      }
+    } catch { /* ignore */ }
+    setEditSaving(false)
+  }
+
   // Auto-detect pilot (same logic as BookingForm)
   useEffect(() => {
     const name = pilotName.trim()
@@ -258,23 +290,64 @@ export default function PilotPortal() {
                 <p className="text-gray-500 text-sm text-center py-3">אין הזמנות עתידיות</p>
               ) : (
                 <div className="space-y-2">
-                  {futureBookings.map(b => (
-                    <div key={b.id} className={`rounded-lg p-3 border ${
-                      b.status === 'approved' ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'
-                    }`}>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="text-gray-900 font-medium text-sm">{formatDate(b.date)}</div>
-                          <div className="text-gray-500 text-xs">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</div>
-                        </div>
-                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                          b.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {b.status === 'approved' ? 'מאושר' : 'ממתין'}
-                        </span>
+                  {futureBookings.map(b => {
+                    const isEditing = editingBookingId === b.id
+                    return (
+                      <div key={b.id} className={`rounded-lg p-3 border ${
+                        b.status === 'approved' ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'
+                      }`}>
+                        {isEditing ? (
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-3 gap-2">
+                              <input type="date" value={editBookingForm.date}
+                                onChange={e => setEditBookingForm({ ...editBookingForm, date: e.target.value })}
+                                className="px-2 py-1.5 rounded-lg border border-gray-300 text-sm bg-white" />
+                              <input type="time" value={editBookingForm.start_time}
+                                onChange={e => setEditBookingForm({ ...editBookingForm, start_time: e.target.value })}
+                                className="px-2 py-1.5 rounded-lg border border-gray-300 text-sm bg-white" />
+                              <input type="time" value={editBookingForm.end_time}
+                                onChange={e => setEditBookingForm({ ...editBookingForm, end_time: e.target.value })}
+                                className="px-2 py-1.5 rounded-lg border border-gray-300 text-sm bg-white" />
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={() => saveBookingEdit(b.id)} disabled={editSaving}
+                                className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium">
+                                {editSaving ? '...' : '✓ שמור'}
+                              </button>
+                              <button onClick={() => setEditingBookingId(null)}
+                                className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 text-xs font-medium">ביטול</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <div className="text-gray-900 font-medium text-sm">{formatDate(b.date)}</div>
+                                <div className="text-gray-500 text-xs">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</div>
+                              </div>
+                              <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                                b.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {b.status === 'approved' ? 'מאושר' : 'ממתין'}
+                              </span>
+                            </div>
+                            <div className="flex gap-3 mt-2 pt-2 border-t border-gray-200/50">
+                              <button onClick={() => {
+                                setEditingBookingId(b.id)
+                                setEditBookingForm({ date: b.date, start_time: b.start_time, end_time: b.end_time })
+                              }} className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                ✏️ ערוך
+                              </button>
+                              <button onClick={() => cancelBooking(b.id)}
+                                className="text-red-500 hover:text-red-700 text-xs font-medium">
+                                ✕ בטל הזמנה
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
