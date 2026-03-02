@@ -1150,6 +1150,24 @@ export default function AdminPage() {
 
               {showAddMaint && (
                 <form onSubmit={addMaintenanceItem} className="mt-3 bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                  {/* Quick presets */}
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { label: "החלפת שמן", type: "oil_change", hrs: "50", months: "", notes: "החלפת שמן" },
+                      { label: "ביקורת 100h", type: "100hr", hrs: "100", months: "", notes: "ביקורת 100 שעות" },
+                      { label: "שנתית", type: "annual", hrs: "", months: "12", notes: "ביקורת שנתית" },
+                      { label: "מד גובה", type: "altimeter", hrs: "", months: "24", notes: "בדיקת מד גובה + טרנספונדר" },
+                      { label: "ELT", type: "elt", hrs: "", months: "12", notes: "בדיקת ELT" },
+                    ].map(p => (
+                      <button key={p.type} type="button" onClick={() => setMaintAddForm({
+                        maintenance_type: p.type, interval_hours: p.hrs, interval_months: p.months,
+                        last_done_hobbs: String(currentHobbs), last_done_date: new Date().toISOString().split("T")[0], notes: p.notes
+                      })}
+                        className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200 hover:bg-blue-100 transition-colors">
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-gray-700 text-xs font-semibold mb-1">סוג תחזוקה</label>

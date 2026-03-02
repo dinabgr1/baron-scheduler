@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 
 type Pilot = { id: string; name: string; phone: string | null; license_number: string | null }
+type ExistingBooking = { id: string; pilot_name: string; date: string; start_time: string; end_time: string; status: string }
 
 export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
   const [form, setForm] = useState({
@@ -20,6 +21,36 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Conflict detection state
+  const [dayBookings, setDayBookings] = useState<ExistingBooking[]>([])
+  const [conflict, setConflict] = useState<ExistingBooking | null>(null)
+  const [loadingDay, setLoadingDay] = useState(false)
+
+  // Fetch bookings for selected date
+  useEffect(() => {
+    if (!form.date) { setDayBookings([]); setConflict(null); return }
+    setLoadingDay(true)
+    fetch(`/api/bookings?from=${form.date}&to=${form.date}`)
+      .then(r => r.json())
+      .then((bookings: ExistingBooking[]) => {
+        const active = bookings.filter(b => b.status === 'approved' || b.status === 'pending')
+        setDayBookings(active)
+      })
+      .catch(() => setDayBookings([]))
+      .finally(() => setLoadingDay(false))
+  }, [form.date])
+
+  // Check for conflicts when times change
+  useEffect(() => {
+    if (!form.start_time || !form.end_time || dayBookings.length === 0) {
+      setConflict(null); return
+    }
+    const found = dayBookings.find(b =>
+      form.start_time < b.end_time && form.end_time > b.start_time
+    )
+    setConflict(found || null)
+  }, [form.start_time, form.end_time, dayBookings])
 
   useEffect(() => {
     const name = form.pilot_name.trim()
@@ -46,6 +77,9 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (conflict) {
+      if (!confirm(`⚠️ יש התנגשות עם הזמנה של ${conflict.pilot_name} (${conflict.start_time}–${conflict.end_time}). להמשיך בכל זאת?`)) return
+    }
     setSubmitting(true)
     setMessage(null)
     try {
@@ -77,6 +111,8 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       setForm({ pilot_name: '', phone: '', date: '', start_time: '', end_time: '', with_instructor: false, instructor_name: 'Shani Segev', flight_purpose: 'אימון' })
       setNewPilotFields({ license_number: '' })
       setPilotStatus('idle')
+      setDayBookings([])
+      setConflict(null)
       onSuccess?.()
     } catch (error) {
       setMessage({ type: 'error', text: error instanceof Error ? error.message : 'שגיאה ביצירת ההזמנה' })
@@ -155,6 +191,20 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
         <input type="date" required min={today} value={form.date}
           onChange={(e) => setForm({ ...form, date: e.target.value })}
           className={inputClass} />
+        {loadingDay && <p className="text-xs text-gray-400 mt-1">בודק זמינות...</p>}
+        {!loadingDay && form.date && dayBookings.length > 0 && (
+          <div className="mt-2 space-y-1">
+            <p className="text-xs font-semibold text-slate-500">📋 הזמנות קיימות ביום זה:</p>
+            {dayBookings.map(b => (
+              <div key={b.id} className="flex items-center gap-2 text-xs bg-slate-50 rounded-lg px-3 py-1.5 border border-slate-100">
+                <span className={`w-2 h-2 rounded-full ${b.status === 'approved' ? 'bg-green-500' : 'bg-yellow-400'}`} />
+                <span className="font-mono font-bold text-slate-700">{b.start_time}–{b.end_time}</span>
+                <span className="text-slate-500">{b.pilot_name}</span>
+                <span className="text-slate-400">({b.status === 'approved' ? 'מאושר' : 'ממתין'})</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -162,15 +212,29 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
           <label className="block text-slate-600 text-sm font-medium mb-1.5">שעת התחלה</label>
           <input type="time" required value={form.start_time}
             onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-            className={inputClass} />
+            className={`${inputClass} ${conflict ? 'border-red-400 bg-red-50' : ''}`} />
         </div>
         <div>
           <label className="block text-slate-600 text-sm font-medium mb-1.5">שעת סיום</label>
           <input type="time" required value={form.end_time}
             onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-            className={inputClass} />
+            className={`${inputClass} ${conflict ? 'border-red-400 bg-red-50' : ''}`} />
         </div>
       </div>
+
+      {/* Conflict warning */}
+      {conflict && (
+        <div className="bg-red-50 border border-red-300 rounded-xl p-3 flex items-start gap-2">
+          <span className="text-xl">⚠️</span>
+          <div>
+            <p className="text-red-800 font-bold text-sm">התנגשות!</p>
+            <p className="text-red-600 text-xs">
+              המטוס תפוס ע&quot;י {conflict.pilot_name} בשעות {conflict.start_time}–{conflict.end_time}
+              {conflict.status === 'pending' && ' (ממתין לאישור)'}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-slate-50 border border-slate-200">
@@ -189,8 +253,12 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
 
       <button type="submit" disabled={submitting || pilotStatus === 'checking'}
-        className="w-full py-4 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-lg transition-colors shadow-sm">
-        {submitting ? 'שולח...' : pilotStatus === 'new' ? 'הירשם ושלח הזמנה ✈️' : 'שלח הזמנה ✈️'}
+        className={`w-full py-4 rounded-xl font-bold text-lg transition-colors shadow-sm ${
+          conflict
+            ? 'bg-orange-500 hover:bg-orange-600 text-white'
+            : 'bg-blue-700 hover:bg-blue-800 text-white'
+        } disabled:bg-slate-300 disabled:cursor-not-allowed`}>
+        {submitting ? 'שולח...' : conflict ? '⚠️ שלח בכל זאת' : pilotStatus === 'new' ? 'הירשם ושלח הזמנה ✈️' : 'שלח הזמנה ✈️'}
       </button>
 
       {message && (
