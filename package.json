@@ -11,7 +11,8 @@
     "lighthouse": "lhci autorun",
     "prepare": "husky",
     "pages:build": "npx @cloudflare/next-on-pages",
-    "pages:dev": "npx @cloudflare/next-on-pages dev"
+    "pages:dev": "npx @cloudflare/next-on-pages dev",
+    "deploy": "npx @cloudflare/next-on-pages && wrangler pages deploy .vercel/output/static --project-name baron-scheduler"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
