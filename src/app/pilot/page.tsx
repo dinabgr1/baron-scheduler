@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Header from '@/components/Header'
+import PageView from '@/components/PageView'
 
 type Pilot = { id: string; name: string; phone: string | null; license_number: string | null }
 type Booking = { id: string; pilot_name: string; date: string; start_time: string; end_time: string; status: string; with_instructor: boolean; instructor_name: string | null }
@@ -163,6 +164,7 @@ export default function PilotPortal() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <PageView page="פורטל טייס" />
       <Header />
       <main className="max-w-lg mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
         <div className="text-center space-y-2">

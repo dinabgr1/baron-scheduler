@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Header from '@/components/Header'
 import WeeklyCalendar from '@/components/WeeklyCalendar'
+import PageView from '@/components/PageView'
 import BookingForm from '@/components/BookingForm'
 
 export default function AvailabilityPage() {
@@ -10,6 +11,7 @@ export default function AvailabilityPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <PageView page="זמינות" />
       <Header />
       <main className="max-w-2xl mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
         <div className="flex items-center justify-between">

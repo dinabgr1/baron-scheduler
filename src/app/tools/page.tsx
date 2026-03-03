@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
 import FuelCalculator from '@/components/FuelCalculator'
+import PageView from '@/components/PageView'
 
 type MaintenanceRecord = {
   id: string; maintenance_type: string; last_done_date: string | null;
@@ -45,6 +46,7 @@ export default function ToolsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <PageView page="כלים" />
       <Header />
       <main className="max-w-lg mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
         <div className="text-center space-y-2">

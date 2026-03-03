@@ -95,6 +95,7 @@ export default function LoginLogsPage() {
 
   const adminLogs = logs.filter(l => l.login_type === 'admin')
   const pilotLogs = logs.filter(l => l.login_type === 'pilot')
+  const viewLogs = logs.filter(l => l.login_type === 'view')
   const failedLogs = logs.filter(l => !l.success)
 
   return (
@@ -110,7 +111,7 @@ export default function LoginLogsPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-xl border p-4 text-center">
             <div className="text-2xl font-bold text-blue-700">{adminLogs.length}</div>
             <div className="text-xs text-slate-500">כניסות מנהל</div>
@@ -118,6 +119,10 @@ export default function LoginLogsPage() {
           <div className="bg-white rounded-xl border p-4 text-center">
             <div className="text-2xl font-bold text-green-600">{pilotLogs.length}</div>
             <div className="text-xs text-slate-500">כניסות טייסים</div>
+          </div>
+          <div className="bg-white rounded-xl border p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600">{viewLogs.length}</div>
+            <div className="text-xs text-slate-500">צפיות בדפים</div>
           </div>
           <div className="bg-white rounded-xl border p-4 text-center">
             <div className="text-2xl font-bold text-red-500">{failedLogs.length}</div>
@@ -133,14 +138,14 @@ export default function LoginLogsPage() {
             logs.map(log => (
               <div key={log.id} className="p-4 flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
-                  !log.success ? 'bg-red-100' : log.login_type === 'admin' ? 'bg-blue-100' : 'bg-green-100'
+                  !log.success ? 'bg-red-100' : log.login_type === 'admin' ? 'bg-blue-100' : log.login_type === 'view' ? 'bg-purple-100' : 'bg-green-100'
                 }`}>
-                  {!log.success ? '🚫' : log.login_type === 'admin' ? '🔑' : '✈️'}
+                  {!log.success ? '🚫' : log.login_type === 'admin' ? '🔑' : log.login_type === 'view' ? '👁️' : '✈️'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-800">
-                      {log.login_type === 'admin' ? 'מנהל' : log.user_name || 'טייס'}
+                      {log.login_type === 'admin' ? 'מנהל' : log.login_type === 'view' ? `צפייה: ${log.user_name}` : log.user_name || 'טייס'}
                     </span>
                     {!log.success && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">נכשל</span>}
                   </div>

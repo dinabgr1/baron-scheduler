@@ -3,6 +3,7 @@
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
+import PageView from '@/components/PageView'
 import PostFlightForm from '@/components/PostFlightForm'
 
 function PostFlightContent() {
@@ -29,6 +30,7 @@ function PostFlightContent() {
 export default function PostFlightPage() {
   return (
     <div className="min-h-screen bg-gray-50">
+      <PageView page="דוח אחרי טיסה" />
       <Header />
       <main className="max-w-lg mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
         <Suspense fallback={<div className="p-8 text-center text-gray-500">טוען...</div>}>
