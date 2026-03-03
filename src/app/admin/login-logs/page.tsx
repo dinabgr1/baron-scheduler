@@ -11,6 +11,13 @@ type LoginLog = {
   user_agent: string
   success: number
   created_at: string
+  city: string | null
+  country: string | null
+  referrer: string | null
+  screen_size: string | null
+  timezone: string | null
+  connection: string | null
+  language: string | null
 }
 
 function parseUA(ua: string): string {
@@ -149,10 +156,13 @@ export default function LoginLogsPage() {
                     </span>
                     {!log.success && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">נכשל</span>}
                   </div>
-                  <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                  <div className="text-xs text-slate-400 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
                     <span>{parseUA(log.user_agent)}</span>
-                    <span>·</span>
-                    <span>{log.ip}</span>
+                    {log.city && <span>· 📍 {log.city}{log.country ? `, ${log.country}` : ''}</span>}
+                    {!log.city && log.country && <span>· 🌍 {log.country}</span>}
+                    {log.screen_size && <span>· 🖥️ {log.screen_size}</span>}
+                    {log.connection && <span>· 📶 {log.connection}</span>}
+                    <span>· {log.ip}</span>
                   </div>
                 </div>
                 <div className="text-xs text-slate-400 whitespace-nowrap">
