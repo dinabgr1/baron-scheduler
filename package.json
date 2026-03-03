@@ -15,7 +15,6 @@
     "deploy": "npx @cloudflare/next-on-pages && wrangler pages deploy .vercel/output/static --project-name baron-scheduler"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
     "googleapis": "^129.0.0",
     "next": "^15.1.0",
     "react": "^18.2.0",
