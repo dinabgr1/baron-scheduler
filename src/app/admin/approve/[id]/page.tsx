@@ -3,7 +3,7 @@ export const runtime = 'edge'
 
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
-import { Booking } from '@/lib/supabase'
+import { Booking } from '@/lib/db'
 
 export default function ApprovePage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const { id } = require('react').use(paramsPromise) as { id: string }

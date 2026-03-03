@@ -4,7 +4,7 @@ export const runtime = 'edge'
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Header from '@/components/Header'
-import { Pilot, Booking, FlightLog, HourPackage, BillingRecord, Rate } from '@/lib/supabase'
+import { Pilot, Booking, FlightLog, HourPackage, BillingRecord, Rate } from '@/lib/db'
 
 type BillingTab = 'שעות'
 type FlightTab = 'טיסות עתידיות' | 'טיסות שעברו'

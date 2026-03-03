@@ -1,34 +1,17 @@
 export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServiceClient } from '@/lib/supabase'
+import { dbAll, dbFirst } from '@/lib/db'
+import type { Booking, Pilot } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params
-  const supabase = getServiceClient()
-
-  // First get the pilot name
-  const { data: pilot, error: pilotErr } = await supabase
-    .from('pilots')
-    .select('name')
-    .eq('id', id)
-    .single()
-
-  if (pilotErr || !pilot) {
-    return NextResponse.json({ error: 'Pilot not found' }, { status: 404 })
-  }
-
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('pilot_name', pilot.name)
-    .order('date', { ascending: false })
-    .order('start_time', { ascending: false })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
+  const pilot = await dbFirst<Pilot>('SELECT * FROM pilots WHERE id = ?', id)
+  if (!pilot) return NextResponse.json({ error: 'Pilot not found' }, { status: 404 })
+  const data = await dbAll<Booking>('SELECT * FROM bookings WHERE pilot_name = ? ORDER BY date DESC', pilot.name)
   return NextResponse.json(data)
 }

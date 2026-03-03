@@ -1,44 +1,21 @@
 export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServiceClient } from '@/lib/supabase'
+import { dbAll, dbFirst } from '@/lib/db'
+import type { FlightLog, Pilot, Booking } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params
-  const supabase = getServiceClient()
-
-  const { data: pilot, error: pilotErr } = await supabase
-    .from('pilots')
-    .select('name')
-    .eq('id', id)
-    .single()
-
-  if (pilotErr || !pilot) {
-    return NextResponse.json({ error: 'Pilot not found' }, { status: 404 })
-  }
-
-  // Get all bookings for this pilot, then join flight_logs
-  const { data: bookings } = await supabase
-    .from('bookings')
-    .select('id')
-    .eq('pilot_name', pilot.name)
-
-  if (!bookings || bookings.length === 0) {
-    return NextResponse.json([])
-  }
-
-  const bookingIds = bookings.map(b => b.id)
-
-  const { data, error } = await supabase
-    .from('flight_logs')
-    .select('*, bookings(*)')
-    .in('booking_id', bookingIds)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
+  const pilot = await dbFirst<Pilot>('SELECT * FROM pilots WHERE id = ?', id)
+  if (!pilot) return NextResponse.json({ error: 'Pilot not found' }, { status: 404 })
+  const bookings = await dbAll<Booking>('SELECT id FROM bookings WHERE pilot_name = ?', pilot.name)
+  if (bookings.length === 0) return NextResponse.json([])
+  const ids = bookings.map(b => b.id)
+  const placeholders = ids.map(() => '?').join(',')
+  const data = await dbAll<FlightLog>(`SELECT * FROM flight_logs WHERE booking_id IN (${placeholders}) ORDER BY created_at DESC`, ...ids)
   return NextResponse.json(data)
 }

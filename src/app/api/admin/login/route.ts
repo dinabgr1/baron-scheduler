@@ -1,22 +1,20 @@
 export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
-
-export const dynamic = 'force-dynamic'
+import { getEnv } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   const { password } = await request.json()
-
-  if (password === process.env.ADMIN_PASSWORD) {
-    const response = NextResponse.json({ success: true })
-    response.cookies.set('admin_auth', 'true', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: '/',
-    })
-    return response
+  const env = getEnv()
+  if (password !== env.ADMIN_PASSWORD) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-
-  return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
+  const response = NextResponse.json({ success: true })
+  response.cookies.set('admin_auth', 'true', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+  })
+  return response
 }

@@ -1,29 +1,24 @@
 export const runtime = 'edge'
 import { NextResponse } from 'next/server'
-import { getServiceClient } from '@/lib/supabase'
+import { dbAll, dbFirst } from '@/lib/db'
+import type { Booking, FlightLog, Pilot, Rate, HourPackage, MaintenanceRecord } from '@/lib/db'
+
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const supabase = getServiceClient()
-
-  const [bookings, pilots, flightLogs, packages, rates, maintenance] = await Promise.all([
-    supabase.from('bookings').select('*').order('date', { ascending: false }),
-    supabase.from('pilots').select('*').order('name'),
-    supabase.from('flight_logs').select('*').order('created_at', { ascending: false }),
-    supabase.from('hour_packages').select('*').order('purchase_date', { ascending: false }),
-    supabase.from('rates').select('*').eq('is_active', true),
-    supabase.from('maintenance_records').select('*'),
+  const [bookings, flightLogs, pilots, rates, hourPackages, maintenanceRecords, lastLog] = await Promise.all([
+    dbAll<Booking>('SELECT * FROM bookings ORDER BY date ASC, start_time ASC'),
+    dbAll<FlightLog>('SELECT * FROM flight_logs ORDER BY created_at DESC'),
+    dbAll<Pilot>('SELECT * FROM pilots WHERE is_active = 1 ORDER BY name'),
+    dbAll<Rate>('SELECT * FROM rates WHERE is_active = 1 ORDER BY name'),
+    dbAll<HourPackage>('SELECT * FROM hour_packages ORDER BY purchase_date DESC'),
+    dbAll<MaintenanceRecord>('SELECT * FROM maintenance_records ORDER BY created_at'),
+    dbFirst<FlightLog>('SELECT hobbs_end FROM flight_logs WHERE hobbs_end IS NOT NULL ORDER BY hobbs_end DESC LIMIT 1'),
   ])
 
-  const currentHobbs = flightLogs.data?.[0]?.hobbs_end || 0
-
   return NextResponse.json({
-    bookings: bookings.data || [],
-    pilots: pilots.data || [],
-    flightLogs: flightLogs.data || [],
-    packages: packages.data || [],
-    rates: rates.data || [],
-    maintenance: { records: maintenance.data || [], currentHobbs },
+    bookings, flightLogs, pilots, rates, hourPackages,
+    maintenance: { records: maintenanceRecords, currentHobbs: lastLog?.hobbs_end || 0 },
   }, {
     headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' }
   })

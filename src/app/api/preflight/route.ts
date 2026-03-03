@@ -1,47 +1,32 @@
 export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServiceClient } from '@/lib/supabase'
+import { dbAll, dbRun, dbFirst } from '@/lib/db'
+
 export const dynamic = 'force-dynamic'
 
+type PreflightChecklist = { id: string; booking_id: string|null; pilot_name: string; checked_items: string; all_passed: number; notes: string|null; created_at: string }
+
 export async function GET(request: NextRequest) {
-  const supabase = getServiceClient()
   const { searchParams } = new URL(request.url)
   const bookingId = searchParams.get('booking_id')
-
-  if (!bookingId) {
-    return NextResponse.json({ error: 'booking_id required' }, { status: 400 })
+  if (bookingId) {
+    const data = await dbFirst<PreflightChecklist>('SELECT * FROM preflight_checklists WHERE booking_id = ?', bookingId)
+    return NextResponse.json(data)
   }
-
-  const { data, error } = await supabase
-    .from('preflight_checklists')
-    .select('*')
-    .eq('booking_id', bookingId)
-    .maybeSingle()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const data = await dbAll<PreflightChecklist>('SELECT * FROM preflight_checklists ORDER BY created_at DESC')
   return NextResponse.json(data)
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = getServiceClient()
   const body = await request.json()
-  const { booking_id, pilot_name, checklist_data } = body
+  const { booking_id, pilot_name, checked_items, all_passed, notes } = body
+  if (!pilot_name) return NextResponse.json({ error: 'Missing pilot_name' }, { status: 400 })
 
-  if (!booking_id || !checklist_data) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-  }
-
-  const { data, error } = await supabase
-    .from('preflight_checklists')
-    .insert({
-      booking_id,
-      pilot_name: pilot_name || null,
-      checklist_data,
-      completed: true,
-    })
-    .select()
-    .single()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const id = crypto.randomUUID()
+  await dbRun(
+    'INSERT INTO preflight_checklists (id, booking_id, pilot_name, checked_items, all_passed, notes) VALUES (?, ?, ?, ?, ?, ?)',
+    id, booking_id || null, pilot_name, JSON.stringify(checked_items || []), all_passed ? 1 : 0, notes || null
+  )
+  const data = await dbFirst<PreflightChecklist>('SELECT * FROM preflight_checklists WHERE id = ?', id)
   return NextResponse.json(data, { status: 201 })
 }

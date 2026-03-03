@@ -1,17 +1,34 @@
 export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServiceClient } from '@/lib/supabase'
+import { dbFirst, dbRun } from '@/lib/db'
+import type { Rate } from '@/lib/db'
+
 export const dynamic = 'force-dynamic'
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params
-  const body = await req.json()
-  const { data, error } = await getServiceClient().from('rates').update(body).eq('id', id).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const body = await request.json()
+  const fields: string[] = []
+  const values: unknown[] = []
+  for (const [key, val] of Object.entries(body)) {
+    if (key === 'id') continue
+    fields.push(`${key} = ?`)
+    values.push(val)
+  }
+  values.push(id)
+  await dbRun(`UPDATE rates SET ${fields.join(', ')} WHERE id = ?`, ...values)
+  const data = await dbFirst<Rate>('SELECT * FROM rates WHERE id = ?', id)
   return NextResponse.json(data)
 }
-export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params
-  const { error } = await getServiceClient().from('rates').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true })
+  await dbRun('DELETE FROM rates WHERE id = ?', id)
+  return NextResponse.json({ success: true })
 }

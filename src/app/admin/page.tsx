@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
 import NotificationBanner from '@/components/NotificationBanner'
 import WeeklyCalendar from '@/components/WeeklyCalendar'
-import { Booking, FlightLog, Pilot, Rate, HourPackage } from '@/lib/supabase'
+import { Booking, FlightLog, Pilot, Rate, HourPackage } from '@/lib/db'
 
 type AdminTab = 'הזמנות' | 'טייסים' | 'פיננסים' | 'תחזוקה' | 'דוחות'
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Booking, FlightLog } from '@/lib/supabase'
+import { Booking, FlightLog } from '@/lib/db'
 import PreFlightChecklist from '@/components/PreFlightChecklist'
 
 type Step = 'name' | 'select' | 'form' | 'done'

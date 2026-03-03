@@ -1,40 +1,66 @@
 export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServiceClient } from '@/lib/supabase'
+import { dbAll, dbRun, dbFirst } from '@/lib/db'
+import type { MaintenanceRecord, FlightLog } from '@/lib/db'
+
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-  const supabase = getServiceClient()
-  const pilotsOnly = request.nextUrl.searchParams.get('pilots_only') === 'true'
+  const { searchParams } = new URL(request.url)
+  const pilotsOnly = searchParams.get('pilots_only')
 
-  let query = supabase.from('maintenance_records').select('*')
-  if (pilotsOnly) query = query.eq('visible_to_pilots', true)
-  const { data: records, error } = await query
+  let sql = 'SELECT * FROM maintenance_records'
+  if (pilotsOnly) sql += ' WHERE visible_to_pilots = 1'
+  sql += ' ORDER BY created_at'
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  const { data: logs } = await supabase.from('flight_logs').select('hobbs_end').order('created_at', { ascending: false }).limit(1)
-  const currentHobbs = logs?.[0]?.hobbs_end || 0
-  return NextResponse.json({ records, currentHobbs })
+  const records = await dbAll<MaintenanceRecord>(sql)
+
+  // Get current Hobbs from latest flight log
+  const lastLog = await dbFirst<FlightLog>('SELECT hobbs_end FROM flight_logs WHERE hobbs_end IS NOT NULL ORDER BY hobbs_end DESC LIMIT 1')
+  const currentHobbs = lastLog?.hobbs_end || 0
+
+  return NextResponse.json({ records, currentHobbs }, {
+    headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' }
+  })
 }
 
-export async function PATCH(req: NextRequest) {
-  const body = await req.json()
-  const { id, ...updates } = body
-  const { data, error } = await getServiceClient().from('maintenance_records').update(updates).eq('id', id).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } })
-}
+export async function POST(request: NextRequest) {
+  const body = await request.json()
+  const { maintenance_type, interval_hours, interval_months, last_done_hobbs, last_done_date, notes } = body
+  if (!maintenance_type) return NextResponse.json({ error: 'Missing type' }, { status: 400 })
 
-export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const { data, error } = await getServiceClient().from('maintenance_records').insert(body).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const id = crypto.randomUUID()
+  await dbRun(
+    `INSERT INTO maintenance_records (id, maintenance_type, interval_hours, interval_months, last_done_hobbs, last_done_date, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    id, maintenance_type, interval_hours || null, interval_months || null,
+    last_done_hobbs || 0, last_done_date || null, notes || null
+  )
+  const data = await dbFirst<MaintenanceRecord>('SELECT * FROM maintenance_records WHERE id = ?', id)
   return NextResponse.json(data, { status: 201 })
 }
 
-export async function DELETE(req: NextRequest) {
-  const { id } = await req.json()
-  const { error } = await getServiceClient().from('maintenance_records').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true })
+export async function PATCH(request: NextRequest) {
+  const body = await request.json()
+  const { id, ...updates } = body
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+  const fields: string[] = ['updated_at = datetime(\'now\')']
+  const values: unknown[] = []
+  for (const [key, val] of Object.entries(updates)) {
+    fields.push(`${key} = ?`)
+    values.push(val)
+  }
+  values.push(id)
+  await dbRun(`UPDATE maintenance_records SET ${fields.join(', ')} WHERE id = ?`, ...values)
+  const data = await dbFirst<MaintenanceRecord>('SELECT * FROM maintenance_records WHERE id = ?', id)
+  return NextResponse.json(data)
+}
+
+export async function DELETE(request: NextRequest) {
+  const body = await request.json()
+  const { id } = body
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+  await dbRun('DELETE FROM maintenance_records WHERE id = ?', id)
+  return NextResponse.json({ success: true })
 }

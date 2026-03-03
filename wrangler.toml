@@ -4,7 +4,9 @@ compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static"
 
 [vars]
-NEXT_PUBLIC_SUPABASE_URL = "https://wqethdnkquhfxjelwtqw.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxZXRoZG5rcXVoZnhqZWx3dHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjE4NDAsImV4cCI6MjA4Nzc5Nzg0MH0.2H6wPPOjp9IeesZfCmIz3StSKKvPTwrQj1KZMc48Wug"
-SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxZXRoZG5rcXVoZnhqZWx3dHF3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjIyMTg0MCwiZXhwIjoyMDg3Nzk3ODQwfQ.zT3Lp1gIuNTdgepOFJpeEnynnLFCvNA50pRYeXova34"
 ADMIN_PASSWORD = "BaronAdmin"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "baron-scheduler-db"
+database_id = "bed3b521-a506-4c80-9fa7-5fabebb9dd85"

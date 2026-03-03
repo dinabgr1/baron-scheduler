@@ -1,6 +1,7 @@
 export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServiceClient } from '@/lib/supabase'
+import { dbFirst, dbRun } from '@/lib/db'
+import type { Booking } from '@/lib/db'
 import { updateCalendarEvent, deleteCalendarEvent } from '@/lib/google-calendar'
 
 export const dynamic = 'force-dynamic'
@@ -10,18 +11,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = getServiceClient()
-
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 })
-  }
-
+  const data = await dbFirst<Booking>('SELECT * FROM bookings WHERE id = ?', id)
+  if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(data)
 }
 
@@ -30,44 +21,26 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = getServiceClient()
   const body = await request.json()
+  const existing = await dbFirst<Booking>('SELECT * FROM bookings WHERE id = ?', id)
+  if (!existing) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
 
-  // Get existing booking for calendar update
-  const { data: existing } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (!existing) {
-    return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
-  }
-
-  // Update calendar if status changed
   if (body.status && body.status !== existing.status && existing.google_event_id) {
-    try {
-      await updateCalendarEvent(
-        existing.google_event_id,
-        body.status,
-        existing.pilot_name
-      )
-    } catch (error) {
-      console.error('Calendar update error:', error)
-    }
+    try { await updateCalendarEvent(existing.google_event_id, body.status, existing.pilot_name) } catch (e) { console.error('Calendar update error:', e) }
   }
 
-  const { data, error } = await supabase
-    .from('bookings')
-    .update(body)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  const fields: string[] = []
+  const values: unknown[] = []
+  for (const [key, val] of Object.entries(body)) {
+    if (key === 'id') continue
+    fields.push(`${key} = ?`)
+    values.push(val)
   }
+  if (fields.length === 0) return NextResponse.json(existing)
 
+  values.push(id)
+  await dbRun(`UPDATE bookings SET ${fields.join(', ')} WHERE id = ?`, ...values)
+  const data = await dbFirst<Booking>('SELECT * FROM bookings WHERE id = ?', id)
   return NextResponse.json(data)
 }
 
@@ -76,31 +49,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = getServiceClient()
-
-  // Get booking for calendar deletion
-  const { data: existing } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('id', id)
-    .single()
-
+  const existing = await dbFirst<Booking>('SELECT * FROM bookings WHERE id = ?', id)
   if (existing?.google_event_id) {
-    try {
-      await deleteCalendarEvent(existing.google_event_id)
-    } catch (error) {
-      console.error('Calendar delete error:', error)
-    }
+    try { await deleteCalendarEvent(existing.google_event_id) } catch (e) { console.error('Calendar delete error:', e) }
   }
-
-  const { error } = await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', id)
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
+  await dbRun('DELETE FROM bookings WHERE id = ?', id)
   return NextResponse.json({ success: true })
 }

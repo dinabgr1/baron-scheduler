@@ -1,42 +1,63 @@
 export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServiceClient } from '@/lib/supabase'
+import { dbAll, dbRun, dbFirst } from '@/lib/db'
+
 export const dynamic = 'force-dynamic'
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabase = getServiceClient()
-  const { data: pilot } = await supabase.from('pilots').select('name').eq('id', id).single()
-  if (!pilot) return NextResponse.json({ error: 'Pilot not found' }, { status: 404 })
-  const { data, error } = await supabase.from('pilot_documents').select('*').eq('pilot_name', pilot.name).order('expiry_date', { ascending: true })
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data || [])
-}
+type PilotDoc = { id: string; pilot_id: string; doc_type: string; expiry_date: string|null; notes: string|null; created_at: string }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params
-  const supabase = getServiceClient()
-  const { data: pilot } = await supabase.from('pilots').select('name').eq('id', id).single()
-  if (!pilot) return NextResponse.json({ error: 'Pilot not found' }, { status: 404 })
-  const body = await req.json()
-  const { data, error } = await supabase.from('pilot_documents').insert({ ...body, pilot_name: pilot.name }).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data, { status: 201 })
-}
-
-export async function PATCH(req: NextRequest) {
-  const body = await req.json()
-  const { id: docId, ...updates } = body
-  const { data, error } = await getServiceClient().from('pilot_documents').update(updates).eq('id', docId).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const data = await dbAll<PilotDoc>('SELECT * FROM pilot_documents WHERE pilot_id = ? ORDER BY doc_type', id)
   return NextResponse.json(data)
 }
 
-export async function DELETE(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
-  const docId = searchParams.get('doc_id')
-  if (!docId) return NextResponse.json({ error: 'doc_id required' }, { status: 400 })
-  const { error } = await getServiceClient().from('pilot_documents').delete().eq('id', docId)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true })
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: pilotId } = await params
+  const body = await request.json()
+  const { doc_type, expiry_date, notes } = body
+  if (!doc_type) return NextResponse.json({ error: 'Missing doc_type' }, { status: 400 })
+
+  const id = crypto.randomUUID()
+  await dbRun(
+    'INSERT INTO pilot_documents (id, pilot_id, doc_type, expiry_date, notes) VALUES (?, ?, ?, ?, ?)',
+    id, pilotId, doc_type, expiry_date || null, notes || null
+  )
+  const data = await dbFirst<PilotDoc>('SELECT * FROM pilot_documents WHERE id = ?', id)
+  return NextResponse.json(data, { status: 201 })
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const body = await request.json()
+  const { doc_id, ...updates } = body
+  if (!doc_id) return NextResponse.json({ error: 'Missing doc_id' }, { status: 400 })
+  const fields: string[] = []
+  const values: unknown[] = []
+  for (const [key, val] of Object.entries(updates)) {
+    fields.push(`${key} = ?`)
+    values.push(val)
+  }
+  values.push(doc_id)
+  await dbRun(`UPDATE pilot_documents SET ${fields.join(', ')} WHERE id = ?`, ...values)
+  return NextResponse.json({ success: true })
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const body = await request.json()
+  const { doc_id } = body
+  if (!doc_id) return NextResponse.json({ error: 'Missing doc_id' }, { status: 400 })
+  await dbRun('DELETE FROM pilot_documents WHERE id = ?', doc_id)
+  return NextResponse.json({ success: true })
 }
