@@ -427,6 +427,7 @@ export default function AdminPage() {
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">פאנל ניהול</h2>
           <p className="text-gray-500">ניהול הזמנות ונתוני טיסה | Baron 4X-DZJ</p>
+          <a href="/admin/login-logs" className="inline-block mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium">📋 היסטוריית כניסות →</a>
         </div>
 
         {/* Stats Cards */}

@@ -101,6 +101,7 @@ export default function PilotPortal() {
       setLicenseError(false)
       setVerified(true)
       loadPilotData(foundPilotId)
+      fetch('/api/log-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login_type: 'pilot', user_name: pilotName.trim() }) }).catch(() => {})
     } else {
       setLicenseError(true)
     }
