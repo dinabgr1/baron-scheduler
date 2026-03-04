@@ -10,7 +10,7 @@ export default function AvailabilityPage() {
   const [showBooking, setShowBooking] = useState(false)
 
   return (
-    <div className={`md:h-auto md:min-h-screen bg-baron-bg flex flex-col md:block md:overflow-auto ${showBooking ? 'min-h-screen overflow-auto' : 'h-screen overflow-hidden'}`}>
+    <div className={`md:h-auto md:min-h-screen bg-baron-bg flex flex-col md:block md:overflow-auto ${showBooking ? 'min-h-screen overflow-auto' : 'fixed inset-0 md:relative md:h-auto overflow-hidden'}`}>
       <PageView page="זמינות" />
       <Header onBookClick={() => setShowBooking(!showBooking)} />
 

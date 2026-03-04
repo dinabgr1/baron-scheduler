@@ -168,7 +168,7 @@ export default function PilotPortal() {
           <p className="text-white/50 text-[12px]">Baron 4X-DZJ · פורטל טייס</p>
         </div>
       </div>
-      <main className="max-w-lg mx-auto px-4 -mt-2 pb-24 md:pb-12 space-y-4">
+      <main className="max-w-lg mx-auto px-4 -mt-2 pb-32 md:pb-12 space-y-4">
 
         {!pilot ? (
           <div className="card rounded-xl md:rounded-2xl p-5 space-y-4">

@@ -31,7 +31,7 @@ export default function PostFlightPage() {
           <p className="text-white/50 text-[12px]">Baron 4X-DZJ · מילוי נתוני טיסה</p>
         </div>
       </div>
-      <main className="max-w-lg mx-auto px-4 -mt-2 pb-24 md:pb-12 space-y-4">
+      <main className="max-w-lg mx-auto px-4 -mt-2 pb-32 md:pb-12 space-y-4">
         <Suspense fallback={<div className="p-8 text-center text-baron-muted">טוען...</div>}>
           <PostFlightContent />
         </Suspense>

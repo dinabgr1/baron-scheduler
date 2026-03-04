@@ -55,7 +55,7 @@ export default function ToolsPage() {
           <p className="text-white/50 text-[12px]">Baron 4X-DZJ · כלי עזר לטייסים</p>
         </div>
       </div>
-      <main className="max-w-lg mx-auto px-4 -mt-2 pb-24 md:pb-12 space-y-4">
+      <main className="max-w-lg mx-auto px-4 -mt-2 pb-32 md:pb-12 space-y-4">
 
         {/* Maintenance Status */}
         {maintenance && maintenance.records.length > 0 && (
