@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-type Pilot = { id: string; name: string; phone: string | null; license_number: string | null }
+type Pilot = { id: string; name: string; phone: string | null; license_number: string | null; is_active?: boolean }
 type ExistingBooking = { id: string; pilot_name: string; date: string; start_time: string; end_time: string; status: string }
 
 export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
@@ -16,7 +16,8 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
     instructor_name: 'Shani Segev',
     flight_purpose: 'אימון',
   })
-  const [newPilotFields, setNewPilotFields] = useState({ license_number: '' })
+  const [pilots, setPilots] = useState<Pilot[]>([])
+  const [newPilotFields, setNewPilotFields] = useState({ license_number: '', new_name: '' })
   const [pilotStatus, setPilotStatus] = useState<'idle' | 'checking' | 'found' | 'new'>('idle')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -49,28 +50,30 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
     setConflict(found || null)
   }, [form.start_time, form.end_time, dayBookings])
 
+  // Load pilots on mount
+  useEffect(() => {
+    fetch('/api/pilots').then(r => r.json()).then((data: Pilot[]) => {
+      setPilots(Array.isArray(data) ? data.filter(p => p.is_active !== false) : [])
+    }).catch(() => setPilots([]))
+  }, [])
+
+  // Check pilot status when name changes
   useEffect(() => {
     const name = form.pilot_name.trim()
+    if (name === '__new__') { setPilotStatus('new'); return }
     if (name.length < 2) { setPilotStatus('idle'); return }
     if (checkTimer.current) clearTimeout(checkTimer.current)
-    checkTimer.current = setTimeout(async () => {
-      setPilotStatus('checking')
-      try {
-        const res = await fetch('/api/pilots')
-        const pilots: Pilot[] = await res.json()
-        const found = pilots.find(p => p.name.trim().toLowerCase() === name.toLowerCase())
-        if (found) {
-          setPilotStatus('found')
-          if (!form.phone && found.phone) setForm(f => ({ ...f, phone: found.phone! }))
-        } else {
-          setPilotStatus('new')
-        }
-      } catch {
-        setPilotStatus('idle')
+    checkTimer.current = setTimeout(() => {
+      const found = pilots.find(p => p.name.trim().toLowerCase() === name.toLowerCase())
+      if (found) {
+        setPilotStatus('found')
+        if (!form.phone && found.phone) setForm(f => ({ ...f, phone: found.phone! }))
+      } else {
+        setPilotStatus('new')
       }
-    }, 600)
+    }, 300)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.pilot_name])
+  }, [form.pilot_name, pilots])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -80,12 +83,16 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
     setSubmitting(true)
     setMessage(null)
     try {
+      const actualPilotName = form.pilot_name === '__new__' ? newPilotFields.new_name.trim() : form.pilot_name.trim()
+      if (!actualPilotName) {
+        throw new Error('יש להזין שם טייס')
+      }
       if (pilotStatus === 'new') {
         const pilotRes = await fetch('/api/pilots', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: form.pilot_name.trim(),
+            name: actualPilotName,
             phone: form.phone,
             license_number: newPilotFields.license_number || null,
           }),
@@ -98,7 +105,7 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, pilot_name: actualPilotName }),
       })
       if (!res.ok) {
         const err = await res.json()
@@ -106,7 +113,7 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       }
       setMessage({ type: 'success', text: 'ההזמנה נשלחה בהצלחה! ממתין לאישור.' })
       setForm({ pilot_name: '', phone: '', date: '', start_time: '', end_time: '', with_instructor: false, instructor_name: 'Shani Segev', flight_purpose: 'אימון' })
-      setNewPilotFields({ license_number: '' })
+      setNewPilotFields({ license_number: '', new_name: '' })
       setPilotStatus('idle')
       setDayBookings([])
       setConflict(null)
@@ -125,14 +132,40 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="text-baron-muted text-[11px] font-medium uppercase tracking-[0.1em] block mb-1.5">שם הטייס</label>
-        <div className="relative">
-          <input type="text" required value={form.pilot_name}
-            onChange={(e) => { setForm({ ...form, pilot_name: e.target.value }); setPilotStatus('idle') }}
-            placeholder="הכנס שם מלא" className={inputClass} />
-          {pilotStatus === 'checking' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-baron-muted text-sm">⏳</span>}
-          {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">✓</span>}
-        </div>
-        {pilotStatus === 'found' && <p className="text-emerald-500 text-[11px] mt-1 font-medium">✓ טייס קיים במערכת</p>}
+        {pilots.length > 0 ? (
+          <>
+            <select
+              required
+              value={form.pilot_name}
+              onChange={(e) => {
+                const val = e.target.value
+                if (val === '__new__') {
+                  setForm({ ...form, pilot_name: '__new__', phone: '' })
+                  setPilotStatus('new')
+                } else {
+                  const p = pilots.find(p => p.name === val)
+                  setForm({ ...form, pilot_name: val, phone: p?.phone || '' })
+                  setPilotStatus(val ? 'found' : 'idle')
+                }
+              }}
+              className={inputClass}
+            >
+              <option value="">בחר טייס...</option>
+              {pilots.map(p => (
+                <option key={p.id} value={p.name}>{p.name}</option>
+              ))}
+              <option value="__new__">➕ טייס חדש</option>
+            </select>
+            {pilotStatus === 'found' && <p className="text-emerald-500 text-[11px] mt-1 font-medium">✓ טייס קיים במערכת</p>}
+          </>
+        ) : (
+          <div className="relative">
+            <input type="text" required value={form.pilot_name}
+              onChange={(e) => { setForm({ ...form, pilot_name: e.target.value }); setPilotStatus('idle') }}
+              placeholder="הכנס שם מלא" className={inputClass} />
+            {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">✓</span>}
+          </div>
+        )}
       </div>
 
       {pilotStatus === 'new' && (
@@ -141,13 +174,22 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
             <span className="text-xl">👋</span>
             <div>
               <p className="text-baron-text font-semibold text-[13px]">טייס חדש!</p>
-              <p className="text-baron-muted text-[11px]">לא מצאנו אותך במערכת. מלא פרטים נוספים כדי להירשם.</p>
+              <p className="text-baron-muted text-[11px]">מלא פרטים כדי להירשם למערכת.</p>
             </div>
           </div>
+          {form.pilot_name === '__new__' && (
+            <div>
+              <label className="text-baron-gold-text text-[11px] font-semibold mb-1 block">שם מלא</label>
+              <input type="text" required value={newPilotFields.new_name || ''}
+                onChange={e => setNewPilotFields({ ...newPilotFields, new_name: e.target.value })}
+                placeholder="הכנס שם מלא"
+                className="w-full px-3 py-2.5 rounded-lg bg-white border border-baron-gold/30 text-baron-text placeholder-baron-muted focus:outline-none focus:border-baron-gold text-[13px]" />
+            </div>
+          )}
           <div>
             <label className="text-baron-gold-text text-[11px] font-semibold mb-1 block">מספר רישיון טיס</label>
             <input type="text" value={newPilotFields.license_number}
-              onChange={e => setNewPilotFields({ license_number: e.target.value })}
+              onChange={e => setNewPilotFields({ ...newPilotFields, license_number: e.target.value })}
               placeholder="לדוגמה: IL-PPL-12345"
               className="w-full px-3 py-2.5 rounded-lg bg-white border border-baron-gold/30 text-baron-text placeholder-baron-muted focus:outline-none focus:border-baron-gold text-[13px]" />
           </div>
