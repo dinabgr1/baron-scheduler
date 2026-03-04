@@ -1,5 +1,10 @@
 # Baron Scheduler — Project Context
 
+## ⚠️ First Thing Every Session
+Read `memory/lessons.md` — contains current status, recent work, TODO, and lessons learned.
+After compacting or new session, this file is your memory.
+**Update it** when you complete tasks or learn something new.
+
 ## About
 Flight scheduling web app for Beechcraft Baron 58, registration 4X-DZJ.
 Owner: Din (pilot + flight instructor)

@@ -6,7 +6,7 @@
 html, body { overflow-x: hidden; max-width: 100vw; }
 
 body {
-  background-color: #eef0f4;
+  background-color: #f5f3ef;
   color: #1e2432;
   min-height: 100vh;
   font-size: 16px;
@@ -30,17 +30,29 @@ body {
   border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 
-.gold { color: #a0833a; }
-.gold-dim { color: rgba(160,131,58,0.4); }
-.gold-bg { background: #c9a961; }
+.gold { color: #8a6d1b; }
+.gold-dim { color: rgba(184,145,45,0.3); }
+.gold-bg { background: linear-gradient(135deg, #c9a54e, #b8912d); color: #fff; }
 .red { color: #b82e2e; }
 .red-bg { background: #c23030; }
-.text-muted-baron { color: rgba(30,36,50,0.4); }
+.text-muted-baron { color: rgba(30,36,50,0.5); }
 .text-dim-baron { color: rgba(30,36,50,0.2); }
 
 .hero-img {
-  background: linear-gradient(180deg, rgba(30,36,50,0.15) 0%, rgba(30,36,50,0.5) 40%, #eef0f4 88%),
+  background: linear-gradient(180deg, rgba(30,36,50,0.15) 0%, rgba(30,36,50,0.5) 40%, #f5f3ef 88%),
               url('/4x-dzj-hero.jpg') center 55%/cover;
+}
+
+/* Page header with dark gradient */
+.page-header {
+  background: linear-gradient(135deg, #1a1e2e 0%, #2a2f42 100%);
+  color: #fff;
+}
+
+/* Gold accent stripe */
+.accent-stripe {
+  height: 3px;
+  background: linear-gradient(90deg, #c23030, #b8912d, #c9a54e);
 }
 
 .booking-row { border-bottom: 1px solid rgba(0,0,0,0.04); }
