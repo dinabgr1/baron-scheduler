@@ -463,28 +463,17 @@ export default function PilotDetailPage() {
                 <div className="text-gray-500 text-base mt-1">{Math.round(totalFlightHours * 10) / 10} שעות נטסו בפועל</div>
               </div>
 
-              {/* Two add buttons */}
-              <div className="flex gap-2">
-                <button onClick={() => { setShowPackageForm(showPackageForm && packageForm.purchase_type === 'package' ? false : true); setPackageForm(f => ({ ...f, purchase_type: 'package' })) }}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    showPackageForm && packageForm.purchase_type === 'package' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}>
-                  {showPackageForm && packageForm.purchase_type === 'package' ? '✕ סגור' : '+ בנק שעות'}
-                </button>
-                <button onClick={() => { setShowPackageForm(showPackageForm && packageForm.purchase_type === 'individual' ? false : true); setPackageForm(f => ({ ...f, purchase_type: 'individual' })) }}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    showPackageForm && packageForm.purchase_type === 'individual' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}>
-                  {showPackageForm && packageForm.purchase_type === 'individual' ? '✕ סגור' : '+ שעות בודדות'}
-                </button>
-              </div>
+              <button onClick={() => setShowPackageForm(!showPackageForm)}
+                className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  showPackageForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}>
+                {showPackageForm ? '✕ סגור' : '+ הוספת רכישת שעות'}
+              </button>
 
               {showPackageForm && (
                 <form onSubmit={addPackage} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
                   <div className="flex justify-between items-center">
-                    <h3 className="text-gray-700 font-semibold text-sm">
-                      {packageForm.purchase_type === 'package' ? '📦 הוספת בנק שעות' : '🕐 הוספת שעות בודדות'}
-                    </h3>
+                    <h3 className="text-gray-700 font-semibold text-sm">💼 הוספת רכישת שעות</h3>
                     {rates.length > 0 && <span className="text-xs text-gray-500">תעריף: ₪{rates[0]?.rate_per_hour?.toLocaleString()}/שעה</span>}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
