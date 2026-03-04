@@ -62,14 +62,24 @@ export default function AdminPage() {
   // Maintenance state
   type MaintenanceRecord = {
     id: string; maintenance_type: string; last_done_date: string | null;
-    last_done_hobbs: number; interval_hours: number; interval_months: number | null; notes: string | null; visible_to_pilots: boolean
+    last_done_hobbs: number; interval_hours: number | null; interval_months: number | null; notes: string | null; visible_to_pilots: number;
+    interval_type: 'calendar' | 'airtime' | 'fixed_airframe'; last_done_airframe_hours: number | null;
+    next_due_airframe_hours: number | null; hobbs_at_maintenance: number | null;
+    remaining?: number | null; remainingUnit?: 'hours' | 'days'; percentage?: number;
   }
+  type MaintenanceHistoryEntry = { id: string; maintenance_record_id: string; done_date: string; done_airframe_hours: number | null; hobbs_reading: number | null; notes: string | null; created_at: string }
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([])
   const [currentHobbs, setCurrentHobbs] = useState(0)
+  const [totalAirframeHours, setTotalAirframeHours] = useState(0)
   const [editingMaintId, setEditingMaintId] = useState<string | null>(null)
-  const [maintEditForm, setMaintEditForm] = useState({ last_done_hobbs: '', last_done_date: '' })
+  const [maintEditForm, setMaintEditForm] = useState({ last_done_hobbs: '', last_done_date: '', last_done_airframe_hours: '', hobbs_at_maintenance: '', notes: '' })
   const [showAddMaint, setShowAddMaint] = useState(false)
-  const [maintAddForm, setMaintAddForm] = useState({ maintenance_type: '', interval_hours: '', interval_months: '', last_done_hobbs: '', last_done_date: '', notes: '' })
+  const [maintAddForm, setMaintAddForm] = useState({ maintenance_type: '', interval_type: 'airtime' as string, interval_hours: '', interval_months: '', next_due_airframe_hours: '', last_done_hobbs: '', last_done_date: '', last_done_airframe_hours: '', hobbs_at_maintenance: '', notes: '' })
+  const [showAirframeToggle, setShowAirframeToggle] = useState(false)
+  const [expandedMaintId, setExpandedMaintId] = useState<string | null>(null)
+  const [maintHistory, setMaintHistory] = useState<Record<string, MaintenanceHistoryEntry[]>>({})
+  const [editingAirframeHours, setEditingAirframeHours] = useState(false)
+  const [airframeHoursInput, setAirframeHoursInput] = useState('')
 
   // Stats
   const [stats, setStats] = useState({ totalBookings: 0, pendingBookings: 0, flightHours: 0, lastHobbs: 0 })
@@ -79,6 +89,7 @@ export default function AdminPage() {
     const data = await res.json()
     if (data.records) setMaintenanceRecords(data.records)
     if (data.currentHobbs) setCurrentHobbs(data.currentHobbs)
+    if (data.totalAirframeHours) setTotalAirframeHours(data.totalAirframeHours)
   }
 
   async function deleteMaintItem(id: string) {
@@ -87,17 +98,37 @@ export default function AdminPage() {
     loadMaintenance()
   }
 
-  async function toggleMaintVisibility(id: string, current: boolean) {
-    await fetch('/api/maintenance', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, visible_to_pilots: !current }) })
+  async function toggleMaintVisibility(id: string, current: number) {
+    await fetch('/api/maintenance', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, visible_to_pilots: current ? 0 : 1 }) })
     loadMaintenance()
   }
 
   async function saveMaintEdit(id: string) {
+    const payload: Record<string, unknown> = { id }
+    if (maintEditForm.last_done_hobbs) payload.last_done_hobbs = parseFloat(maintEditForm.last_done_hobbs)
+    if (maintEditForm.last_done_date) payload.last_done_date = maintEditForm.last_done_date
+    if (maintEditForm.last_done_airframe_hours) payload.last_done_airframe_hours = parseFloat(maintEditForm.last_done_airframe_hours)
+    if (maintEditForm.hobbs_at_maintenance) payload.hobbs_at_maintenance = parseFloat(maintEditForm.hobbs_at_maintenance)
+
     await fetch('/api/maintenance', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, last_done_hobbs: parseFloat(maintEditForm.last_done_hobbs), last_done_date: maintEditForm.last_done_date }),
+      body: JSON.stringify(payload),
     })
+
+    // Also add to history
+    await fetch('/api/maintenance/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        maintenance_record_id: id,
+        done_date: maintEditForm.last_done_date,
+        done_airframe_hours: maintEditForm.last_done_airframe_hours ? parseFloat(maintEditForm.last_done_airframe_hours) : null,
+        hobbs_reading: maintEditForm.hobbs_at_maintenance ? parseFloat(maintEditForm.hobbs_at_maintenance) : null,
+        notes: maintEditForm.notes || null,
+      }),
+    })
+
     setEditingMaintId(null)
     loadMaintenance()
   }
@@ -109,16 +140,37 @@ export default function AdminPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         maintenance_type: maintAddForm.maintenance_type,
-        interval_hours: parseFloat(maintAddForm.interval_hours) || 0,
-        interval_months: maintAddForm.interval_months ? parseInt(maintAddForm.interval_months) : null,
+        interval_type: maintAddForm.interval_type,
+        interval_hours: maintAddForm.interval_type === 'airtime' ? (parseFloat(maintAddForm.interval_hours) || null) : null,
+        interval_months: maintAddForm.interval_type === 'calendar' ? (parseInt(maintAddForm.interval_months) || null) : null,
+        next_due_airframe_hours: maintAddForm.interval_type === 'fixed_airframe' ? (parseFloat(maintAddForm.next_due_airframe_hours) || null) : null,
         last_done_hobbs: parseFloat(maintAddForm.last_done_hobbs) || 0,
         last_done_date: maintAddForm.last_done_date || null,
+        last_done_airframe_hours: maintAddForm.last_done_airframe_hours ? parseFloat(maintAddForm.last_done_airframe_hours) : null,
+        hobbs_at_maintenance: maintAddForm.hobbs_at_maintenance ? parseFloat(maintAddForm.hobbs_at_maintenance) : null,
         notes: maintAddForm.notes || null,
       }),
     })
-    setMaintAddForm({ maintenance_type: '', interval_hours: '', interval_months: '', last_done_hobbs: '', last_done_date: '', notes: '' })
+    setMaintAddForm({ maintenance_type: '', interval_type: 'airtime', interval_hours: '', interval_months: '', next_due_airframe_hours: '', last_done_hobbs: '', last_done_date: '', last_done_airframe_hours: '', hobbs_at_maintenance: '', notes: '' })
     setShowAddMaint(false)
     loadMaintenance()
+  }
+
+  async function loadMaintHistory(recordId: string) {
+    const res = await fetch(`/api/maintenance/history?record_id=${recordId}`)
+    const data = await res.json()
+    setMaintHistory(prev => ({ ...prev, [recordId]: data }))
+  }
+
+  async function saveAirframeHours() {
+    await fetch('/api/aircraft-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'airframe_hours_initial', value: airframeHoursInput }),
+    })
+    setEditingAirframeHours(false)
+    loadMaintenance()
+    loadAllData()
   }
 
   async function createAdminBooking(e: React.FormEvent) {
@@ -186,6 +238,7 @@ export default function AdminPage() {
       if (d.maintenance) {
         setMaintenanceRecords(d.maintenance.records)
         setCurrentHobbs(d.maintenance.currentHobbs)
+        if (d.maintenance.totalAirframeHours) setTotalAirframeHours(d.maintenance.totalAirframeHours)
       }
     } catch(e) { console.error(e) }
     setLoading(false)
@@ -1034,61 +1087,103 @@ export default function AdminPage() {
         {/* ====== תחזוקה TAB ====== */}
         {activeTab === 'תחזוקה' && (
           <div className="space-y-4">
-            {/* Current Hobbs display */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 text-center">
-              <div className="text-gray-500 text-sm mb-1">Hobbs נוכחי</div>
-              <div className="text-5xl font-black text-gray-900">{currentHobbs}</div>
+            {/* Airframe Hours + Hobbs display */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div className="text-gray-500 text-sm mb-1">Hobbs נוכחי</div>
+                  <div className="text-4xl font-black text-gray-900">{currentHobbs}</div>
+                </div>
+                <div>
+                  <div className="text-gray-500 text-sm mb-1">שעות גוף נוכחיות</div>
+                  {editingAirframeHours ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <input type="number" step="0.1" value={airframeHoursInput}
+                        onChange={e => setAirframeHoursInput(e.target.value)}
+                        className={inputClass + ' w-28 text-center'} placeholder="שעות בסיס" />
+                      <button onClick={saveAirframeHours} className="px-2 py-1 rounded bg-green-600 text-white text-xs">שמור</button>
+                      <button onClick={() => setEditingAirframeHours(false)} className="px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">ביטול</button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-4xl font-black text-gray-900">{Math.round(totalAirframeHours * 10) / 10}</span>
+                      <button onClick={() => { setEditingAirframeHours(true); setAirframeHoursInput(String(Math.round(totalAirframeHours * 10) / 10)) }}
+                        className="text-blue-500 hover:text-blue-700 text-sm">✏️</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Toggle display mode */}
+            <div className="flex justify-end">
+              <button onClick={() => setShowAirframeToggle(!showAirframeToggle)}
+                className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium transition-colors border border-gray-200">
+                {showAirframeToggle ? 'שעות שנותרו' : 'שעות גוף'}
+              </button>
             </div>
 
             {/* Maintenance records */}
             <div className="space-y-3">
               {maintenanceRecords.map(rec => {
-                const isCalendarBased = rec.interval_months && rec.interval_months > 0
-                let hoursRemaining = 0
-                let pct = 0
-                let monthsRemaining = 0
+                const intervalType = rec.interval_type || 'airtime'
+                const remaining = rec.remaining ?? 0
+                const pct = rec.percentage ?? 0
+                const typeIcon = intervalType === 'calendar' ? '\u{1F4C5}' : intervalType === 'fixed_airframe' ? '\u{1F527}' : '\u{23F1}'
+
                 let colorClass = 'text-green-600'
                 let barColor = 'bg-green-500'
-
-                if (isCalendarBased && rec.last_done_date) {
-                  const lastDone = new Date(rec.last_done_date)
-                  const nextDue = new Date(lastDone)
-                  nextDue.setMonth(nextDue.getMonth() + (rec.interval_months || 0))
-                  monthsRemaining = Math.round((nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30.44))
-                  pct = Math.min(100, ((rec.interval_months || 1) - monthsRemaining) / (rec.interval_months || 1) * 100)
-                  if (monthsRemaining <= 1) { colorClass = 'text-red-600'; barColor = 'bg-red-500' }
-                  else if (monthsRemaining <= 3) { colorClass = 'text-orange-600'; barColor = 'bg-orange-400' }
-                } else {
-                  const hoursUsed = currentHobbs - rec.last_done_hobbs
-                  hoursRemaining = Math.round((rec.interval_hours - hoursUsed) * 10) / 10
-                  pct = Math.min(100, (hoursUsed / (rec.interval_hours || 1)) * 100)
-                  if (hoursRemaining <= 10) { colorClass = 'text-red-600'; barColor = 'bg-red-500' }
-                  else if (hoursRemaining <= 25) { colorClass = 'text-orange-600'; barColor = 'bg-orange-400' }
-                }
+                if (pct >= 90 || remaining !== null && remaining <= 0) { colorClass = 'text-red-600'; barColor = 'bg-red-500' }
+                else if (pct >= 75) { colorClass = 'text-orange-600'; barColor = 'bg-orange-400' }
 
                 const isEditing = editingMaintId === rec.id
+                const isExpanded = expandedMaintId === rec.id
+
+                const displayRemaining = () => {
+                  if (showAirframeToggle && intervalType === 'fixed_airframe') {
+                    return `${rec.next_due_airframe_hours || 0}h גוף`
+                  }
+                  if (remaining === null) return '-'
+                  if (rec.remainingUnit === 'days') {
+                    const days = remaining
+                    if (days > 60) return `${Math.round(days / 30.44)} חודשים`
+                    return `${days} ימים`
+                  }
+                  return `${remaining}h`
+                }
+
+                const intervalLabel = () => {
+                  if (intervalType === 'calendar') return `כל ${rec.interval_months} חודשים`
+                  if (intervalType === 'fixed_airframe') return `עד ${rec.next_due_airframe_hours}h גוף`
+                  return `כל ${rec.interval_hours}h`
+                }
 
                 return (
                   <div key={rec.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
                     <div className="flex justify-between items-start">
-                      <div>
-                        <div className="text-gray-900 font-bold">{rec.notes || rec.maintenance_type}</div>
-                        <div className="text-gray-500 text-xs">
-                          {rec.last_done_date && `ביצוע אחרון: ${rec.last_done_date}`}
-                          {rec.last_done_hobbs > 0 && ` | Hobbs: ${rec.last_done_hobbs}`}
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg">{typeIcon}</span>
+                        <div>
+                          <div className="text-gray-900 font-bold">{rec.notes || rec.maintenance_type}</div>
+                          <div className="text-gray-500 text-xs">
+                            {rec.last_done_date && `ביצוע אחרון: ${rec.last_done_date}`}
+                            {rec.last_done_hobbs > 0 && ` | Hobbs: ${rec.last_done_hobbs}`}
+                            {rec.last_done_airframe_hours && ` | גוף: ${rec.last_done_airframe_hours}h`}
+                          </div>
                         </div>
                       </div>
                       <span className={`font-bold text-lg ${colorClass}`}>
-                        {isCalendarBased ? `${monthsRemaining} חודשים` : `${hoursRemaining}h`}
+                        {displayRemaining()}
                       </span>
                     </div>
                     <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                       <div className={`h-full rounded-full transition-all ${barColor}`}
-                        style={{ width: `${pct}%` }} />
+                        style={{ width: `${Math.min(100, pct)}%` }} />
                     </div>
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>{isCalendarBased ? `כל ${rec.interval_months} חודשים` : `כל ${rec.interval_hours}h`}</span>
-                      <span>{isCalendarBased ? '' : `ביקורת ב-${rec.last_done_hobbs + rec.interval_hours}h`}</span>
+                      <span>{intervalLabel()}</span>
+                      {intervalType === 'airtime' && rec.interval_hours && <span>ביקורת ב-{(rec.last_done_hobbs || 0) + rec.interval_hours}h</span>}
+                      {intervalType === 'fixed_airframe' && <span>גוף נוכחי: {Math.round(totalAirframeHours * 10) / 10}h</span>}
                     </div>
 
                     {isEditing ? (
@@ -1106,6 +1201,18 @@ export default function AdminPage() {
                               onChange={e => setMaintEditForm({ ...maintEditForm, last_done_date: e.target.value })}
                               className={inputClass} />
                           </div>
+                          <div>
+                            <label className="block text-gray-700 text-xs font-semibold mb-1">שעות גוף בביצוע</label>
+                            <input type="number" step="0.1" value={maintEditForm.last_done_airframe_hours}
+                              onChange={e => setMaintEditForm({ ...maintEditForm, last_done_airframe_hours: e.target.value })}
+                              className={inputClass} />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-xs font-semibold mb-1">הערות</label>
+                            <input type="text" value={maintEditForm.notes}
+                              onChange={e => setMaintEditForm({ ...maintEditForm, notes: e.target.value })}
+                              className={inputClass} />
+                          </div>
                         </div>
                         <div className="flex gap-2">
                           <button onClick={() => saveMaintEdit(rec.id)}
@@ -1121,18 +1228,52 @@ export default function AdminPage() {
                           setMaintEditForm({
                             last_done_hobbs: String(currentHobbs),
                             last_done_date: new Date().toISOString().split('T')[0],
+                            last_done_airframe_hours: String(Math.round(totalAirframeHours * 10) / 10),
+                            hobbs_at_maintenance: String(currentHobbs),
+                            notes: '',
                           })
                         }} className="text-blue-600 hover:text-blue-800 text-xs font-medium">
                           ✏️ עדכן תחזוקה
                         </button>
+                        <button onClick={() => {
+                          if (isExpanded) { setExpandedMaintId(null) }
+                          else { setExpandedMaintId(rec.id); loadMaintHistory(rec.id) }
+                        }} className="text-purple-600 hover:text-purple-800 text-xs font-medium">
+                          {isExpanded ? '▲ סגור היסטוריה' : '▼ היסטוריה'}
+                        </button>
                         <button onClick={() => toggleMaintVisibility(rec.id, rec.visible_to_pilots)}
                           className={`text-xs font-medium ${rec.visible_to_pilots ? 'text-green-600 hover:text-green-800' : 'text-gray-400 hover:text-gray-600'}`}>
-                          {rec.visible_to_pilots ? '👁️ מוצג לטייסים' : '🚫 מוסתר מטייסים'}
+                          {rec.visible_to_pilots ? '👁️ מוצג' : '🚫 מוסתר'}
                         </button>
                         <button onClick={() => deleteMaintItem(rec.id)}
                           className="text-red-500 hover:text-red-700 text-xs font-medium">
                           🗑️ מחק
                         </button>
+                      </div>
+                    )}
+
+                    {/* History expansion */}
+                    {isExpanded && (
+                      <div className="border-t border-gray-200 pt-3">
+                        <div className="text-xs font-semibold text-gray-600 mb-2">היסטוריית ביקורות</div>
+                        {maintHistory[rec.id] && maintHistory[rec.id].length > 0 ? (
+                          <div className="space-y-2">
+                            {maintHistory[rec.id].map(h => (
+                              <div key={h.id} className="bg-gray-50 rounded-lg p-2 text-xs">
+                                <div className="flex justify-between">
+                                  <span className="font-medium">{h.done_date}</span>
+                                  <span className="text-gray-500">
+                                    {h.hobbs_reading && `Hobbs: ${h.hobbs_reading}`}
+                                    {h.done_airframe_hours && ` | גוף: ${h.done_airframe_hours}h`}
+                                  </span>
+                                </div>
+                                {h.notes && <div className="text-gray-600 mt-1">{h.notes}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-gray-400">אין היסטוריה</div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1146,7 +1287,7 @@ export default function AdminPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   showAddMaint ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
                 }`}>
-                {showAddMaint ? '✕ סגור' : '+ הוסף פריט תחזוקה'}
+                {showAddMaint ? '✕ סגור' : '+ הוסף ביקורת'}
               </button>
 
               {showAddMaint && (
@@ -1154,15 +1295,19 @@ export default function AdminPage() {
                   {/* Quick presets */}
                   <div className="flex flex-wrap gap-2">
                     {[
-                      { label: "החלפת שמן", type: "oil_change", hrs: "50", months: "", notes: "החלפת שמן" },
-                      { label: "ביקורת 100h", type: "100hr", hrs: "100", months: "", notes: "ביקורת 100 שעות" },
-                      { label: "שנתית", type: "annual", hrs: "", months: "12", notes: "ביקורת שנתית" },
-                      { label: "מד גובה", type: "altimeter", hrs: "", months: "24", notes: "בדיקת מד גובה + טרנספונדר" },
-                      { label: "ELT", type: "elt", hrs: "", months: "12", notes: "בדיקת ELT" },
+                      { label: "החלפת שמן", type: "oil_change", itype: "airtime", hrs: "50", months: "", nxt: "", notes: "החלפת שמן" },
+                      { label: "ביקורת 100h", type: "100hr", itype: "airtime", hrs: "100", months: "", nxt: "", notes: "ביקורת 100 שעות" },
+                      { label: "שנתית", type: "annual", itype: "calendar", hrs: "", months: "12", nxt: "", notes: "ביקורת שנתית" },
+                      { label: "מד גובה", type: "altimeter", itype: "calendar", hrs: "", months: "24", nxt: "", notes: "בדיקת מד גובה + טרנספונדר" },
+                      { label: "ELT", type: "elt", itype: "calendar", hrs: "", months: "12", nxt: "", notes: "בדיקת ELT" },
                     ].map(p => (
                       <button key={p.type} type="button" onClick={() => setMaintAddForm({
-                        maintenance_type: p.type, interval_hours: p.hrs, interval_months: p.months,
-                        last_done_hobbs: String(currentHobbs), last_done_date: new Date().toISOString().split("T")[0], notes: p.notes
+                        maintenance_type: p.type, interval_type: p.itype, interval_hours: p.hrs, interval_months: p.months,
+                        next_due_airframe_hours: p.nxt,
+                        last_done_hobbs: String(currentHobbs), last_done_date: new Date().toISOString().split("T")[0],
+                        last_done_airframe_hours: String(Math.round(totalAirframeHours * 10) / 10),
+                        hobbs_at_maintenance: String(currentHobbs),
+                        notes: p.notes
                       })}
                         className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200 hover:bg-blue-100 transition-colors">
                         {p.label}
@@ -1171,29 +1316,45 @@ export default function AdminPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-gray-700 text-xs font-semibold mb-1">סוג תחזוקה</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">שם הביקורת</label>
                       <input type="text" required value={maintAddForm.maintenance_type}
                         onChange={e => setMaintAddForm({ ...maintAddForm, maintenance_type: e.target.value })}
                         placeholder="לדוגמה: החלפת שמן" className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-semibold mb-1">מרווח שעות</label>
-                      <input type="number" step="0.1" value={maintAddForm.interval_hours}
-                        onChange={e => setMaintAddForm({ ...maintAddForm, interval_hours: e.target.value })}
-                        placeholder="50" className={inputClass} />
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">סוג</label>
+                      <select value={maintAddForm.interval_type}
+                        onChange={e => setMaintAddForm({ ...maintAddForm, interval_type: e.target.value })}
+                        className={inputClass}>
+                        <option value="airtime">לפי זמן אוויר</option>
+                        <option value="calendar">לפי ימים</option>
+                        <option value="fixed_airframe">לפי שעות גוף</option>
+                      </select>
                     </div>
-                    <div>
-                      <label className="block text-gray-700 text-xs font-semibold mb-1">מרווח חודשים (אופציונלי)</label>
-                      <input type="number" value={maintAddForm.interval_months}
-                        onChange={e => setMaintAddForm({ ...maintAddForm, interval_months: e.target.value })}
-                        placeholder="12" className={inputClass} />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 text-xs font-semibold mb-1">Hobbs בביצוע אחרון</label>
-                      <input type="number" step="0.1" value={maintAddForm.last_done_hobbs}
-                        onChange={e => setMaintAddForm({ ...maintAddForm, last_done_hobbs: e.target.value })}
-                        placeholder={String(currentHobbs)} className={inputClass} />
-                    </div>
+                    {maintAddForm.interval_type === 'airtime' && (
+                      <div>
+                        <label className="block text-gray-700 text-xs font-semibold mb-1">מרווח שעות</label>
+                        <input type="number" step="0.1" value={maintAddForm.interval_hours}
+                          onChange={e => setMaintAddForm({ ...maintAddForm, interval_hours: e.target.value })}
+                          placeholder="50" className={inputClass} />
+                      </div>
+                    )}
+                    {maintAddForm.interval_type === 'calendar' && (
+                      <div>
+                        <label className="block text-gray-700 text-xs font-semibold mb-1">מרווח חודשים</label>
+                        <input type="number" value={maintAddForm.interval_months}
+                          onChange={e => setMaintAddForm({ ...maintAddForm, interval_months: e.target.value })}
+                          placeholder="12" className={inputClass} />
+                      </div>
+                    )}
+                    {maintAddForm.interval_type === 'fixed_airframe' && (
+                      <div>
+                        <label className="block text-gray-700 text-xs font-semibold mb-1">שעות גוף יעד</label>
+                        <input type="number" step="0.1" value={maintAddForm.next_due_airframe_hours}
+                          onChange={e => setMaintAddForm({ ...maintAddForm, next_due_airframe_hours: e.target.value })}
+                          placeholder="2000" className={inputClass} />
+                      </div>
+                    )}
                     <div>
                       <label className="block text-gray-700 text-xs font-semibold mb-1">תאריך ביצוע אחרון</label>
                       <input type="date" value={maintAddForm.last_done_date}
@@ -1201,14 +1362,26 @@ export default function AdminPage() {
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-semibold mb-1">תיאור</label>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">Hobbs בביצוע</label>
+                      <input type="number" step="0.1" value={maintAddForm.last_done_hobbs}
+                        onChange={e => setMaintAddForm({ ...maintAddForm, last_done_hobbs: e.target.value })}
+                        placeholder={String(currentHobbs)} className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">שעות גוף בביצוע</label>
+                      <input type="number" step="0.1" value={maintAddForm.last_done_airframe_hours}
+                        onChange={e => setMaintAddForm({ ...maintAddForm, last_done_airframe_hours: e.target.value })}
+                        placeholder={String(Math.round(totalAirframeHours * 10) / 10)} className={inputClass} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-gray-700 text-xs font-semibold mb-1">הערות</label>
                       <input type="text" value={maintAddForm.notes}
                         onChange={e => setMaintAddForm({ ...maintAddForm, notes: e.target.value })}
                         placeholder="תיאור הפריט" className={inputClass} />
                     </div>
                   </div>
                   <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold">
-                    הוסף פריט
+                    הוסף ביקורת
                   </button>
                 </form>
               )}

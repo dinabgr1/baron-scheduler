@@ -70,8 +70,28 @@ CREATE TABLE IF NOT EXISTS maintenance_records (
   interval_months INTEGER,
   notes TEXT,
   visible_to_pilots INTEGER DEFAULT 1,
+  interval_type TEXT DEFAULT 'airtime',
+  last_done_airframe_hours REAL,
+  next_due_airframe_hours REAL,
+  hobbs_at_maintenance REAL,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS aircraft_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS maintenance_history (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  maintenance_record_id TEXT NOT NULL,
+  done_date TEXT NOT NULL,
+  done_airframe_hours REAL,
+  hobbs_reading REAL,
+  notes TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS billing_records (

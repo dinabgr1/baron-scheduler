@@ -7,7 +7,9 @@ import PageView from '@/components/PageView'
 
 type MaintenanceRecord = {
   id: string; maintenance_type: string; last_done_date: string | null;
-  last_done_hobbs: number; interval_hours: number; interval_months: number | null; notes: string | null
+  last_done_hobbs: number; interval_hours: number | null; interval_months: number | null; notes: string | null;
+  interval_type: string; remaining: number | null; remainingUnit: 'hours' | 'days'; percentage: number;
+  next_due_airframe_hours: number | null;
 }
 
 type LastFlight = {
@@ -60,28 +62,39 @@ export default function ToolsPage() {
           <div className="card rounded-xl md:rounded-2xl p-5 space-y-4">
             <h3 className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em] leading-none">מצב תחזוקה</h3>
             {maintenance.records.map(rec => {
-              const hoursUsed = maintenance.currentHobbs - rec.last_done_hobbs
-              const hoursRemaining = Math.round((rec.interval_hours - hoursUsed) * 10) / 10
-              const pct = Math.min(100, (hoursUsed / rec.interval_hours) * 100)
-              const isUrgent = hoursRemaining <= 10
-              const isWarning = hoursRemaining <= 25
+              const pct = rec.percentage || 0
+              const remaining = rec.remaining ?? 0
+              const isUrgent = pct >= 90 || remaining <= 0
+              const isWarning = pct >= 75
+
+              const displayRemaining = () => {
+                if (remaining === null) return '-'
+                if (rec.remainingUnit === 'days') {
+                  if (remaining > 60) return `${Math.round(remaining / 30.44)} חודשים`
+                  return `${remaining} ימים`
+                }
+                return `${remaining}h`
+              }
+
+              const typeIcon = rec.interval_type === 'calendar' ? '\u{1F4C5}' : rec.interval_type === 'fixed_airframe' ? '\u{1F527}' : '\u{23F1}'
+
               return (
                 <div key={rec.id} className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-[13px] text-baron-text font-medium">{rec.notes || rec.maintenance_type}</span>
+                    <span className="text-[13px] text-baron-text font-medium">{typeIcon} {rec.notes || rec.maintenance_type}</span>
                     <span className={`font-mono text-[13px] font-medium ${isUrgent ? 'text-baron-red' : isWarning ? 'text-orange-500' : 'text-emerald-500'}`}>
-                      {hoursRemaining}h
+                      {displayRemaining()}
                     </span>
                   </div>
                   <div className="h-[3px] bg-baron-text/[0.04] rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${isUrgent ? 'bg-baron-red' : isWarning ? 'bg-orange-400' : 'gold-bg'}`}
-                      style={{ width: `${pct}%` }}
+                      style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>
                   <div className="flex justify-between text-[10px] text-baron-muted">
-                    <span>Hobbs נוכחי: {maintenance.currentHobbs}</span>
-                    <span>ביקורת ב-{rec.last_done_hobbs + rec.interval_hours}h</span>
+                    <span>{rec.interval_type === 'calendar' ? `כל ${rec.interval_months} חודשים` : rec.interval_type === 'fixed_airframe' ? 'לפי שעות גוף' : `כל ${rec.interval_hours}h`}</span>
+                    <span>{Math.round(pct)}% נוצל</span>
                   </div>
                 </div>
               )
