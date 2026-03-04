@@ -150,6 +150,7 @@ export default function LoginLogsPage() {
   const [loading, setLoading] = useState(true)
   const [authed, setAuthed] = useState(false)
   const [password, setPassword] = useState('')
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   async function login(e: React.FormEvent) {
     e.preventDefault()
@@ -212,7 +213,6 @@ export default function LoginLogsPage() {
     )
   }
 
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const adminLogs = logs.filter(l => l.login_type === 'admin')
   const pilotLogs = logs.filter(l => l.login_type === 'pilot')
   const viewLogs = logs.filter(l => l.login_type === 'view')
