@@ -469,7 +469,7 @@ function TimeGridView({
       <div className="flex relative">
         <div className="flex-shrink-0 w-12 md:w-14 relative" style={{ height: TOTAL_HOURS * hourHeight }}>
           {Array.from({ length: TOTAL_HOURS }, (_, i) => (
-            <div key={i} className="absolute w-full text-right pr-2 text-xs text-slate-400 font-mono"
+            <div key={i} className="absolute w-full text-right pr-2 text-xs text-slate-400 font-sans tabular-nums tracking-tight"
               style={{ top: i * hourHeight - 6 }}>
               {String(START_HOUR + i).padStart(2, '0')}:00
             </div>
