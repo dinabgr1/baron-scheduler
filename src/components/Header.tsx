@@ -4,65 +4,100 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const navItems = [
-  { href: '/availability', label: 'הזמנה', icon: '✈️' },
+  { href: '/availability', label: 'זמינות', icon: '📅' },
   { href: '/post-flight', label: 'לאחר טיסה', icon: '📝' },
-  { href: '/pilot', label: 'הטייס שלי', icon: '👤' },
+  { href: '/pilot', label: 'הטייס שלי', icon: '✈️' },
   { href: '/tools', label: 'כלים', icon: '🔧' },
   { href: '/admin', label: 'ניהול', icon: '⚙️' },
 ]
 
-export default function Header() {
+export default function Header({ onBookClick }: { onBookClick?: () => void }) {
   const pathname = usePathname()
 
   return (
     <>
-      {/* Desktop header */}
-      <header className="bg-[#1e3a5f] sticky top-0 z-50 shadow-md">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="text-white font-bold text-xl">Baron Scheduler</span>
-            <span className="text-amber-400 font-mono font-bold">4X-DZJ</span>
-          </Link>
-
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === item.href
-                    ? 'bg-white/20 text-white'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+      {/* Desktop nav — glass bar */}
+      <nav className="nav-glass fixed top-0 w-full z-50 hidden md:block">
+        <div className="max-w-[1060px] mx-auto px-8 h-[60px] flex items-center justify-between">
+          <div className="flex items-center gap-10">
+            <Link href="/" className="flex items-baseline gap-2.5">
+              <span className="text-[17px] font-bold tracking-tight leading-none">
+                <span className="text-baron-red">B</span>ARON
+              </span>
+              <span className="gold-dim text-[11px] font-mono tracking-[0.12em] leading-none">4X-DZJ</span>
+            </Link>
+            <div className="flex items-center gap-0.5 text-[13px]">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href))
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`px-3 py-1.5 rounded-md transition-colors ${
+                      isActive
+                        ? 'text-baron-text font-medium bg-baron-text/[0.06]'
+                        : 'text-baron-muted hover:text-baron-text/70'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+          {onBookClick && (
+            <button
+              onClick={onBookClick}
+              className="gold-bg text-baron-text text-[13px] font-semibold px-5 py-2 rounded-lg hover:brightness-110 transition-all"
+            >
+              + הזמן טיסה
+            </button>
+          )}
         </div>
-      </header>
+      </nav>
+
+      {/* Mobile top nav */}
+      <nav className="nav-glass fixed top-0 w-full z-50 md:hidden">
+        <div className="px-4 h-[52px] flex items-center justify-between">
+          <Link href="/" className="flex items-baseline gap-2">
+            <span className="text-[15px] font-bold tracking-tight leading-none">
+              <span className="text-baron-red">B</span>ARON
+            </span>
+            <span className="gold-dim text-[10px] font-mono tracking-[0.12em] leading-none">4X-DZJ</span>
+          </Link>
+          {onBookClick && (
+            <button
+              onClick={onBookClick}
+              className="gold-bg text-baron-text text-[12px] font-semibold px-4 py-1.5 rounded-lg"
+            >
+              + הזמן טיסה
+            </button>
+          )}
+        </div>
+      </nav>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
-        <div className="flex justify-around items-center h-16">
+      <div className="md:hidden fixed bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-baron-border z-50">
+        <div className="flex items-center justify-around py-2.5">
           {navItems.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href))
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-xs font-medium transition-colors ${
-                  isActive ? 'text-[#1e3a5f]' : 'text-gray-400'
-                }`}
+                className="flex flex-col items-center gap-1"
               >
-                <span className="text-lg">{item.icon}</span>
-                <span>{item.label}</span>
+                <span className="text-[16px]">{item.icon}</span>
+                <span className={`text-[10px] font-medium leading-none ${
+                  isActive ? 'gold font-semibold' : 'text-baron-text/30'
+                }`}>
+                  {item.label}
+                </span>
               </Link>
             )
           })}
         </div>
-      </nav>
+      </div>
     </>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Header from '@/components/Header'
 
 type LoginLog = {
   id: string
@@ -21,13 +22,13 @@ type LoginLog = {
 }
 
 function parseUA(ua: string): string {
-  if (ua.includes('iPhone')) return '📱 iPhone'
-  if (ua.includes('Android')) return '📱 Android'
-  if (ua.includes('iPad')) return '📱 iPad'
-  if (ua.includes('Mac')) return '💻 Mac'
-  if (ua.includes('Windows')) return '💻 Windows'
-  if (ua.includes('Linux')) return '💻 Linux'
-  return '🌐 ' + ua.slice(0, 30)
+  if (ua.includes('iPhone')) return 'iPhone'
+  if (ua.includes('Android')) return 'Android'
+  if (ua.includes('iPad')) return 'iPad'
+  if (ua.includes('Mac')) return 'Mac'
+  if (ua.includes('Windows')) return 'Windows'
+  if (ua.includes('Linux')) return 'Linux'
+  return ua.slice(0, 30)
 }
 
 function timeAgo(dateStr: string): string {
@@ -85,19 +86,29 @@ export default function LoginLogsPage() {
 
   if (!authed) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4" dir="rtl">
-        <form onSubmit={login} className="bg-white p-6 rounded-2xl shadow-sm border max-w-sm w-full space-y-4">
-          <h2 className="text-xl font-bold text-center">🔐 כניסת מנהל</h2>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-            placeholder="סיסמה" className="w-full border rounded-xl px-4 py-3 text-center" autoFocus />
-          <button className="w-full bg-blue-700 text-white py-3 rounded-xl font-semibold">כניסה</button>
-        </form>
+      <div className="min-h-screen bg-baron-bg" dir="rtl">
+        <Header />
+        <main className="max-w-sm mx-auto px-4 pt-[68px] md:pt-[76px] pb-24 md:pb-12 flex items-center justify-center min-h-[60vh]">
+          <form onSubmit={login} className="card rounded-xl md:rounded-2xl p-5 max-w-sm w-full space-y-4">
+            <h2 className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em] text-center">כניסת מנהל</h2>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="סיסמה" className="w-full px-3 py-2 rounded-lg bg-white border border-baron-border text-baron-text placeholder-baron-muted text-sm focus:outline-none focus:border-baron-gold text-center" autoFocus />
+            <button className="w-full py-3 rounded-lg gold-bg text-baron-text font-semibold text-[14px] hover:brightness-110 transition-all">כניסה</button>
+          </form>
+        </main>
       </div>
     )
   }
 
   if (loading) {
-    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-400 text-lg">טוען...</div></div>
+    return (
+      <div className="min-h-screen bg-baron-bg">
+        <Header />
+        <main className="max-w-3xl mx-auto px-4 pt-[68px] md:pt-[76px] pb-24 md:pb-12 flex items-center justify-center">
+          <div className="text-baron-muted text-[14px]">טוען...</div>
+        </main>
+      </div>
+    )
   }
 
   const adminLogs = logs.filter(l => l.login_type === 'admin')
@@ -106,73 +117,74 @@ export default function LoginLogsPage() {
   const failedLogs = logs.filter(l => !l.success)
 
   return (
-    <div className="min-h-screen bg-slate-50" dir="rtl">
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+    <div className="min-h-screen bg-baron-bg" dir="rtl">
+      <Header />
+      <main className="max-w-3xl mx-auto px-4 pt-[68px] md:pt-[76px] pb-24 md:pb-12 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">📋 היסטוריית כניסות</h1>
-            <p className="text-slate-500 text-sm">{logs.length} כניסות</p>
+          <div className="space-y-1">
+            <h1 className="font-semibold text-[15px] leading-none text-baron-text">היסטוריית כניסות</h1>
+            <p className="text-baron-muted text-[12px]">{logs.length} כניסות</p>
           </div>
-          <Link href="/admin" className="text-blue-700 hover:text-blue-800 text-sm font-semibold">← חזרה לניהול</Link>
+          <Link href="/admin" className="text-baron-gold-text hover:brightness-110 text-[13px] font-semibold transition-all">חזרה לניהול</Link>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-blue-700">{adminLogs.length}</div>
-            <div className="text-xs text-slate-500">כניסות מנהל</div>
+          <div className="card rounded-xl md:rounded-2xl p-4 text-center">
+            <div className="text-[22px] font-bold text-baron-gold-text">{adminLogs.length}</div>
+            <div className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em]">כניסות מנהל</div>
           </div>
-          <div className="bg-white rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{pilotLogs.length}</div>
-            <div className="text-xs text-slate-500">כניסות טייסים</div>
+          <div className="card rounded-xl md:rounded-2xl p-4 text-center">
+            <div className="text-[22px] font-bold text-emerald-500">{pilotLogs.length}</div>
+            <div className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em]">כניסות טייסים</div>
           </div>
-          <div className="bg-white rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{viewLogs.length}</div>
-            <div className="text-xs text-slate-500">צפיות בדפים</div>
+          <div className="card rounded-xl md:rounded-2xl p-4 text-center">
+            <div className="text-[22px] font-bold text-baron-text">{viewLogs.length}</div>
+            <div className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em]">צפיות בדפים</div>
           </div>
-          <div className="bg-white rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-red-500">{failedLogs.length}</div>
-            <div className="text-xs text-slate-500">ניסיונות כושלים</div>
+          <div className="card rounded-xl md:rounded-2xl p-4 text-center">
+            <div className="text-[22px] font-bold text-baron-red">{failedLogs.length}</div>
+            <div className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em]">ניסיונות כושלים</div>
           </div>
         </div>
 
         {/* Log List */}
-        <div className="bg-white rounded-2xl shadow-sm border divide-y">
+        <div className="card rounded-xl md:rounded-2xl divide-y divide-baron-border">
           {logs.length === 0 ? (
-            <div className="p-8 text-center text-slate-400">אין כניסות עדיין</div>
+            <div className="p-8 text-center text-baron-muted text-[13px]">אין כניסות עדיין</div>
           ) : (
             logs.map(log => (
               <div key={log.id} className="p-4 flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
-                  !log.success ? 'bg-red-100' : log.login_type === 'admin' ? 'bg-blue-100' : log.login_type === 'view' ? 'bg-purple-100' : 'bg-green-100'
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-medium ${
+                  !log.success ? 'bg-red-50 text-baron-red' : log.login_type === 'admin' ? 'bg-amber-50 text-baron-gold-text' : log.login_type === 'view' ? 'bg-baron-bg text-baron-muted' : 'bg-emerald-50 text-emerald-600'
                 }`}>
-                  {!log.success ? '🚫' : log.login_type === 'admin' ? '🔑' : log.login_type === 'view' ? '👁️' : '✈️'}
+                  {!log.success ? '!' : log.login_type === 'admin' ? 'A' : log.login_type === 'view' ? 'V' : 'P'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-800">
+                    <span className="font-medium text-[13px] text-baron-text">
                       {log.login_type === 'admin' ? 'מנהל' : log.login_type === 'view' ? `צפייה: ${log.user_name}` : log.user_name || 'טייס'}
                     </span>
-                    {!log.success && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">נכשל</span>}
+                    {!log.success && <span className="text-[10px] bg-red-50 text-baron-red px-2 py-0.5 rounded-md font-medium border border-red-200">נכשל</span>}
                   </div>
-                  <div className="text-xs text-slate-400 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                  <div className="text-[11px] text-baron-dim flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
                     <span>{parseUA(log.user_agent)}</span>
-                    {log.city && <span>· 📍 {log.city}{log.country ? `, ${log.country}` : ''}</span>}
-                    {!log.city && log.country && <span>· 🌍 {log.country}</span>}
-                    {log.screen_size && <span>· 🖥️ {log.screen_size}</span>}
-                    {log.connection && <span>· 📶 {log.connection}</span>}
+                    {log.city && <span>· {log.city}{log.country ? `, ${log.country}` : ''}</span>}
+                    {!log.city && log.country && <span>· {log.country}</span>}
+                    {log.screen_size && <span>· {log.screen_size}</span>}
+                    {log.connection && <span>· {log.connection}</span>}
                     <span>· {log.ip}</span>
                   </div>
                 </div>
-                <div className="text-xs text-slate-400 whitespace-nowrap">
+                <div className="text-[11px] text-baron-dim whitespace-nowrap">
                   {timeAgo(log.created_at)}
                 </div>
               </div>
             ))
           )}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

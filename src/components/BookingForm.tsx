@@ -22,12 +22,10 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Conflict detection state
   const [dayBookings, setDayBookings] = useState<ExistingBooking[]>([])
   const [conflict, setConflict] = useState<ExistingBooking | null>(null)
   const [loadingDay, setLoadingDay] = useState(false)
 
-  // Fetch bookings for selected date
   useEffect(() => {
     if (!form.date) { setDayBookings([]); setConflict(null); return }
     setLoadingDay(true)
@@ -41,7 +39,6 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       .finally(() => setLoadingDay(false))
   }, [form.date])
 
-  // Check for conflicts when times change
   useEffect(() => {
     if (!form.start_time || !form.end_time || dayBookings.length === 0) {
       setConflict(null); return
@@ -122,50 +119,49 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
   }
 
   const today = new Date().toISOString().split('T')[0]
-  const inputClass = "w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-base"
+  const inputClass = "w-full px-4 py-3 rounded-xl bg-white border border-baron-border text-baron-text placeholder-baron-muted focus:outline-none focus:border-baron-gold focus:ring-2 focus:ring-baron-gold/20 text-[14px]"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-
       <div>
-        <label className="block text-slate-600 text-sm font-medium mb-1.5">שם הטייס</label>
+        <label className="text-baron-muted text-[11px] font-medium uppercase tracking-[0.1em] block mb-1.5">שם הטייס</label>
         <div className="relative">
           <input type="text" required value={form.pilot_name}
             onChange={(e) => { setForm({ ...form, pilot_name: e.target.value }); setPilotStatus('idle') }}
             placeholder="הכנס שם מלא" className={inputClass} />
-          {pilotStatus === 'checking' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">⏳</span>}
-          {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 font-bold">✓</span>}
+          {pilotStatus === 'checking' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-baron-muted text-sm">⏳</span>}
+          {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">✓</span>}
         </div>
-        {pilotStatus === 'found' && <p className="text-green-600 text-xs mt-1 font-medium">✓ טייס קיים במערכת</p>}
+        {pilotStatus === 'found' && <p className="text-emerald-500 text-[11px] mt-1 font-medium">✓ טייס קיים במערכת</p>}
       </div>
 
       {pilotStatus === 'new' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+        <div className="bg-baron-gold/5 border border-baron-gold/20 rounded-xl p-4 space-y-3">
           <div className="flex items-start gap-2">
             <span className="text-xl">👋</span>
             <div>
-              <p className="text-blue-800 font-bold text-sm">טייס חדש!</p>
-              <p className="text-blue-600 text-xs">לא מצאנו אותך במערכת. מלא פרטים נוספים כדי להירשם.</p>
+              <p className="text-baron-text font-semibold text-[13px]">טייס חדש!</p>
+              <p className="text-baron-muted text-[11px]">לא מצאנו אותך במערכת. מלא פרטים נוספים כדי להירשם.</p>
             </div>
           </div>
           <div>
-            <label className="block text-blue-700 text-xs font-semibold mb-1">מספר רישיון טיס</label>
+            <label className="text-baron-gold-text text-[11px] font-semibold mb-1 block">מספר רישיון טיס</label>
             <input type="text" value={newPilotFields.license_number}
               onChange={e => setNewPilotFields({ license_number: e.target.value })}
               placeholder="לדוגמה: IL-PPL-12345"
-              className="w-full px-3 py-2.5 rounded-lg bg-white border border-blue-300 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm" />
+              className="w-full px-3 py-2.5 rounded-lg bg-white border border-baron-gold/30 text-baron-text placeholder-baron-muted focus:outline-none focus:border-baron-gold text-[13px]" />
           </div>
         </div>
       )}
 
       <div>
-        <label className="block text-slate-600 text-sm font-medium mb-1.5">טלפון</label>
+        <label className="text-baron-muted text-[11px] font-medium uppercase tracking-[0.1em] block mb-1.5">טלפון</label>
         {pilotStatus === 'found' && form.phone ? (
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-slate-700">
-            <span className="text-green-600">📱</span>
-            <span className="flex-1">{form.phone}</span>
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/[0.04] border border-emerald-500/15 text-baron-text">
+            <span className="text-emerald-500">📱</span>
+            <span className="flex-1 text-[14px]">{form.phone}</span>
             <button type="button" onClick={() => setPilotStatus('idle')}
-              className="text-xs text-gray-400 hover:text-gray-600 underline">שנה</button>
+              className="text-[11px] text-baron-muted hover:text-baron-text underline">שנה</button>
           </div>
         ) : (
           <input type="tel" required value={form.phone}
@@ -175,7 +171,7 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
 
       <div>
-        <label className="block text-slate-600 text-sm font-medium mb-1.5">מטרת הטיסה</label>
+        <label className="text-baron-muted text-[11px] font-medium uppercase tracking-[0.1em] block mb-1.5">מטרת הטיסה</label>
         <select value={form.flight_purpose}
           onChange={(e) => setForm({ ...form, flight_purpose: e.target.value })}
           className={inputClass}>
@@ -187,20 +183,19 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
 
       <div>
-        <label className="block text-slate-600 text-sm font-medium mb-1.5">תאריך</label>
+        <label className="text-baron-muted text-[11px] font-medium uppercase tracking-[0.1em] block mb-1.5">תאריך</label>
         <input type="date" required min={today} value={form.date}
           onChange={(e) => setForm({ ...form, date: e.target.value })}
           className={inputClass} />
-        {loadingDay && <p className="text-xs text-gray-400 mt-1">בודק זמינות...</p>}
+        {loadingDay && <p className="text-[11px] text-baron-muted mt-1">בודק זמינות...</p>}
         {!loadingDay && form.date && dayBookings.length > 0 && (
           <div className="mt-2 space-y-1">
-            <p className="text-xs font-semibold text-slate-500">📋 הזמנות קיימות ביום זה:</p>
+            <p className="text-[11px] font-medium text-baron-muted">הזמנות קיימות ביום זה:</p>
             {dayBookings.map(b => (
-              <div key={b.id} className="flex items-center gap-2 text-xs bg-slate-50 rounded-lg px-3 py-1.5 border border-slate-100">
-                <span className={`w-2 h-2 rounded-full ${b.status === 'approved' ? 'bg-green-500' : 'bg-yellow-400'}`} />
-                <span className="font-mono font-bold text-slate-700">{b.start_time}–{b.end_time}</span>
-                <span className="text-slate-500">{b.pilot_name}</span>
-                <span className="text-slate-400">({b.status === 'approved' ? 'מאושר' : 'ממתין'})</span>
+              <div key={b.id} className="flex items-center gap-2 text-[11px] bg-baron-bg rounded-lg px-3 py-1.5 border border-baron-border">
+                <span className={`w-[5px] h-[5px] rounded-full ${b.status === 'approved' ? 'bg-emerald-400' : 'bg-baron-red'}`} />
+                <span className="font-mono font-medium text-baron-text">{b.start_time}–{b.end_time}</span>
+                <span className="text-baron-muted">{b.pilot_name}</span>
               </div>
             ))}
           </div>
@@ -209,26 +204,25 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-slate-600 text-sm font-medium mb-1.5">שעת התחלה</label>
+          <label className="text-baron-muted text-[11px] font-medium uppercase tracking-[0.1em] block mb-1.5">שעת התחלה</label>
           <input type="time" required value={form.start_time}
             onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-            className={`${inputClass} ${conflict ? 'border-red-400 bg-red-50' : ''}`} />
+            className={`${inputClass} ${conflict ? 'border-baron-red bg-baron-red/5' : ''}`} />
         </div>
         <div>
-          <label className="block text-slate-600 text-sm font-medium mb-1.5">שעת סיום</label>
+          <label className="text-baron-muted text-[11px] font-medium uppercase tracking-[0.1em] block mb-1.5">שעת סיום</label>
           <input type="time" required value={form.end_time}
             onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-            className={`${inputClass} ${conflict ? 'border-red-400 bg-red-50' : ''}`} />
+            className={`${inputClass} ${conflict ? 'border-baron-red bg-baron-red/5' : ''}`} />
         </div>
       </div>
 
-      {/* Conflict warning */}
       {conflict && (
-        <div className="bg-red-50 border border-red-300 rounded-xl p-3 flex items-start gap-2">
+        <div className="bg-baron-red/5 border border-baron-red/20 rounded-xl p-3 flex items-start gap-2">
           <span className="text-xl">⚠️</span>
           <div>
-            <p className="text-red-800 font-bold text-sm">התנגשות!</p>
-            <p className="text-red-600 text-xs">
+            <p className="text-baron-red font-semibold text-[13px]">התנגשות!</p>
+            <p className="text-baron-red/70 text-[11px]">
               המטוס תפוס ע&quot;י {conflict.pilot_name} בשעות {conflict.start_time}–{conflict.end_time}
               {conflict.status === 'pending' && ' (ממתין לאישור)'}
             </p>
@@ -237,11 +231,11 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       )}
 
       <div className="space-y-3">
-        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-baron-bg border border-baron-border">
           <input type="checkbox" checked={form.with_instructor}
             onChange={(e) => setForm({ ...form, with_instructor: e.target.checked })}
-            className="w-5 h-5 rounded border-slate-300 text-blue-500 focus:ring-blue-400" />
-          <span className="text-slate-700 text-base font-medium">טיסה עם מדריך</span>
+            className="w-5 h-5 rounded border-baron-border text-baron-gold focus:ring-baron-gold/40" />
+          <span className="text-baron-text text-[14px] font-medium">טיסה עם מדריך</span>
         </label>
         {form.with_instructor && (
           <select value={form.instructor_name}
@@ -253,17 +247,17 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
 
       <button type="submit" disabled={submitting || pilotStatus === 'checking'}
-        className={`w-full py-4 rounded-xl font-bold text-lg transition-colors shadow-sm ${
+        className={`w-full py-4 rounded-xl font-bold text-[15px] transition-all ${
           conflict
             ? 'bg-orange-500 hover:bg-orange-600 text-white'
-            : 'bg-blue-700 hover:bg-blue-800 text-white'
-        } disabled:bg-slate-300 disabled:cursor-not-allowed`}>
-        {submitting ? 'שולח...' : conflict ? '⚠️ שלח בכל זאת' : pilotStatus === 'new' ? 'הירשם ושלח הזמנה ✈️' : 'שלח הזמנה ✈️'}
+            : 'gold-bg text-baron-text hover:brightness-110'
+        } disabled:bg-baron-dim disabled:text-baron-muted disabled:cursor-not-allowed`}>
+        {submitting ? 'שולח...' : conflict ? '⚠️ שלח בכל זאת' : pilotStatus === 'new' ? 'הירשם ושלח הזמנה' : 'שלח הזמנה ✈️'}
       </button>
 
       {message && (
-        <div className={`p-4 rounded-xl text-center font-medium text-sm ${
-          message.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'
+        <div className={`p-4 rounded-xl text-center font-medium text-[13px] ${
+          message.type === 'success' ? 'bg-emerald-500/[0.06] border border-emerald-500/15 text-emerald-600' : 'bg-baron-red/[0.06] border border-baron-red/15 text-baron-red'
         }`}>
           {message.text}
         </div>

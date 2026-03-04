@@ -29,7 +29,6 @@ export default function PilotPortal() {
   const [allPilots, setAllPilots] = useState<Pilot[]>([])
   const [suggestions, setSuggestions] = useState<Pilot[]>([])
 
-  // Edit booking state
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null)
   const [editBookingForm, setEditBookingForm] = useState({ date: '', start_time: '', end_time: '' })
   const [editSaving, setEditSaving] = useState(false)
@@ -61,7 +60,6 @@ export default function PilotPortal() {
     setEditSaving(false)
   }
 
-  // Auto-detect pilot (same logic as BookingForm)
   useEffect(() => {
     const name = pilotName.trim()
     if (name.length < 2) { setPilotStatus('idle'); return }
@@ -131,7 +129,6 @@ export default function PilotPortal() {
     finally { setSearching(false) }
   }
 
-  // Legacy search - no longer used directly, kept for form submit
   async function search() { if (foundPilotId && verified) loadPilotData(foundPilotId) }
 
   const today = new Date().toISOString().split('T')[0]
@@ -148,7 +145,6 @@ export default function PilotPortal() {
   const totalPurchased = packages.reduce((s, p) => s + p.hours_purchased, 0)
   const remaining = Math.round((totalPurchased - totalFlightHours) * 10) / 10
 
-  // Last 5 flights with details
   const last5Flights = flightLogs.slice(0, 5).map(log => {
     const booking = bookings.find(b => b.id === log.booking_id)
     const duration = log.hobbs_end && log.hobbs_start ? Math.round((log.hobbs_end - log.hobbs_start) * 10) / 10 : (log.flight_time_hours || 0) + (log.flight_time_minutes || 0) / 60
@@ -160,22 +156,22 @@ export default function PilotPortal() {
     return `${day}/${m}/${y}`
   }
 
-  const inputClass = "w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+  const inputClass = "w-full px-4 py-3 rounded-xl bg-white border border-baron-border text-baron-text placeholder-baron-muted focus:outline-none focus:border-baron-gold focus:ring-2 focus:ring-baron-gold/20"
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-baron-bg">
       <PageView page="פורטל טייס" />
       <Header />
-      <main className="max-w-lg mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold text-gray-900">👤 הטייס שלי</h2>
-          <p className="text-gray-500">Baron 4X-DZJ | פורטל טייס</p>
+      <main className="max-w-lg mx-auto px-4 pt-[68px] md:pt-[76px] pb-24 md:pb-12 space-y-4">
+        <div className="space-y-1">
+          <h2 className="font-semibold text-[15px] leading-none">הטייס שלי</h2>
+          <p className="text-baron-muted text-[12px]">Baron 4X-DZJ · פורטל טייס</p>
         </div>
 
         {!pilot ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-4">
+          <div className="card rounded-xl md:rounded-2xl p-5 space-y-4">
             <div>
-              <label className="block text-gray-700 text-sm font-medium mb-1.5">שם הטייס</label>
+              <label className="text-baron-muted text-[11px] font-medium uppercase tracking-[0.1em] block mb-1.5">שם הטייס</label>
               <div className="relative">
                 <input
                   type="text"
@@ -184,18 +180,18 @@ export default function PilotPortal() {
                   placeholder="הכנס את שמך"
                   className={inputClass}
                 />
-                {pilotStatus === 'checking' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">⏳</span>}
-                {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 font-bold">✓</span>}
+                {pilotStatus === 'checking' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-baron-muted text-sm">⏳</span>}
+                {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">✓</span>}
               </div>
-              {pilotStatus === 'found' && <p className="text-green-600 text-xs mt-1 font-medium">✓ טייס קיים במערכת</p>}
+              {pilotStatus === 'found' && <p className="text-emerald-500 text-[11px] mt-1 font-medium">✓ טייס קיים במערכת</p>}
               {pilotStatus === 'not_found' && (
                 <div>
-                  <p className="text-orange-600 text-xs mt-1 font-medium">טייס לא נמצא במערכת</p>
+                  <p className="text-orange-500 text-[11px] mt-1 font-medium">טייס לא נמצא במערכת</p>
                   {suggestions.length > 0 && (
-                    <div className="mt-1 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="mt-1 card rounded-lg overflow-hidden">
                       {suggestions.slice(0, 5).map(s => (
                         <button key={s.id} onClick={() => { setPilotName(s.name); setSuggestions([]) }}
-                          className="block w-full text-right px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 border-b border-gray-100 last:border-0">
+                          className="block w-full text-right px-3 py-2 text-[13px] text-baron-text hover:bg-baron-gold/10 border-b border-baron-border last:border-0">
                           {s.name}
                         </button>
                       ))}
@@ -205,14 +201,13 @@ export default function PilotPortal() {
               )}
             </div>
 
-            {/* License verification - shows after pilot is found */}
             {pilotStatus === 'found' && !verified && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+              <div className="bg-baron-gold/5 border border-baron-gold/20 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🔐</span>
                   <div>
-                    <p className="text-blue-800 font-bold text-sm">אימות זהות</p>
-                    <p className="text-blue-600 text-xs">הכנס את מספר הרישיון שלך</p>
+                    <p className="text-baron-text font-semibold text-[13px]">אימות זהות</p>
+                    <p className="text-baron-muted text-[11px]">הכנס את מספר הרישיון שלך</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -220,23 +215,23 @@ export default function PilotPortal() {
                     onChange={e => { setLicenseInput(e.target.value); setLicenseError(false) }}
                     onKeyDown={e => e.key === 'Enter' && verifyLicense()}
                     placeholder="מספר רישיון טיס"
-                    className={"flex-1 px-3 py-2.5 rounded-lg border text-sm " + (licenseError ? 'border-red-400 bg-red-50' : 'border-blue-300 bg-white') + " text-gray-900 focus:outline-none focus:border-blue-500"} />
+                    className={"flex-1 px-3 py-2.5 rounded-lg border text-[13px] " + (licenseError ? 'border-baron-red bg-baron-red/5' : 'border-baron-gold/30 bg-white') + " text-baron-text focus:outline-none focus:border-baron-gold"} />
                   <button onClick={verifyLicense}
-                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm">
+                    className="px-4 py-2 rounded-lg gold-bg text-baron-text font-semibold text-[13px]">
                     אמת
                   </button>
                 </div>
-                {licenseError && <p className="text-red-600 text-xs font-medium">מספר רישיון שגוי</p>}
-                {!foundPilotLicense && <p className="text-orange-600 text-xs">⚠️ לא הוגדר רישיון לטייס זה. פנה למנהל.</p>}
+                {licenseError && <p className="text-baron-red text-[11px] font-medium">מספר רישיון שגוי</p>}
+                {!foundPilotLicense && <p className="text-orange-500 text-[11px]">⚠️ לא הוגדר רישיון לטייס זה. פנה למנהל.</p>}
               </div>
             )}
 
             {verified && (
-              <p className="text-green-600 text-xs font-medium">✓ זהות אומתה</p>
+              <p className="text-emerald-500 text-[11px] font-medium">✓ זהות אומתה</p>
             )}
 
             {notFound && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-center text-sm">
+              <div className="p-3 rounded-xl bg-baron-red/5 border border-baron-red/20 text-baron-red text-center text-[13px]">
                 לא נמצא טייס בשם זה
               </div>
             )}
@@ -244,29 +239,29 @@ export default function PilotPortal() {
         ) : (
           <>
             {/* Pilot header */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+            <div className="card rounded-xl md:rounded-2xl p-5">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">{pilot.name}</h3>
-                  {pilot.phone && <p className="text-gray-500 text-sm">{pilot.phone}</p>}
-                  {pilot.license_number && <p className="text-gray-400 text-xs">רישיון: {pilot.license_number}</p>}
+                  <h3 className="text-[18px] font-bold text-baron-text">{pilot.name}</h3>
+                  {pilot.phone && <p className="text-baron-muted text-[12px]">{pilot.phone}</p>}
+                  {pilot.license_number && <p className="text-baron-dim text-[11px]">רישיון: {pilot.license_number}</p>}
                 </div>
                 <button onClick={() => { setPilot(null); setPilotName('') }}
-                  className="text-gray-400 hover:text-gray-600 text-sm">התנתק</button>
+                  className="text-baron-muted hover:text-baron-text text-[12px]">התנתק</button>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-gray-50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-black text-gray-900">{Math.round(totalFlightHours * 10) / 10}</div>
-                  <div className="text-xs text-gray-500">שעות טיסה</div>
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="bg-baron-bg rounded-xl p-3 text-center">
+                  <div className="font-mono text-[22px] font-medium text-baron-text leading-none">{Math.round(totalFlightHours * 10) / 10}</div>
+                  <div className="text-baron-muted text-[10px] mt-1.5 uppercase tracking-[0.08em]">שעות טיסה</div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-black text-gray-900">{totalPurchased}</div>
-                  <div className="text-xs text-gray-500">שעות שנרכשו</div>
+                <div className="bg-baron-bg rounded-xl p-3 text-center">
+                  <div className="font-mono text-[22px] font-medium text-baron-text leading-none">{totalPurchased}</div>
+                  <div className="text-baron-muted text-[10px] mt-1.5 uppercase tracking-[0.08em]">שעות שנרכשו</div>
                 </div>
-                <div className={`rounded-lg p-3 text-center ${remaining >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                  <div className={`text-2xl font-black ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>{remaining}</div>
-                  <div className="text-xs text-gray-500">נותרו</div>
+                <div className={`rounded-xl p-3 text-center ${remaining >= 0 ? 'bg-emerald-500/5' : 'bg-baron-red/5'}`}>
+                  <div className={`font-mono text-[22px] font-medium leading-none ${remaining >= 0 ? 'text-emerald-500' : 'text-baron-red'}`}>{remaining}</div>
+                  <div className="text-baron-muted text-[10px] mt-1.5 uppercase tracking-[0.08em]">נותרו</div>
                 </div>
               </div>
             </div>
@@ -274,75 +269,77 @@ export default function PilotPortal() {
             {/* Unreported flights banner */}
             {unreportedFlights.length > 0 && (
               <a href="/post-flight" className="block">
-                <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-center gap-3">
+                <div className="bg-baron-red/5 border border-baron-red/20 rounded-xl p-4 flex items-center gap-3">
                   <span className="text-2xl">⚠️</span>
                   <div>
-                    <div className="text-red-700 font-bold text-sm">
+                    <div className="text-baron-red font-bold text-[13px]">
                       יש לך {unreportedFlights.length} טיסות שלא דווחו!
                     </div>
-                    <div className="text-red-600 text-xs">לחץ כאן לדווח</div>
+                    <div className="text-baron-red/70 text-[11px]">לחץ כאן לדווח</div>
                   </div>
                 </div>
               </a>
             )}
 
             {/* Upcoming bookings */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
-              <h3 className="font-bold text-gray-900">📅 הזמנות קרובות</h3>
+            <div className="card rounded-xl md:rounded-2xl p-5 space-y-3">
+              <h3 className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em] leading-none">הזמנות קרובות</h3>
               {futureBookings.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-3">אין הזמנות עתידיות</p>
+                <p className="text-baron-muted text-[13px] text-center py-3">אין הזמנות עתידיות</p>
               ) : (
                 <div className="space-y-2">
                   {futureBookings.map(b => {
                     const isEditing = editingBookingId === b.id
                     return (
-                      <div key={b.id} className={`rounded-lg p-3 border ${
-                        b.status === 'approved' ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'
+                      <div key={b.id} className={`rounded-xl p-3 border ${
+                        b.status === 'approved' ? 'bg-emerald-500/[0.04] border-emerald-500/15' : 'bg-baron-gold/[0.04] border-baron-gold/15'
                       }`}>
                         {isEditing ? (
                           <div className="space-y-2">
                             <div className="grid grid-cols-3 gap-2">
                               <input type="date" value={editBookingForm.date}
                                 onChange={e => setEditBookingForm({ ...editBookingForm, date: e.target.value })}
-                                className="px-2 py-1.5 rounded-lg border border-gray-300 text-sm bg-white" />
+                                className="px-2 py-1.5 rounded-lg border border-baron-border text-[13px] bg-white" />
                               <input type="time" value={editBookingForm.start_time}
                                 onChange={e => setEditBookingForm({ ...editBookingForm, start_time: e.target.value })}
-                                className="px-2 py-1.5 rounded-lg border border-gray-300 text-sm bg-white" />
+                                className="px-2 py-1.5 rounded-lg border border-baron-border text-[13px] bg-white" />
                               <input type="time" value={editBookingForm.end_time}
                                 onChange={e => setEditBookingForm({ ...editBookingForm, end_time: e.target.value })}
-                                className="px-2 py-1.5 rounded-lg border border-gray-300 text-sm bg-white" />
+                                className="px-2 py-1.5 rounded-lg border border-baron-border text-[13px] bg-white" />
                             </div>
                             <div className="flex gap-2">
                               <button onClick={() => saveBookingEdit(b.id)} disabled={editSaving}
-                                className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium">
+                                className="px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-[11px] font-medium">
                                 {editSaving ? '...' : '✓ שמור'}
                               </button>
                               <button onClick={() => setEditingBookingId(null)}
-                                className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 text-xs font-medium">ביטול</button>
+                                className="px-3 py-1.5 rounded-lg bg-baron-text/[0.06] text-baron-text text-[11px] font-medium">ביטול</button>
                             </div>
                           </div>
                         ) : (
                           <>
                             <div className="flex justify-between items-center">
                               <div>
-                                <div className="text-gray-900 font-medium text-sm">{formatDate(b.date)}</div>
-                                <div className="text-gray-500 text-xs">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</div>
+                                <div className="text-baron-text font-medium text-[13px]">{formatDate(b.date)}</div>
+                                <div className="font-mono text-baron-muted text-[12px]">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</div>
                               </div>
-                              <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                                b.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                              <span className={`text-[10px] font-semibold px-2.5 py-[5px] rounded-md leading-none ${
+                                b.status === 'approved'
+                                  ? 'text-emerald-400/90 bg-emerald-400/[0.08]'
+                                  : 'text-baron-red/90 bg-baron-red/[0.08]'
                               }`}>
                                 {b.status === 'approved' ? 'מאושר' : 'ממתין'}
                               </span>
                             </div>
-                            <div className="flex gap-3 mt-2 pt-2 border-t border-gray-200/50">
+                            <div className="flex gap-3 mt-2 pt-2 border-t border-baron-border">
                               <button onClick={() => {
                                 setEditingBookingId(b.id)
                                 setEditBookingForm({ date: b.date, start_time: b.start_time, end_time: b.end_time })
-                              }} className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                              }} className="text-baron-gold-text hover:text-baron-gold text-[11px] font-medium">
                                 ✏️ ערוך
                               </button>
                               <button onClick={() => cancelBooking(b.id)}
-                                className="text-red-500 hover:text-red-700 text-xs font-medium">
+                                className="text-baron-red/70 hover:text-baron-red text-[11px] font-medium">
                                 ✕ בטל הזמנה
                               </button>
                             </div>
@@ -356,26 +353,26 @@ export default function PilotPortal() {
             </div>
 
             {/* Last 5 flights */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
-              <h3 className="font-bold text-gray-900">🛩️ טיסות אחרונות</h3>
+            <div className="card rounded-xl md:rounded-2xl p-5 space-y-3">
+              <h3 className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em] leading-none">טיסות אחרונות</h3>
               {last5Flights.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-3">אין טיסות מדווחות</p>
+                <p className="text-baron-muted text-[13px] text-center py-3">אין טיסות מדווחות</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-[13px]">
                     <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">תאריך</th>
-                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">Hobbs</th>
-                        <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">משך</th>
+                      <tr className="border-b border-baron-border">
+                        <th className="text-baron-muted text-[10px] font-medium uppercase tracking-[0.08em] text-right py-2 px-2">תאריך</th>
+                        <th className="text-baron-muted text-[10px] font-medium uppercase tracking-[0.08em] text-right py-2 px-2">Hobbs</th>
+                        <th className="text-baron-muted text-[10px] font-medium uppercase tracking-[0.08em] text-right py-2 px-2">משך</th>
                       </tr>
                     </thead>
                     <tbody>
                       {last5Flights.map(f => (
-                        <tr key={f.id} className="border-b border-gray-100 even:bg-gray-50">
-                          <td className="py-2 px-3 text-gray-900">{f.booking ? formatDate(f.booking.date) : '-'}</td>
-                          <td className="py-2 px-3 text-gray-700">{f.hobbs_start} → {f.hobbs_end}</td>
-                          <td className="py-2 px-3 text-gray-700 font-medium">{f.duration}h</td>
+                        <tr key={f.id} className="border-b border-baron-border last:border-0">
+                          <td className="py-2 px-2 text-baron-text">{f.booking ? formatDate(f.booking.date) : '-'}</td>
+                          <td className="py-2 px-2 font-mono text-baron-text/70">{f.hobbs_start} → {f.hobbs_end}</td>
+                          <td className="py-2 px-2 font-mono text-baron-gold-text font-medium">{f.duration}h</td>
                         </tr>
                       ))}
                     </tbody>
@@ -386,10 +383,10 @@ export default function PilotPortal() {
 
             {/* Quick links */}
             <div className="grid grid-cols-2 gap-3">
-              <a href="/availability" className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-4 text-center font-bold transition-colors">
-                ✈️ הזמן טיסה
+              <a href="/availability" className="gold-bg hover:brightness-110 text-baron-text rounded-xl p-4 text-center font-bold text-[13px] transition-all">
+                + הזמן טיסה
               </a>
-              <a href="/post-flight" className="bg-green-600 hover:bg-green-700 text-white rounded-xl p-4 text-center font-bold transition-colors">
+              <a href="/post-flight" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl p-4 text-center font-bold text-[13px] transition-colors">
                 📝 דווח טיסה
               </a>
             </div>

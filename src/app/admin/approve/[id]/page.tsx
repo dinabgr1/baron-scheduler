@@ -51,9 +51,9 @@ export default function ApprovePage({ params: paramsPromise }: { params: Promise
 
   if (loading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-baron-bg">
         <Header />
-        <main className="max-w-sm mx-auto px-4 py-20 text-center text-gray-500">
+        <main className="max-w-sm mx-auto px-4 pt-[68px] md:pt-[76px] pb-24 md:pb-12 text-center text-baron-muted">
           טוען...
         </main>
       </div>
@@ -62,11 +62,11 @@ export default function ApprovePage({ params: paramsPromise }: { params: Promise
 
   if (!booking) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-baron-bg">
         <Header />
-        <main className="max-w-sm mx-auto px-4 py-20 text-center">
-          <div className="text-5xl mb-4">❓</div>
-          <p className="text-gray-500">הזמנה לא נמצאה</p>
+        <main className="max-w-sm mx-auto px-4 pt-[68px] md:pt-[76px] pb-24 md:pb-12 text-center">
+          <div className="text-5xl mb-4">?</div>
+          <p className="text-baron-muted">הזמנה לא נמצאה</p>
         </main>
       </div>
     )
@@ -74,39 +74,39 @@ export default function ApprovePage({ params: paramsPromise }: { params: Promise
 
   if (!authed) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-baron-bg">
         <Header />
-        <main className="max-w-sm mx-auto px-4 py-12 space-y-6">
+        <main className="max-w-sm mx-auto px-4 pt-[68px] md:pt-[76px] pb-24 md:pb-12 space-y-4">
           {/* Show booking summary even before login */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
-            <h3 className="text-white font-bold text-lg mb-3">הזמנה לאישור</h3>
-            <div className="text-gray-700 space-y-1">
-              <div className="text-xl font-bold text-white">{booking.pilot_name}</div>
-              <div>📅 {booking.date}</div>
-              <div>🕐 {booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}</div>
-              {booking.with_instructor && <div>👨‍✈️ מדריך: {booking.instructor_name}</div>}
+          <div className="card rounded-xl md:rounded-2xl p-5 text-center space-y-3">
+            <h3 className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em]">הזמנה לאישור</h3>
+            <div className="space-y-1">
+              <div className="text-[18px] font-bold text-baron-text">{booking.pilot_name}</div>
+              <div className="text-[13px] text-baron-muted">{booking.date}</div>
+              <div className="text-[13px] text-baron-muted">{booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}</div>
+              {booking.with_instructor && <div className="text-[13px] text-baron-muted">מדריך: {booking.instructor_name}</div>}
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-white font-bold text-center mb-4">🔐 הכנס סיסמת מנהל</h3>
+          <div className="card rounded-xl md:rounded-2xl p-5">
+            <h3 className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em] text-center mb-4">כניסת מנהל</h3>
             <form onSubmit={login} className="space-y-4">
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="סיסמה"
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 text-lg text-center"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-baron-border text-baron-text placeholder-baron-muted text-sm focus:outline-none focus:border-baron-gold text-center"
                 autoFocus
               />
               <button
                 type="submit"
-                className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg transition-colors"
+                className="w-full py-3 rounded-lg gold-bg text-baron-text font-semibold text-[14px] hover:brightness-110 transition-all"
               >
                 כניסה
               </button>
               {loginError && (
-                <p className="text-red-400 text-center text-sm">{loginError}</p>
+                <p className="text-baron-red text-center text-sm">{loginError}</p>
               )}
             </form>
           </div>
@@ -116,56 +116,56 @@ export default function ApprovePage({ params: paramsPromise }: { params: Promise
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-baron-bg">
       <Header />
-      <main className="max-w-sm mx-auto px-4 py-12">
-        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
-          <h3 className="text-white font-bold text-xl text-center">אישור הזמנה</h3>
+      <main className="max-w-sm mx-auto px-4 pt-[68px] md:pt-[76px] pb-24 md:pb-12">
+        <div className="card rounded-xl md:rounded-2xl p-5 space-y-5">
+          <h3 className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em] text-center">אישור הזמנה</h3>
 
           <div className="text-center space-y-2">
-            <div className="text-2xl font-bold text-white">{booking.pilot_name}</div>
-            <div className="text-gray-700">📅 {booking.date}</div>
-            <div className="text-gray-700">
-              🕐 {booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}
+            <div className="text-[20px] font-bold text-baron-text">{booking.pilot_name}</div>
+            <div className="text-[13px] text-baron-muted">{booking.date}</div>
+            <div className="text-[13px] text-baron-muted">
+              {booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}
             </div>
             {booking.with_instructor && (
-              <div className="text-gray-700">👨‍✈️ מדריך: {booking.instructor_name}</div>
+              <div className="text-[13px] text-baron-muted">מדריך: {booking.instructor_name}</div>
             )}
 
-            <div className={`inline-block mt-2 px-3 py-1 rounded text-sm font-medium ${
-              booking.status === 'approved' ? 'bg-green-500/20 text-green-300' :
-              booking.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' :
-              'bg-red-500/20 text-red-300'
+            <div className={`inline-block mt-2 px-3 py-1 rounded-md text-[12px] font-medium ${
+              booking.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+              booking.status === 'pending' ? 'bg-orange-50 text-orange-600 border border-orange-200' :
+              'bg-red-50 text-baron-red border border-red-200'
             }`}>
-              {booking.status === 'approved' ? '✅ מאושר' : booking.status === 'pending' ? '⏳ ממתין' : '❌ נדחה'}
+              {booking.status === 'approved' ? 'מאושר' : booking.status === 'pending' ? 'ממתין' : 'נדחה'}
             </div>
           </div>
 
           {actionDone ? (
-            <div className={`text-center p-4 rounded-lg ${
+            <div className={`text-center p-4 rounded-lg text-[13px] font-medium ${
               actionDone === 'approved'
-                ? 'bg-green-500/20 border border-green-500/50 text-green-200'
-                : 'bg-red-500/20 border border-red-500/50 text-red-200'
+                ? 'bg-emerald-50 border border-emerald-200 text-emerald-600'
+                : 'bg-red-50 border border-red-200 text-baron-red'
             }`}>
-              {actionDone === 'approved' ? 'ההזמנה אושרה בהצלחה! ✅' : 'ההזמנה נדחתה ❌'}
+              {actionDone === 'approved' ? 'ההזמנה אושרה בהצלחה!' : 'ההזמנה נדחתה'}
             </div>
           ) : booking.status === 'pending' ? (
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => handleAction('approved')}
-                className="py-4 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-lg transition-colors"
+                className="py-3 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-[14px] transition-colors"
               >
-                ✅ אשר
+                אשר
               </button>
               <button
                 onClick={() => handleAction('rejected')}
-                className="py-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-lg transition-colors"
+                className="py-3 rounded-lg bg-baron-red hover:brightness-110 text-white font-semibold text-[14px] transition-all"
               >
-                ❌ דחה
+                דחה
               </button>
             </div>
           ) : (
-            <p className="text-center text-gray-500">הזמנה זו כבר טופלה.</p>
+            <p className="text-center text-baron-muted text-[13px]">הזמנה זו כבר טופלה.</p>
           )}
         </div>
       </main>

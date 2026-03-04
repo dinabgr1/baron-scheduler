@@ -10,28 +10,41 @@ export default function AvailabilityPage() {
   const [showBooking, setShowBooking] = useState(false)
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-baron-bg">
       <PageView page="זמינות" />
-      <Header />
-      <main className="max-w-2xl mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">זמינות המטוס</h2>
-            <p className="text-slate-500 text-sm">Beechcraft Baron 58 | <span className="font-mono font-bold text-blue-600">4X-DZJ</span></p>
-          </div>
-          <button onClick={() => setShowBooking(!showBooking)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-1.5 ${showBooking ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-blue-700 hover:bg-blue-800 text-white'}`}>
-            {showBooking ? '✕ סגור' : '✈️ הזמן טיסה'}
-          </button>
-        </div>
+      <Header onBookClick={() => setShowBooking(!showBooking)} />
 
+      {/* Hero */}
+      <div className="hero-img flex items-end pt-20 md:pt-0 min-h-[220px] md:min-h-[340px]">
+        <div className="max-w-[1060px] mx-auto px-4 md:px-8 pb-8 md:pb-12 w-full">
+          <h1 className="text-[28px] md:text-[40px] font-bold leading-[1.1] tracking-tight">
+            Baron <span className="gold">58</span>
+          </h1>
+          <p className="text-baron-text/35 text-[13px] md:text-[14px] mt-2 tracking-wide">
+            Beechcraft · Twin Engine · IFR · 166 Gal
+          </p>
+        </div>
+      </div>
+
+      <div className="w-full h-[3px] bg-gradient-to-l from-baron-red via-baron-gold to-transparent" />
+
+      <main className="max-w-[1060px] mx-auto px-4 md:px-8 pb-24 md:pb-20 space-y-4 md:space-y-5 mt-3">
         {showBooking && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+          <div className="card rounded-xl md:rounded-2xl p-5 space-y-4 animate-fade-in">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-semibold text-[15px] leading-none">הזמן טיסה</h2>
+              <button
+                onClick={() => setShowBooking(false)}
+                className="text-baron-muted hover:text-baron-text text-sm"
+              >
+                ✕
+              </button>
+            </div>
             <BookingForm onSuccess={() => setShowBooking(false)} />
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="card rounded-xl md:rounded-2xl overflow-hidden">
           <WeeklyCalendar />
         </div>
       </main>

@@ -22,7 +22,6 @@ export default function ToolsPage() {
   useEffect(() => {
     fetch('/api/maintenance?pilots_only=true').then(r => r.json()).then(setMaintenance).catch(() => {})
 
-    // Load last flight of the aircraft (not pilot-specific)
     Promise.all([fetch('/api/flight-logs'), fetch('/api/bookings')]).then(async ([lRes, bRes]) => {
       const logs = await lRes.json()
       const bookings = await bRes.json()
@@ -45,19 +44,19 @@ export default function ToolsPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-baron-bg">
       <PageView page="כלים" />
       <Header />
-      <main className="max-w-lg mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold text-gray-900">כלים</h2>
-          <p className="text-gray-500">Baron 4X-DZJ | כלי עזר לטייסים</p>
+      <main className="max-w-lg mx-auto px-4 pt-[68px] md:pt-[76px] pb-24 md:pb-12 space-y-4">
+        <div className="space-y-1">
+          <h2 className="font-semibold text-[15px] leading-none">כלים</h2>
+          <p className="text-baron-muted text-[12px]">Baron 4X-DZJ · כלי עזר לטייסים</p>
         </div>
 
-        {/* ===== Maintenance Status ===== */}
+        {/* Maintenance Status */}
         {maintenance && maintenance.records.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2">🔧 מצב תחזוקה</h3>
+          <div className="card rounded-xl md:rounded-2xl p-5 space-y-4">
+            <h3 className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em] leading-none">מצב תחזוקה</h3>
             {maintenance.records.map(rec => {
               const hoursUsed = maintenance.currentHobbs - rec.last_done_hobbs
               const hoursRemaining = Math.round((rec.interval_hours - hoursUsed) * 10) / 10
@@ -67,18 +66,18 @@ export default function ToolsPage() {
               return (
                 <div key={rec.id} className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-700 font-medium">{rec.notes || rec.maintenance_type}</span>
-                    <span className={`text-sm font-bold ${isUrgent ? 'text-red-600' : isWarning ? 'text-orange-600' : 'text-green-600'}`}>
-                      {hoursRemaining}h נותרו
+                    <span className="text-[13px] text-baron-text font-medium">{rec.notes || rec.maintenance_type}</span>
+                    <span className={`font-mono text-[13px] font-medium ${isUrgent ? 'text-baron-red' : isWarning ? 'text-orange-500' : 'text-emerald-500'}`}>
+                      {hoursRemaining}h
                     </span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                  <div className="h-[3px] bg-baron-text/[0.04] rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${isUrgent ? 'bg-red-500' : isWarning ? 'bg-orange-400' : 'bg-green-500'}`}
+                      className={`h-full rounded-full transition-all ${isUrgent ? 'bg-baron-red' : isWarning ? 'bg-orange-400' : 'gold-bg'}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-[10px] text-baron-muted">
                     <span>Hobbs נוכחי: {maintenance.currentHobbs}</span>
                     <span>ביקורת ב-{rec.last_done_hobbs + rec.interval_hours}h</span>
                   </div>
@@ -88,36 +87,34 @@ export default function ToolsPage() {
           </div>
         )}
 
-        {/* ===== Last Flight of Aircraft ===== */}
+        {/* Last Flight */}
         {lastFlight && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2">🛩️ טיסה אחרונה של המטוס</h3>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs text-gray-500">טייס</p>
-                  <p className="font-bold text-gray-900">{lastFlight.pilot_name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">תאריך</p>
-                  <p className="font-bold text-gray-900">{lastFlight.date}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Hobbs</p>
-                  <p className="font-bold text-gray-900">{lastFlight.hobbs_start} → {lastFlight.hobbs_end}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">זמן באוויר</p>
-                  <p className="font-bold text-green-600">{lastFlight.flight_hours}h</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">מפלס דלק</p>
-                  <p className="font-bold text-gray-900">{lastFlight.fuel_level}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">שמן (מנוע 1 / 2)</p>
-                  <p className="font-bold text-gray-900">{lastFlight.oil}</p>
-                </div>
+          <div className="card rounded-xl md:rounded-2xl p-5 space-y-3">
+            <h3 className="text-baron-muted text-[10px] md:text-[11px] font-medium uppercase tracking-[0.1em] leading-none">טיסה אחרונה של המטוס</h3>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <p className="text-baron-muted text-[10px] uppercase tracking-[0.08em]">טייס</p>
+                <p className="font-medium text-[14px] text-baron-text">{lastFlight.pilot_name}</p>
+              </div>
+              <div>
+                <p className="text-baron-muted text-[10px] uppercase tracking-[0.08em]">תאריך</p>
+                <p className="font-medium text-[14px] text-baron-text">{lastFlight.date}</p>
+              </div>
+              <div>
+                <p className="text-baron-muted text-[10px] uppercase tracking-[0.08em]">Hobbs</p>
+                <p className="font-mono text-[14px] text-baron-text">{lastFlight.hobbs_start} → {lastFlight.hobbs_end}</p>
+              </div>
+              <div>
+                <p className="text-baron-muted text-[10px] uppercase tracking-[0.08em]">זמן באוויר</p>
+                <p className="font-mono text-[14px] text-emerald-500 font-medium">{lastFlight.flight_hours}h</p>
+              </div>
+              <div>
+                <p className="text-baron-muted text-[10px] uppercase tracking-[0.08em]">מפלס דלק</p>
+                <p className="font-medium text-[14px] text-baron-text">{lastFlight.fuel_level}</p>
+              </div>
+              <div>
+                <p className="text-baron-muted text-[10px] uppercase tracking-[0.08em]">שמן (מנוע 1 / 2)</p>
+                <p className="font-mono text-[14px] text-baron-text">{lastFlight.oil}</p>
               </div>
             </div>
           </div>
