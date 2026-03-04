@@ -44,7 +44,7 @@ export default function PilotDetailPage() {
 
   // Add package form
   const [showPackageForm, setShowPackageForm] = useState(false)
-  const [packageForm, setPackageForm] = useState({ hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '', purchase_type: 'package' as 'package' | 'individual' })
+  const [packageForm, setPackageForm] = useState({ hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '', purchase_type: 'package' as 'package' | 'individual', hours_gift: '' })
 
   // Add billing form
   const [showBillingForm, setShowBillingForm] = useState(false)
@@ -173,12 +173,15 @@ export default function PilotDetailPage() {
     const notesWithType = packageForm.purchase_type === 'individual'
       ? `[individual] ${packageForm.notes}`.trim()
       : packageForm.notes
+    const giftHours = parseFloat(packageForm.hours_gift || '0')
+    const totalHours = parseFloat(packageForm.hours_purchased || '0') + giftHours
+    const giftNote = giftHours > 0 ? ` (כולל ${giftHours} שעות מתנה)` : ''
     await fetch(`/api/pilots/${pilotId}/packages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...packageForm, notes: notesWithType }),
+      body: JSON.stringify({ ...packageForm, hours_purchased: String(totalHours), notes: (notesWithType + giftNote).trim() }),
     })
-    setPackageForm({ hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '', purchase_type: 'package' })
+    setPackageForm({ hours_purchased: '', price_paid: '', purchase_date: new Date().toISOString().split('T')[0], notes: '', purchase_type: 'package', hours_gift: '' })
     setShowPackageForm(false)
     loadData()
   }
@@ -477,40 +480,75 @@ export default function PilotDetailPage() {
               </div>
 
               {showPackageForm && (
-                <form onSubmit={addPackage} className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <div className="text-gray-700 text-sm font-medium mb-2">
-                    {packageForm.purchase_type === 'package' ? '📦 הוספת בנק שעות' : '🕐 הוספת שעות בודדות'}
+                <form onSubmit={addPackage} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-gray-700 font-semibold text-sm">
+                      {packageForm.purchase_type === 'package' ? '📦 הוספת בנק שעות' : '🕐 הוספת שעות בודדות'}
+                    </h3>
+                    {rates.length > 0 && <span className="text-xs text-gray-500">תעריף: ₪{rates[0]?.rate_per_hour?.toLocaleString()}/שעה</span>}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-gray-700 text-xs font-semibold mb-1">
-                        {packageForm.purchase_type === 'package' ? 'שעות בחבילה' : 'מספר שעות'}
-                      </label>
-                      <input type="number" required step="0.1" value={packageForm.hours_purchased}
-                        onChange={e => setPackageForm({ ...packageForm, hours_purchased: e.target.value })}
-                        className={inputClass} />
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">תעריף</label>
+                      <select className={inputClass}
+                        onChange={e => {
+                          const rate = rates.find(r => String(r.id) === e.target.value)
+                          if (rate && packageForm.hours_purchased) {
+                            setPackageForm(f => ({ ...f, price_paid: String(Math.round(parseFloat(f.hours_purchased) * rate.rate_per_hour)) }))
+                          }
+                        }}>
+                        <option value="">בחר תעריף...</option>
+                        {rates.map(r => <option key={r.id} value={r.id}>{r.name} — ₪{r.rate_per_hour?.toLocaleString()}/שעה</option>)}
+                      </select>
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-semibold mb-1">מחיר ששולם (₪)</label>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">מספר שעות</label>
+                      <input type="number" required step="0.1" value={packageForm.hours_purchased}
+                        onChange={e => {
+                          const hrs = e.target.value
+                          setPackageForm(f => {
+                            const currentRate = rates[0]?.rate_per_hour
+                            const auto = currentRate && hrs ? String(Math.round(parseFloat(hrs) * currentRate)) : f.price_paid
+                            return { ...f, hours_purchased: hrs, price_paid: auto }
+                          })
+                        }}
+                        placeholder="0" className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">סכום לתשלום (₪)</label>
                       <input type="number" step="0.01" value={packageForm.price_paid}
                         onChange={e => setPackageForm({ ...packageForm, price_paid: e.target.value })}
-                        className={inputClass} />
+                        placeholder="מחושב אוטומטית" className={inputClass + ' bg-blue-50'} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-semibold mb-1">תאריך רכישה</label>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">שעות מתנה 🎁 <span className="text-gray-400 font-normal">(אופציונלי)</span></label>
+                      <input type="number" step="0.1" min="0" value={packageForm.hours_gift}
+                        onChange={e => setPackageForm({ ...packageForm, hours_gift: e.target.value })}
+                        placeholder="0" className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">תאריך רכישה</label>
                       <input type="date" value={packageForm.purchase_date}
                         onChange={e => setPackageForm({ ...packageForm, purchase_date: e.target.value })}
                         className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-gray-700 text-xs font-semibold mb-1">הערות</label>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">הערות</label>
                       <input type="text" value={packageForm.notes}
                         onChange={e => setPackageForm({ ...packageForm, notes: e.target.value })}
                         className={inputClass} />
                     </div>
                   </div>
-                  <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-base font-bold">
-                    הוסף
+                  {packageForm.hours_purchased && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800 space-y-0.5">
+                      {packageForm.price_paid && <div>💰 {packageForm.hours_purchased} שעות × ₪{rates[0]?.rate_per_hour?.toLocaleString() || '?'} = <strong>₪{packageForm.price_paid}</strong></div>}
+                      {parseFloat(packageForm.hours_gift || '0') > 0 && (
+                        <div className="text-green-700">🎁 + {packageForm.hours_gift} שעות מתנה | סה״כ: <strong>{(parseFloat(packageForm.hours_purchased||'0') + parseFloat(packageForm.hours_gift||'0'))} שעות</strong></div>
+                      )}
+                    </div>
+                  )}
+                  <button type="submit" className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold">
+                    + הוסף רכישת שעות
                   </button>
                 </form>
               )}
