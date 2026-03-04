@@ -10,7 +10,7 @@ export default function AvailabilityPage() {
   const [showBooking, setShowBooking] = useState(false)
 
   return (
-    <div className="h-screen md:h-auto md:min-h-screen bg-baron-bg flex flex-col md:block overflow-hidden md:overflow-auto">
+    <div className={`md:h-auto md:min-h-screen bg-baron-bg flex flex-col md:block md:overflow-auto ${showBooking ? 'min-h-screen overflow-auto' : 'h-screen overflow-hidden'}`}>
       <PageView page="זמינות" />
       <Header onBookClick={() => setShowBooking(!showBooking)} />
 
@@ -33,7 +33,7 @@ export default function AvailabilityPage() {
 
       <main className="max-w-[1060px] mx-auto px-4 md:px-8 pb-24 md:pb-20 flex-1 flex flex-col md:block space-y-4 md:space-y-5 mt-1 md:mt-3 min-h-0">
         {showBooking && (
-          <div className="card rounded-xl md:rounded-2xl p-5 space-y-4 animate-fade-in flex-shrink-0">
+          <div className="card rounded-xl md:rounded-2xl p-5 space-y-4 animate-fade-in mb-24">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-semibold text-[15px] leading-none">הזמן טיסה</h2>
               <button

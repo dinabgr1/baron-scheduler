@@ -88,6 +88,13 @@ textarea {
   color-scheme: light;
 }
 
+/* Safe area bottom padding for pages with bottom nav */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
 /* Calendar scroll container */
 .calendar-scroll-container {
   height: 100%;
