@@ -652,7 +652,11 @@ export default function AdminPage() {
             </div>
 
             {/* Calendar View */}
-            {view === 'calendar' && <WeeklyCalendar key={calendarKey} />}
+            {view === 'calendar' && (
+              <div className="card rounded-xl md:rounded-2xl overflow-hidden">
+                <WeeklyCalendar key={calendarKey} />
+              </div>
+            )}
 
             {/* List View */}
             {view === 'list' && (

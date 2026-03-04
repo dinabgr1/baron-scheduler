@@ -319,16 +319,16 @@ export default function WeeklyCalendar() {
   return (
     <div className="flex flex-col h-full md:h-auto">
       {/* Legend - sticky top */}
-      <div className="flex items-center justify-center gap-x-4 gap-y-1 flex-wrap px-3 py-2 bg-white border-b border-slate-200 text-[11px] text-slate-600 font-medium">
-        <span className="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">סוג טיסה:</span>
+      <div className="flex items-center justify-center gap-x-4 gap-y-1 flex-wrap px-3 py-2 bg-white border-b border-baron-border text-[11px] text-baron-text/70 font-medium">
+        <span className="text-baron-muted text-[10px] font-semibold uppercase tracking-wide">סוג טיסה:</span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-4 rounded-sm" style={{ backgroundColor: '#1e3a5f' }} />עם מדריך
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-4 rounded-sm" style={{ backgroundColor: '#dbeafe', border: '1px solid #93c5fd' }} />עצמאית
         </span>
-        <span className="text-slate-200">│</span>
-        <span className="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">סטטוס:</span>
+        <span className="text-baron-dim">│</span>
+        <span className="text-baron-muted text-[10px] font-semibold uppercase tracking-wide">סטטוס:</span>
         <span className="flex items-center gap-1.5">
           <span className="w-1 h-4 rounded-full" style={{ backgroundColor: '#f59e0b' }} />ממתין
         </span>
@@ -341,7 +341,7 @@ export default function WeeklyCalendar() {
       </div>
 
       {/* View switcher + zoom */}
-      <div className="flex items-center justify-between p-3 border-b border-slate-100">
+      <div className="flex items-center justify-between p-3 border-b border-baron-border">
         <div className="flex items-center gap-1">
           {views.map(v => (
             <button
@@ -349,8 +349,8 @@ export default function WeeklyCalendar() {
               onClick={() => setView(v.key)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors
                 ${view === v.key
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  ? 'bg-baron-gold text-white shadow-sm'
+                  : 'bg-baron-bg text-baron-muted hover:bg-baron-dim'}`}
             >
               {v.label}
             </button>
@@ -361,14 +361,14 @@ export default function WeeklyCalendar() {
             <button
               onClick={() => setHourHeight(h => Math.max(MIN_HOUR_HEIGHT, h - ZOOM_STEP))}
               disabled={hourHeight <= MIN_HOUR_HEIGHT}
-              className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 text-sm font-bold flex items-center justify-center"
+              className="w-7 h-7 rounded-lg bg-baron-bg hover:bg-baron-dim disabled:opacity-30 disabled:cursor-not-allowed text-baron-text/70 text-sm font-bold flex items-center justify-center"
             >
               −
             </button>
             <button
               onClick={() => setHourHeight(h => Math.min(MAX_HOUR_HEIGHT, h + ZOOM_STEP))}
               disabled={hourHeight >= MAX_HOUR_HEIGHT}
-              className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 text-sm font-bold flex items-center justify-center"
+              className="w-7 h-7 rounded-lg bg-baron-bg hover:bg-baron-dim disabled:opacity-30 disabled:cursor-not-allowed text-baron-text/70 text-sm font-bold flex items-center justify-center"
             >
               +
             </button>
@@ -377,27 +377,27 @@ export default function WeeklyCalendar() {
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between p-3 border-b border-slate-100">
+      <div className="flex items-center justify-between p-3 border-b border-baron-border">
         <button onClick={() => navigate(-1)}
-          className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors text-sm font-medium">
+          className="p-2 rounded-lg bg-baron-bg hover:bg-baron-dim text-baron-text/70 transition-colors text-sm font-medium">
           ←
         </button>
         <div className="text-center">
-          <div className="text-slate-700 font-bold text-sm">{headerLabel()}</div>
+          <div className="text-baron-text font-bold text-sm">{headerLabel()}</div>
           {!isAtToday && (
-            <button onClick={goToday} className="text-blue-500 text-xs hover:text-blue-700">
+            <button onClick={goToday} className="text-baron-gold-text text-xs hover:text-baron-gold">
               היום
             </button>
           )}
         </div>
         <button onClick={() => navigate(1)}
-          className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors text-sm font-medium">
+          className="p-2 rounded-lg bg-baron-bg hover:bg-baron-dim text-baron-text/70 transition-colors text-sm font-medium">
           →
         </button>
       </div>
 
       {loading && initialLoad ? (
-        <div className="p-8 text-center text-slate-400">טוען...</div>
+        <div className="p-8 text-center text-baron-muted">טוען...</div>
       ) : view === 'month' ? (
         <MonthView
           anchor={anchor}
@@ -451,16 +451,16 @@ function TimeGridView({
 }) {
   return (
     <div ref={scrollRef} className="overflow-y-auto overscroll-contain touch-pan-y calendar-scroll-container" style={{ '--calendar-height': `${containerHeight}px` } as React.CSSProperties}>
-      <div className="flex sticky top-0 z-10 bg-white border-b border-slate-200">
+      <div className="flex sticky top-0 z-10 bg-white border-b border-baron-border">
         <div className="flex-shrink-0 w-12 md:w-14" />
         {dates.map((d, i) => {
           const isT = isSameDay(d, today)
           return (
-            <div key={i} className={`flex-1 text-center py-2 border-l border-slate-100 ${isT ? 'bg-blue-50' : 'bg-white'}`}>
-              <div className={`text-xs font-bold ${isT ? 'text-blue-600' : 'text-slate-400'}`}>
+            <div key={i} className={`flex-1 text-center py-2 border-l border-baron-border ${isT ? 'bg-baron-gold/10' : 'bg-white'}`}>
+              <div className={`text-xs font-bold ${isT ? 'text-baron-gold' : 'text-baron-muted'}`}>
                 {DAYS_HE[d.getDay()]}
               </div>
-              <div className={`text-sm font-bold leading-tight ${isT ? 'bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center mx-auto' : 'text-slate-700'}`}>
+              <div className={`text-sm font-bold leading-tight ${isT ? 'bg-baron-gold text-white rounded-full w-7 h-7 flex items-center justify-center mx-auto' : 'text-baron-text'}`}>
                 {d.getDate()}
               </div>
             </div>
@@ -471,7 +471,7 @@ function TimeGridView({
       <div className="flex relative">
         <div className="flex-shrink-0 w-12 md:w-14 relative" style={{ height: TOTAL_HOURS * hourHeight }}>
           {Array.from({ length: TOTAL_HOURS }, (_, i) => (
-            <div key={i} className="absolute w-full text-right pr-2 text-xs text-slate-400 font-sans tabular-nums tracking-tight"
+            <div key={i} className="absolute w-full text-right pr-2 text-xs text-baron-muted font-sans tabular-nums tracking-tight"
               style={{ top: i * hourHeight - 6 }}>
               {String(START_HOUR + i).padStart(2, '0')}:00
             </div>
@@ -485,10 +485,10 @@ function TimeGridView({
 
           return (
             <div key={i}
-              className={`flex-1 relative border-l border-slate-100 ${isT ? 'bg-blue-50/40' : ''}`}
+              className={`flex-1 relative border-l border-baron-border ${isT ? 'bg-baron-gold/5' : ''}`}
               style={{ height: TOTAL_HOURS * hourHeight }}>
               {Array.from({ length: TOTAL_HOURS }, (_, h) => (
-                <div key={h} className="absolute w-full border-t border-slate-100" style={{ top: h * hourHeight }} />
+                <div key={h} className="absolute w-full border-t border-baron-border" style={{ top: h * hourHeight }} />
               ))}
               {dayBookings.map(b => (
                 <div key={b.id} className="relative">
@@ -532,16 +532,16 @@ function MonthView({
 
   return (
     <div className="overflow-x-auto">
-      <div className="grid grid-cols-7 border-b border-slate-200">
+      <div className="grid grid-cols-7 border-b border-baron-border">
         {DAYS_HE.map((d, i) => (
-          <div key={i} className="text-center py-2 text-xs font-bold text-slate-400 border-l border-slate-100 first:border-l-0">
+          <div key={i} className="text-center py-2 text-xs font-bold text-baron-muted border-l border-baron-border first:border-l-0">
             {d}
           </div>
         ))}
       </div>
 
       {grid.map((week, wi) => (
-        <div key={wi} className="grid grid-cols-7 border-b border-slate-100">
+        <div key={wi} className="grid grid-cols-7 border-b border-baron-border">
           {week.map((d, di) => {
             const dateStr = formatDate(d)
             const dayBookings = bookingsByDate[dateStr] || []
@@ -551,11 +551,11 @@ function MonthView({
             return (
               <div
                 key={di}
-                className={`min-h-[70px] md:min-h-[90px] border-l border-slate-100 first:border-l-0 p-1
-                  ${isT ? 'bg-blue-50' : ''}
+                className={`min-h-[70px] md:min-h-[90px] border-l border-baron-border first:border-l-0 p-1
+                  ${isT ? 'bg-baron-gold/10' : ''}
                   ${!isCurrentMonth ? 'opacity-40' : ''}`}
               >
-                <div className={`text-xs font-bold mb-1 ${isT ? 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-slate-600 px-0.5'}`}>
+                <div className={`text-xs font-bold mb-1 ${isT ? 'bg-baron-gold text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-baron-text/70 px-0.5'}`}>
                   {d.getDate()}
                 </div>
                 <div className="space-y-0.5">
@@ -586,7 +586,7 @@ function MonthView({
                     )
                   })}
                   {dayBookings.length > 3 && (
-                    <div className="text-[10px] text-slate-400 px-1">+{dayBookings.length - 3}</div>
+                    <div className="text-[10px] text-baron-muted px-1">+{dayBookings.length - 3}</div>
                   )}
                 </div>
               </div>
