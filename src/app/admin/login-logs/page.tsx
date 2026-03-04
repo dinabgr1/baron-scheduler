@@ -44,6 +44,107 @@ function timeAgo(dateStr: string): string {
   return `לפני ${days} ימים`
 }
 
+function formatTime(dateStr: string): string {
+  const d = new Date(dateStr)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+}
+
+function getDateKey(dateStr: string): string {
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+type LogGroup = {
+  key: string
+  device: string
+  date: string
+  dateKey: string
+  ip: string
+  city: string | null
+  country: string | null
+  screen_size: string | null
+  connection: string | null
+  logs: LoginLog[]
+}
+
+function groupLogs(logs: LoginLog[]): (LoginLog | LogGroup)[] {
+  // Group view logs by device+date+ip, keep others as-is
+  const groups: Map<string, LogGroup> = new Map()
+  const result: (LoginLog | LogGroup | null)[] = logs.map(() => null)
+
+  logs.forEach((log, idx) => {
+    if (log.login_type !== 'view') {
+      result[idx] = log
+      return
+    }
+    const device = parseUA(log.user_agent)
+    const dateKey = getDateKey(log.created_at)
+    const groupKey = `${device}|${dateKey}|${log.ip}`
+
+    if (!groups.has(groupKey)) {
+      const group: LogGroup = {
+        key: groupKey,
+        device,
+        date: formatDate(log.created_at),
+        dateKey,
+        ip: log.ip,
+        city: log.city,
+        country: log.country,
+        screen_size: log.screen_size,
+        connection: log.connection,
+        logs: [log],
+      }
+      groups.set(groupKey, group)
+      result[idx] = group
+    } else {
+      groups.get(groupKey)!.logs.push(log)
+      result[idx] = null // will be filtered out
+    }
+  })
+
+  return result.filter((item): item is LoginLog | LogGroup => item !== null)
+}
+
+function isGroup(item: LoginLog | LogGroup): item is LogGroup {
+  return 'logs' in item && Array.isArray((item as LogGroup).logs)
+}
+
+function LogRow({ log }: { log: LoginLog }) {
+  return (
+    <div className="p-4 flex items-center gap-3">
+      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-medium ${
+        !log.success ? 'bg-red-50 text-baron-red' : log.login_type === 'admin' ? 'bg-amber-50 text-baron-gold-text' : log.login_type === 'view' ? 'bg-baron-bg text-baron-muted' : 'bg-emerald-50 text-emerald-600'
+      }`}>
+        {!log.success ? '!' : log.login_type === 'admin' ? 'A' : log.login_type === 'view' ? 'V' : 'P'}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-[13px] text-baron-text">
+            {log.login_type === 'admin' ? 'מנהל' : log.login_type === 'view' ? `צפייה: ${log.user_name}` : log.user_name || 'טייס'}
+          </span>
+          {!log.success && <span className="text-[10px] bg-red-50 text-baron-red px-2 py-0.5 rounded-md font-medium border border-red-200">נכשל</span>}
+        </div>
+        <div className="text-[11px] text-baron-dim flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+          <span>{parseUA(log.user_agent)}</span>
+          {log.city && <span>· {log.city}{log.country ? `, ${log.country}` : ''}</span>}
+          {!log.city && log.country && <span>· {log.country}</span>}
+          {log.screen_size && <span>· {log.screen_size}</span>}
+          {log.connection && <span>· {log.connection}</span>}
+          <span>· {log.ip}</span>
+        </div>
+      </div>
+      <div className="text-[11px] text-baron-dim whitespace-nowrap">
+        {timeAgo(log.created_at)}
+      </div>
+    </div>
+  )
+}
+
 export default function LoginLogsPage() {
   const [logs, setLogs] = useState<LoginLog[]>([])
   const [loading, setLoading] = useState(true)
@@ -111,10 +212,21 @@ export default function LoginLogsPage() {
     )
   }
 
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const adminLogs = logs.filter(l => l.login_type === 'admin')
   const pilotLogs = logs.filter(l => l.login_type === 'pilot')
   const viewLogs = logs.filter(l => l.login_type === 'view')
   const failedLogs = logs.filter(l => !l.success)
+  const grouped = groupLogs(logs)
+
+  function toggleGroup(key: string) {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   return (
     <div className="min-h-screen bg-baron-bg" dir="rtl">
@@ -154,34 +266,70 @@ export default function LoginLogsPage() {
           {logs.length === 0 ? (
             <div className="p-8 text-center text-baron-muted text-[13px]">אין כניסות עדיין</div>
           ) : (
-            logs.map(log => (
-              <div key={log.id} className="p-4 flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-medium ${
-                  !log.success ? 'bg-red-50 text-baron-red' : log.login_type === 'admin' ? 'bg-amber-50 text-baron-gold-text' : log.login_type === 'view' ? 'bg-baron-bg text-baron-muted' : 'bg-emerald-50 text-emerald-600'
-                }`}>
-                  {!log.success ? '!' : log.login_type === 'admin' ? 'A' : log.login_type === 'view' ? 'V' : 'P'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[13px] text-baron-text">
-                      {log.login_type === 'admin' ? 'מנהל' : log.login_type === 'view' ? `צפייה: ${log.user_name}` : log.user_name || 'טייס'}
-                    </span>
-                    {!log.success && <span className="text-[10px] bg-red-50 text-baron-red px-2 py-0.5 rounded-md font-medium border border-red-200">נכשל</span>}
+            grouped.map(item => {
+              if (isGroup(item)) {
+                const group = item
+                const isOpen = expanded.has(group.key)
+                const count = group.logs.length
+                // Single view entry — no need for dropdown
+                if (count === 1) {
+                  const log = group.logs[0]
+                  return <LogRow key={log.id} log={log} />
+                }
+                // Multiple entries — collapsible group
+                const firstTime = formatTime(group.logs[0].created_at)
+                const lastTime = formatTime(group.logs[group.logs.length - 1].created_at)
+                const pages = [...new Set(group.logs.map(l => l.user_name).filter(Boolean))]
+                return (
+                  <div key={group.key}>
+                    <button
+                      onClick={() => toggleGroup(group.key)}
+                      className="w-full p-4 flex items-center gap-3 hover:bg-baron-bg/50 transition-colors text-right"
+                    >
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold bg-baron-bg text-baron-muted">
+                        {count}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-[13px] text-baron-text">{group.device}</span>
+                          <span className="text-[10px] bg-baron-bg text-baron-muted px-2 py-0.5 rounded-md font-medium">
+                            {count} צפיות
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-baron-dim flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                          <span>{group.date}</span>
+                          <span>· {lastTime}–{firstTime}</span>
+                          {group.city && <span>· {group.city}</span>}
+                          {pages.length > 0 && <span>· {pages.join(', ')}</span>}
+                        </div>
+                      </div>
+                      <div className={`text-baron-dim text-[14px] transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                        ▾
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="bg-baron-bg/30 divide-y divide-baron-border/50">
+                        {group.logs.map(log => (
+                          <div key={log.id} className="px-4 py-2.5 pr-16 flex items-center gap-3">
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium bg-baron-bg text-baron-muted">
+                              V
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[12px] text-baron-text">{log.user_name || 'צפייה'}</span>
+                            </div>
+                            <div className="text-[11px] text-baron-dim whitespace-nowrap">
+                              {formatTime(log.created_at)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-[11px] text-baron-dim flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                    <span>{parseUA(log.user_agent)}</span>
-                    {log.city && <span>· {log.city}{log.country ? `, ${log.country}` : ''}</span>}
-                    {!log.city && log.country && <span>· {log.country}</span>}
-                    {log.screen_size && <span>· {log.screen_size}</span>}
-                    {log.connection && <span>· {log.connection}</span>}
-                    <span>· {log.ip}</span>
-                  </div>
-                </div>
-                <div className="text-[11px] text-baron-dim whitespace-nowrap">
-                  {timeAgo(log.created_at)}
-                </div>
-              </div>
-            ))
+                )
+              } else {
+                return <LogRow key={item.id} log={item} />
+              }
+            })
           )}
         </div>
       </main>
