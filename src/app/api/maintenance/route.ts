@@ -18,6 +18,7 @@ async function getAirframeHours(): Promise<number> {
 }
 
 export async function GET(request: NextRequest) {
+  try {
   const { searchParams } = new URL(request.url)
   const pilotsOnly = searchParams.get('pilots_only')
 
@@ -82,6 +83,10 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ records: enriched, currentHobbs, totalAirframeHours }, {
     headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' }
   })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: message, stack: err instanceof Error ? err.stack : undefined }, { status: 500 })
+  }
 }
 
 export async function POST(request: NextRequest) {
