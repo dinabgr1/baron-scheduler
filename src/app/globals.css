@@ -88,6 +88,19 @@ textarea {
   color-scheme: light;
 }
 
+/* Calendar scroll container */
+.calendar-scroll-container {
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+}
+@media (min-width: 768px) {
+  .calendar-scroll-container {
+    height: var(--calendar-height, 480px);
+    flex: none;
+  }
+}
+
 /* Animation */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(4px); }

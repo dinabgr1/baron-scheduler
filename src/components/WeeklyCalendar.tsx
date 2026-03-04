@@ -317,7 +317,7 @@ export default function WeeklyCalendar() {
   const containerHeight = VISIBLE_HOURS * hourHeight
 
   return (
-    <div>
+    <div className="flex flex-col h-full md:h-auto">
       {/* Legend - sticky top */}
       <div className="flex items-center justify-center gap-x-4 gap-y-1 flex-wrap px-3 py-2 bg-white border-b border-slate-200 text-[11px] text-slate-600 font-medium">
         <span className="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">סוג טיסה:</span>
@@ -450,7 +450,7 @@ function TimeGridView({
   clearTooltip: () => void
 }) {
   return (
-    <div ref={scrollRef} className="overflow-y-auto" style={{ height: containerHeight }}>
+    <div ref={scrollRef} className="overflow-y-auto overscroll-contain touch-pan-y calendar-scroll-container" style={{ '--calendar-height': `${containerHeight}px` } as React.CSSProperties}>
       <div className="flex sticky top-0 z-10 bg-white border-b border-slate-200">
         <div className="flex-shrink-0 w-12 md:w-14" />
         {dates.map((d, i) => {

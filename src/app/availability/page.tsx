@@ -10,17 +10,17 @@ export default function AvailabilityPage() {
   const [showBooking, setShowBooking] = useState(false)
 
   return (
-    <div className="min-h-screen bg-baron-bg">
+    <div className="h-screen md:h-auto md:min-h-screen bg-baron-bg flex flex-col md:block overflow-hidden md:overflow-auto">
       <PageView page="זמינות" />
       <Header onBookClick={() => setShowBooking(!showBooking)} />
 
-      {/* Hero */}
-      <div className="hero-img flex items-end pt-20 md:pt-0 min-h-[220px] md:min-h-[340px]">
-        <div className="max-w-[1060px] mx-auto px-4 md:px-8 pb-8 md:pb-12 w-full">
-          <h1 className="text-[28px] md:text-[40px] font-bold leading-[1.1] tracking-tight">
+      {/* Hero — desktop only */}
+      <div className="hero-img hidden md:flex items-end min-h-[340px]">
+        <div className="max-w-[1060px] mx-auto px-8 pb-12 w-full">
+          <h1 className="text-[40px] font-bold leading-[1.1] tracking-tight">
             Baron <span className="gold">58</span>
           </h1>
-          <p className="text-baron-text/35 text-[13px] md:text-[14px] mt-2 tracking-wide">
+          <p className="text-baron-text/35 text-[14px] mt-2 tracking-wide">
             Beechcraft · Twin Engine · IFR · 166 Gal
           </p>
         </div>
@@ -28,9 +28,12 @@ export default function AvailabilityPage() {
 
       <div className="w-full h-[3px] bg-gradient-to-l from-baron-red via-baron-gold to-transparent" />
 
-      <main className="max-w-[1060px] mx-auto px-4 md:px-8 pb-24 md:pb-20 space-y-4 md:space-y-5 mt-3">
+      {/* Mobile spacer for fixed top nav */}
+      <div className="h-[55px] md:hidden flex-shrink-0" />
+
+      <main className="max-w-[1060px] mx-auto px-4 md:px-8 pb-24 md:pb-20 flex-1 flex flex-col md:block space-y-4 md:space-y-5 mt-1 md:mt-3 min-h-0">
         {showBooking && (
-          <div className="card rounded-xl md:rounded-2xl p-5 space-y-4 animate-fade-in">
+          <div className="card rounded-xl md:rounded-2xl p-5 space-y-4 animate-fade-in flex-shrink-0">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-semibold text-[15px] leading-none">הזמן טיסה</h2>
               <button
@@ -44,7 +47,7 @@ export default function AvailabilityPage() {
           </div>
         )}
 
-        <div className="card rounded-xl md:rounded-2xl overflow-hidden">
+        <div className="card rounded-xl md:rounded-2xl overflow-hidden flex-1 min-h-0 md:flex-none">
           <WeeklyCalendar />
         </div>
       </main>
