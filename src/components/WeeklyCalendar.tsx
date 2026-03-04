@@ -192,6 +192,7 @@ export default function WeeklyCalendar() {
   const [logsByBookingId, setLogsByBookingId] = useState<Record<string, FlightLog>>({})
   const [tooltip, setTooltip] = useState<{ bookingId: string; message: string } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const initialScrollDone = useRef(false)
   const today = new Date()
 
   let fetchFrom: string, fetchTo: string
@@ -224,10 +225,16 @@ export default function WeeklyCalendar() {
   }, [fetchFrom, fetchTo])
 
   useEffect(() => {
-    if (!loading && scrollRef.current && view !== 'month') {
+    if (!loading && scrollRef.current && view !== 'month' && !initialScrollDone.current) {
       scrollRef.current.scrollTop = (7 - START_HOUR) * hourHeight
+      initialScrollDone.current = true
     }
   }, [loading, view, hourHeight])
+
+  // Reset scroll flag when view changes so it scrolls to 7AM on view switch
+  useEffect(() => {
+    initialScrollDone.current = false
+  }, [view])
 
   const bookingsByDate: Record<string, Booking[]> = {}
   bookings.forEach(b => {
