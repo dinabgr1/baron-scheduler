@@ -146,7 +146,7 @@ export default function PilotDetailPage() {
   const reportedBookingIds = new Set(flightLogs.map(l => l.booking_id))
   const unclosedLogs = pastBookings.filter(b => !reportedBookingIds.has(b.id))
 
-  const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+  const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-baron-border text-baron-text placeholder-baron-muted text-sm focus:outline-none focus:border-baron-gold focus:ring-2 focus:ring-baron-gold/20"
 
   async function savePilotEdit() {
     await fetch(`/api/pilots/${pilotId}`, {
@@ -255,19 +255,19 @@ export default function PilotDetailPage() {
 
   if (!authed) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-baron-bg">
         <Header />
         <main className="max-w-sm mx-auto px-4 py-20 pb-20 md:pb-6">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <div className="card rounded-xl p-6">
             <h2 className="text-gray-900 font-bold text-xl text-center mb-6">כניסת מנהל</h2>
             <form onSubmit={login} className="space-y-4">
               <input type="password" value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="סיסמה"
-                className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg text-center"
+                className="w-full px-4 py-3 rounded-lg bg-white border border-baron-border text-gray-900 placeholder-gray-400 focus:outline-none focus:border-baron-gold focus:ring-1 focus:ring-baron-gold/20 text-lg text-center"
                 autoFocus />
               <button type="submit"
-                className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition-colors">
+                className="w-full py-4 rounded-xl gold-bg hover:opacity-90 text-white font-bold text-lg transition-colors">
                 כניסה
               </button>
               {loginError && <p className="text-red-600 text-center text-sm">{loginError}</p>}
@@ -280,10 +280,10 @@ export default function PilotDetailPage() {
 
   if (loading && !pilot) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-baron-bg">
         <Header />
         <main className="max-w-4xl mx-auto px-4 py-6">
-          <div className="text-center text-gray-500 py-16">טוען...</div>
+          <div className="text-center text-baron-muted py-16">טוען...</div>
         </main>
       </div>
     )
@@ -291,7 +291,7 @@ export default function PilotDetailPage() {
 
   if (error && !pilot) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-baron-bg">
         <Header />
         <main className="max-w-4xl mx-auto px-4 py-6">
           <div className="text-center text-red-600 py-16">{error}</div>
@@ -339,7 +339,7 @@ export default function PilotDetailPage() {
 
         {/* Section A - Pilot Header */}
         {pilot && (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <div className="card rounded-xl p-5">
             <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
               {editing ? (
                 <div className="flex-1 space-y-3">
@@ -370,7 +370,7 @@ export default function PilotDetailPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={savePilotEdit} className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium">שמור</button>
+                    <button onClick={savePilotEdit} className="px-4 py-2 rounded-lg gold-bg text-white text-sm font-medium">שמור</button>
                     <button onClick={() => setEditing(false)} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium">ביטול</button>
                   </div>
                 </div>
@@ -396,7 +396,7 @@ export default function PilotDetailPage() {
 
               <button onClick={toggleActive}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  pilot.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'
+                  pilot.is_active ? 'bg-baron-gold/10 text-baron-gold-text hover:bg-baron-gold/20' : 'bg-red-100 text-red-700 hover:bg-red-200'
                 }`}>
                 {pilot.is_active ? 'פעיל' : 'לא פעיל'}
               </button>
@@ -404,28 +404,28 @@ export default function PilotDetailPage() {
 
             {/* Quick stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
+              <div className="bg-baron-bg rounded-lg p-3 text-center">
                 <div className="text-2xl font-black text-gray-900">{bookings.length}</div>
                 <div className="text-xs uppercase tracking-wide text-gray-500">✈️ סה&quot;כ טיסות</div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
+              <div className="bg-baron-bg rounded-lg p-3 text-center">
                 <div className="text-2xl font-black text-gray-900">{Math.round(totalFlightHours * 10) / 10}</div>
                 <div className="text-xs uppercase tracking-wide text-gray-500">⏱️ שעות כולל</div>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
+              <div className="bg-baron-bg rounded-lg p-3 text-center">
                 <div className="text-2xl font-black text-gray-900">
                   {lastFlightBooking ? formatDate(lastFlightBooking.date) : '-'}
                 </div>
                 <div className="text-xs uppercase tracking-wide text-gray-500">📅 טיסה אחרונה</div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
+              <div className="bg-baron-bg rounded-lg p-3 text-center">
                 <div className={`text-2xl font-black ${unpaidHours > 0 ? 'text-orange-600' : 'text-green-600'}`}>
                   {Math.round(unpaidHours * 10) / 10}
                 </div>
                 <div className="text-xs uppercase tracking-wide text-gray-500">⚠️ שעות לא שולמו</div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
+              <div className="bg-baron-bg rounded-lg p-3 text-center">
                 <div className={`text-2xl font-black ${remainingHours > 0 ? 'text-green-600' : remainingHours === 0 ? 'text-orange-600' : 'text-red-600'}`}>
                   {Math.round(remainingHours * 10) / 10}
                 </div>
@@ -451,7 +451,7 @@ export default function PilotDetailPage() {
         )}
 
         {/* Section B - Billing & Hours */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <div className="card rounded-xl p-5">
           {true && (
             <div className="space-y-4">
               {/* Balance display */}
@@ -465,13 +465,13 @@ export default function PilotDetailPage() {
 
               <button onClick={() => setShowPackageForm(!showPackageForm)}
                 className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  showPackageForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  showPackageForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'gold-bg text-white'
                 }`}>
                 {showPackageForm ? '✕ סגור' : '+ הוספת רכישת שעות'}
               </button>
 
               {showPackageForm && (
-                <form onSubmit={addPackage} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                <form onSubmit={addPackage} className="card rounded-xl p-4 space-y-3">
                   <div className="flex justify-between items-center">
                     <h3 className="text-gray-700 font-semibold text-sm">💼 הוספת רכישת שעות</h3>
                     {rates.length > 0 && <span className="text-xs text-gray-500">תעריף: ₪{rates[0]?.rate_per_hour?.toLocaleString()}/שעה</span>}
@@ -529,14 +529,14 @@ export default function PilotDetailPage() {
                     </div>
                   </div>
                   {packageForm.hours_purchased && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800 space-y-0.5">
+                    <div className="bg-baron-gold/5 border border-baron-border rounded-lg px-3 py-2 text-sm text-baron-text space-y-0.5">
                       {packageForm.price_paid && <div>💰 {packageForm.hours_purchased} שעות × ₪{rates[0]?.rate_per_hour?.toLocaleString() || '?'} = <strong>₪{packageForm.price_paid}</strong></div>}
                       {parseFloat(packageForm.hours_gift || '0') > 0 && (
                         <div className="text-green-700">🎁 + {packageForm.hours_gift} שעות מתנה | סה״כ: <strong>{(parseFloat(packageForm.hours_purchased||'0') + parseFloat(packageForm.hours_gift||'0'))} שעות</strong></div>
                       )}
                     </div>
                   )}
-                  <button type="submit" className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold">
+                  <button type="submit" className="w-full py-2.5 rounded-lg gold-bg text-white font-bold">
                     + הוסף רכישת שעות
                   </button>
                 </form>
@@ -546,12 +546,12 @@ export default function PilotDetailPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">סוג</th>
-                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">תאריך</th>
-                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">שעות שנרכשו</th>
-                      <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-3">מחיר</th>
-                      <th className="hidden sm:table-cell text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">הערות</th>
+                    <tr className="border-b border-baron-border bg-baron-bg">
+                      <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">סוג</th>
+                      <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">תאריך</th>
+                      <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">שעות שנרכשו</th>
+                      <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-3">מחיר</th>
+                      <th className="hidden sm:table-cell text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">הערות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -559,7 +559,7 @@ export default function PilotDetailPage() {
                       const isIndividual = pkg.notes?.startsWith('[individual]')
                       const displayNotes = isIndividual ? pkg.notes?.replace('[individual]', '').trim() : pkg.notes
                       return (
-                        <tr key={pkg.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
+                        <tr key={pkg.id} className="border-b border-baron-border even:bg-baron-bg/50 hover:bg-baron-bg">
                           <td className="py-3 px-4">
                             <span className={`text-xs px-2 py-0.5 rounded font-medium ${isIndividual ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                               {isIndividual ? '🕐 בודדות' : '📦 בנק'}
@@ -590,12 +590,12 @@ export default function PilotDetailPage() {
         </div>
 
         {/* Section C - Flights History */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <div className="card rounded-xl p-5">
           <div className="flex gap-2 mb-4">
             {(['טיסות עתידיות', 'טיסות שעברו'] as FlightTab[]).map(tab => (
               <button key={tab} onClick={() => setFlightTab(tab)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  flightTab === tab ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  flightTab === tab ? 'bg-baron-gold text-white' : 'bg-white border border-baron-border text-baron-muted hover:bg-baron-bg'
                 }`}>
                 {tab}
               </button>
@@ -606,16 +606,16 @@ export default function PilotDetailPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">תאריך</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">שעות</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">סטטוס</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">עם מדריך</th>
+                  <tr className="border-b border-baron-border bg-baron-bg">
+                    <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">תאריך</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">שעות</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">סטטוס</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">עם מדריך</th>
                   </tr>
                 </thead>
                 <tbody>
                   {futureBookings.map(b => (
-                    <tr key={b.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
+                    <tr key={b.id} className="border-b border-baron-border even:bg-baron-bg/50 hover:bg-baron-bg">
                       <td className="py-3 px-4 text-base text-gray-900">{formatDate(b.date)}</td>
                       <td className="py-3 px-4 text-base text-gray-500">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
                       <td className="p-3">
@@ -642,19 +642,19 @@ export default function PilotDetailPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">תאריך</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">שעות</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">Hobbs</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">דלק</th>
-                    <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 text-right py-3 px-4">שמן</th>
+                  <tr className="border-b border-baron-border bg-baron-bg">
+                    <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">תאריך</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">שעות</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">Hobbs</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">דלק</th>
+                    <th className="text-xs font-semibold uppercase tracking-wide text-baron-muted bg-baron-bg text-right py-3 px-4">שמן</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pastBookings.map(b => {
                     const log = getFlightLogForBooking(b.id)
                     return (
-                      <tr key={b.id} className="border-b border-gray-100 even:bg-gray-50/50 hover:bg-gray-50">
+                      <tr key={b.id} className="border-b border-baron-border even:bg-baron-bg/50 hover:bg-baron-bg">
                         <td className="py-3 px-4 text-base text-gray-900">{formatDate(b.date)}</td>
                         <td className="py-3 px-4 text-base text-gray-500">{b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}</td>
                         {log ? (
@@ -681,34 +681,34 @@ export default function PilotDetailPage() {
 
           {/* Total hours from flight logs */}
           {flightTab === 'טיסות שעברו' && flightLogs.length > 0 && (
-            <div className="border-t border-gray-200 pt-3 mt-3">
-              <span className="text-gray-500 text-sm">סה&quot;כ שעות טיסה (מ-flight logs): </span>
-              <span className="text-gray-900 font-bold">{Math.round(totalFlightHours * 10) / 10}</span>
+            <div className="border-t border-baron-border pt-3 mt-3">
+              <span className="text-baron-muted text-sm">סה&quot;כ שעות טיסה (מ-flight logs): </span>
+              <span className="text-baron-text font-bold">{Math.round(totalFlightHours * 10) / 10}</span>
             </div>
           )}
         </div>
         {/* PDF Export Button */}
         <div className="flex justify-center">
           <a href={`/api/pilots/${pilotId}/pdf`} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors">
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl gold-bg text-white font-bold transition-colors">
             📄 ייצוא PDF
           </a>
         </div>
 
         {/* Section D - Documents */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <div className="card rounded-xl p-5">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-gray-900 font-bold text-lg">📄 מסמכים</h3>
             <button onClick={() => setShowDocForm(!showDocForm)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                showDocForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+                showDocForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'gold-bg text-white'
               }`}>
               {showDocForm ? '✕ סגור' : '+ הוסף מסמך'}
             </button>
           </div>
 
           {showDocForm && (
-            <form onSubmit={addDocument} className="mb-4 bg-gray-50 rounded-lg p-4 space-y-3">
+            <form onSubmit={addDocument} className="mb-4 bg-baron-bg rounded-lg p-4 space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-gray-700 text-xs font-semibold mb-1">סוג מסמך</label>
@@ -734,7 +734,7 @@ export default function PilotDetailPage() {
                     className={inputClass} />
                 </div>
               </div>
-              <button type="submit" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-sm">
+              <button type="submit" className="px-4 py-2 rounded-lg gold-bg text-white font-bold text-sm">
                 הוסף מסמך
               </button>
             </form>
@@ -801,7 +801,7 @@ export default function PilotDetailPage() {
                               expiry_date: doc.expiry_date || '',
                               notes: doc.notes || '',
                             })
-                          }} className="px-2 py-1 rounded bg-blue-600 text-white text-xs">ערוך</button>
+                          }} className="px-2 py-1 rounded bg-baron-gold text-white text-xs">ערוך</button>
                           <button onClick={() => deleteDocument(doc.id)}
                             className="px-2 py-1 rounded bg-red-600 text-white text-xs">מחק</button>
                         </div>

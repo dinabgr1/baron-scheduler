@@ -450,15 +450,15 @@ export default function AdminPage() {
 
   const tabs: AdminTab[] = ['הזמנות', 'טייסים', 'פיננסים', 'תחזוקה', 'דוחות']
 
-  const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+  const inputClass = "w-full px-3 py-2 rounded-lg bg-white border border-baron-border text-baron-text placeholder-baron-muted text-sm focus:outline-none focus:border-baron-gold focus:ring-2 focus:ring-baron-gold/20"
 
-  if (checkingAuth) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p className="text-gray-400">⏳</p></div>
+  if (checkingAuth) return <div className="min-h-screen bg-baron-bg flex items-center justify-center"><p className="text-gray-400">⏳</p></div>
   if (!authed) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-baron-bg">
         <Header />
         <main className="max-w-sm mx-auto px-4 py-20 pb-20 md:pb-6">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <div className="card rounded-xl p-6">
             <h2 className="text-gray-900 font-bold text-xl text-center mb-6">כניסת מנהל</h2>
             <form onSubmit={login} className="space-y-4">
               <input
@@ -466,12 +466,12 @@ export default function AdminPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="סיסמה"
-                className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-lg text-center"
+                className="w-full px-4 py-3 rounded-lg bg-white border border-baron-border text-gray-900 placeholder-gray-400 focus:outline-none focus:border-baron-gold focus:ring-1 focus:ring-baron-gold/20 text-lg text-center"
                 autoFocus
               />
               <button
                 type="submit"
-                className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition-colors"
+                className="w-full py-4 rounded-xl gold-bg hover:opacity-90 text-white font-bold text-lg transition-colors"
               >
                 כניסה
               </button>
@@ -486,30 +486,33 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-baron-bg" dir="rtl">
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">פאנל ניהול</h2>
-          <p className="text-gray-500">ניהול הזמנות ונתוני טיסה | Baron 4X-DZJ</p>
-          <a href="/admin/login-logs" className="inline-block mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium">📋 היסטוריית כניסות →</a>
+        <div className="page-header pt-[52px] md:pt-[63px] pb-4 px-4 -mx-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="accent-stripe mb-3" />
+            <h2 className="text-2xl font-bold text-white">פאנל ניהול</h2>
+            <p className="text-white/50 text-sm">Baron 4X-DZJ</p>
+            <a href="/admin/login-logs" className="inline-block mt-2 text-sm text-baron-gold-light hover:text-white font-medium transition-colors">📋 היסטוריית כניסות →</a>
+          </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl shadow-md border border-gray-300 p-4 border-l-4 border-l-blue-500">
+          <div className="card rounded-2xl p-4 border-r-4 border-r-baron-gold">
             <div className="text-3xl font-black text-gray-900">{stats.totalBookings}</div>
             <div className="text-gray-500 uppercase tracking-wide text-xs">סה&quot;כ הזמנות החודש</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-md border border-gray-300 p-4 border-l-4 border-l-blue-500">
+          <div className="card rounded-2xl p-4 border-r-4 border-r-baron-gold">
             <div className="text-3xl font-black text-gray-900">{stats.pendingBookings}</div>
             <div className="text-gray-500 uppercase tracking-wide text-xs">ממתינות לאישור</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-md border border-gray-300 p-4 border-l-4 border-l-green-500">
+          <div className="card rounded-2xl p-4 border-r-4 border-r-baron-gold">
             <div className="text-3xl font-black text-gray-900">{stats.flightHours}</div>
             <div className="text-gray-500 uppercase tracking-wide text-xs">שעות טיסה החודש</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-md border border-gray-300 p-4 border-l-4 border-l-green-500">
+          <div className="card rounded-2xl p-4 border-r-4 border-r-baron-gold">
             <div className="text-3xl font-black text-gray-900">{stats.lastHobbs}</div>
             <div className="text-gray-500 uppercase tracking-wide text-xs">Hobbs אחרון</div>
           </div>
@@ -518,13 +521,13 @@ export default function AdminPage() {
         <NotificationBanner />
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-1 flex gap-1 overflow-x-auto">
+        <div className="card rounded-xl p-1 flex gap-1 overflow-x-auto">
           {tabs.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-colors ${
                 activeTab === tab
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-baron-gold text-white'
+                  : 'text-baron-muted hover:bg-baron-bg'
               }`}>
               {tab}
             </button>
@@ -539,13 +542,13 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button onClick={() => setView('list')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    view === 'list' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    view === 'list' ? 'bg-baron-gold text-white' : 'bg-white border border-baron-border text-baron-muted hover:bg-baron-bg'
                   }`}>
                   רשימה
                 </button>
                 <button onClick={() => setView('calendar')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    view === 'calendar' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    view === 'calendar' ? 'bg-baron-gold text-white' : 'bg-white border border-baron-border text-baron-muted hover:bg-baron-bg'
                   }`}>
                   לוח שנה
                 </button>
@@ -555,7 +558,7 @@ export default function AdminPage() {
                 {['all', 'pending', 'approved', 'rejected'].map((f) => (
                   <button key={f} onClick={() => setFilter(f)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      filter === f ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      filter === f ? 'bg-baron-gold text-white' : 'bg-white border border-baron-border text-baron-muted hover:bg-baron-bg'
                     }`}>
                     {f === 'all' ? 'הכל' : f === 'pending' ? 'ממתין' : f === 'approved' ? 'מאושר' : 'נדחה'}
                     {f !== 'all' && (
@@ -570,13 +573,13 @@ export default function AdminPage() {
             <div>
               <button onClick={() => setShowAddForm(!showAddForm)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  showAddForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+                  showAddForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'gold-bg text-white'
                 }`}>
                 {showAddForm ? '✕ סגור' : '+ הוסף הזמנה'}
               </button>
 
               {showAddForm && (
-                <form onSubmit={createAdminBooking} className="mt-3 bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                <form onSubmit={createAdminBooking} className="mt-3 card rounded-xl p-4 space-y-3">
                   <h3 className="text-gray-900 font-bold text-lg">הוספת הזמנה (מנהל)</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
@@ -609,13 +612,13 @@ export default function AdminPage() {
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={addForm.with_instructor}
                         onChange={e => setAddForm({ ...addForm, with_instructor: e.target.checked })}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+                        className="w-4 h-4 rounded border-gray-300 text-baron-gold" />
                       <span className="text-gray-700 text-sm">עם מדריך</span>
                     </label>
                     {addForm.with_instructor && (
                       <select value={addForm.instructor_name}
                         onChange={e => setAddForm({ ...addForm, instructor_name: e.target.value })}
-                        className="px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-blue-500">
+                        className="px-3 py-1.5 rounded-lg bg-white border border-baron-border text-gray-900 text-sm focus:outline-none focus:border-baron-gold">
                         <option value="Shani Segev">שני שגיב</option>
                       </select>
                     )}
@@ -641,7 +644,7 @@ export default function AdminPage() {
                   </div>
 
                   <button type="submit" disabled={addSubmitting}
-                    className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold text-base transition-colors">
+                    className="w-full py-3 rounded-xl gold-bg disabled:bg-gray-400 text-white font-bold text-base transition-colors">
                     {addSubmitting ? 'יוצר...' : 'צור הזמנה'}
                   </button>
                 </form>
@@ -664,28 +667,28 @@ export default function AdminPage() {
                     const isEditing = editingId === b.id
 
                     return (
-                      <div key={b.id} className={`bg-white rounded-xl border border-gray-200 shadow-sm p-5 pl-4 border-l-4 ${b.status === 'approved' ? 'border-l-green-500' : b.status === 'pending' ? 'border-l-yellow-400' : 'border-l-red-500'}`}>
+                      <div key={b.id} className={`card rounded-xl p-5 pl-4 border-l-4 ${b.status === 'approved' ? 'border-l-green-500' : b.status === 'pending' ? 'border-l-yellow-400' : 'border-l-red-500'}`}>
                         <div className="flex flex-wrap gap-4 justify-between items-start">
                           <div className="flex-1 min-w-[200px]">
                             {isEditing ? (
                               <div className="space-y-2">
                                 <input type="text" value={editForm.pilot_name || ''}
                                   onChange={(e) => setEditForm({ ...editForm, pilot_name: e.target.value })}
-                                  className="w-full px-3 py-2 rounded bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-blue-500" />
+                                  className="w-full px-3 py-2 rounded bg-white border border-baron-border text-gray-900 text-sm focus:outline-none focus:border-baron-gold" />
                                 <div className="grid grid-cols-3 gap-2">
                                   <input type="date" value={editForm.date || ''}
                                     onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
-                                    className="px-2 py-1 rounded bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-blue-500" />
+                                    className="px-2 py-1 rounded bg-white border border-baron-border text-gray-900 text-sm focus:outline-none focus:border-baron-gold" />
                                   <input type="time" value={editForm.start_time || ''}
                                     onChange={(e) => setEditForm({ ...editForm, start_time: e.target.value })}
-                                    className="px-2 py-1 rounded bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-blue-500" />
+                                    className="px-2 py-1 rounded bg-white border border-baron-border text-gray-900 text-sm focus:outline-none focus:border-baron-gold" />
                                   <input type="time" value={editForm.end_time || ''}
                                     onChange={(e) => setEditForm({ ...editForm, end_time: e.target.value })}
-                                    className="px-2 py-1 rounded bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-blue-500" />
+                                    className="px-2 py-1 rounded bg-white border border-baron-border text-gray-900 text-sm focus:outline-none focus:border-baron-gold" />
                                 </div>
                                 <div className="flex gap-2">
                                   <button onClick={() => saveEdit(b.id)}
-                                    className="px-3 py-1 rounded bg-green-600 hover:bg-green-700 text-white text-sm">שמור</button>
+                                    className="px-3 py-1 rounded bg-baron-gold text-white text-sm">שמור</button>
                                   <button onClick={() => setEditingId(null)}
                                     className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm">ביטול</button>
                                 </div>
@@ -697,7 +700,7 @@ export default function AdminPage() {
                                   {(() => {
                                     const matchedPilot = pilots.find(p => p.name === b.pilot_name)
                                     return matchedPilot ? (
-                                      <a href={`/admin/pilots/${matchedPilot.id}`} className="text-blue-600 hover:text-blue-800 transition-colors" title="כרטיס טייס">👤</a>
+                                      <a href={`/admin/pilots/${matchedPilot.id}`} className="text-baron-gold-text hover:text-baron-gold transition-colors" title="כרטיס טייס">👤</a>
                                     ) : null
                                   })()}
                                   <span className={`text-xs px-2 py-0.5 rounded font-medium ${
@@ -731,7 +734,7 @@ export default function AdminPage() {
                                 </>
                               )}
                               <button onClick={() => startEdit(b)}
-                                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors">
+                                className="px-4 py-2 rounded-lg gold-bg text-sm font-medium transition-colors">
                                 ערוך
                               </button>
                               <button onClick={() => deleteBooking(b.id)}
@@ -801,13 +804,13 @@ export default function AdminPage() {
             <div>
               <button onClick={() => setShowAddPilotForm(!showAddPilotForm)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  showAddPilotForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+                  showAddPilotForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'gold-bg text-white'
                 }`}>
                 {showAddPilotForm ? '✕ סגור' : '+ הוסף טייס'}
               </button>
 
               {showAddPilotForm && (
-                <form onSubmit={addPilot} className="mt-3 bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                <form onSubmit={addPilot} className="mt-3 card rounded-xl p-4 space-y-3">
                   <h3 className="text-gray-900 font-bold">הוספת טייס</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <input type="text" required value={pilotForm.name}
@@ -820,7 +823,7 @@ export default function AdminPage() {
                       onChange={e => setPilotForm({ ...pilotForm, license_number: e.target.value })}
                       placeholder="מספר רישיון" className={inputClass} />
                   </div>
-                  <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-base font-bold">
+                  <button type="submit" className="px-4 py-3 rounded-lg gold-bg text-white text-base font-bold">
                     הוסף טייס
                   </button>
                 </form>
@@ -853,26 +856,26 @@ export default function AdminPage() {
                   const balance = totalPurchased - pilotFlightHours
 
                   return (
-                    <div key={p.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                    <div key={p.id} className="card rounded-xl p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">{p.name}</h3>
                           {p.phone && <div className="text-gray-500 text-sm">{p.phone}</div>}
                           {p.license_number && <div className="text-gray-400 text-xs">רישיון: {p.license_number}</div>}
                         </div>
-                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${p.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${p.is_active ? 'bg-baron-gold/10 text-baron-gold-text' : 'bg-red-100 text-red-700'}`}>
                           {p.is_active ? 'פעיל' : 'לא פעיל'}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
-                        <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="bg-baron-bg rounded-lg p-2">
                           <div className={`text-2xl font-black ${balance > 0 ? 'text-green-600' : balance === 0 ? 'text-orange-600' : 'text-red-600'}`}>
                             {Math.round(balance * 10) / 10} שעות
                           </div>
                           <div className="text-gray-500 text-xs">נותרו מתוך {totalPurchased} שנרכשו</div>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="bg-baron-bg rounded-lg p-2">
                           <div className="text-gray-900 font-bold">{futureBookings}</div>
                           <div className="text-gray-500 text-xs">הזמנות עתידיות</div>
                         </div>
@@ -888,7 +891,7 @@ export default function AdminPage() {
                       </div>
 
                       <a href={`/admin/pilots/${p.id}`}
-                        className="block w-full text-center py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">
+                        className="block w-full text-center py-2.5 rounded-lg gold-bg text-white text-sm font-semibold transition-colors">
                         פתח כרטיס
                       </a>
                     </div>
@@ -928,7 +931,7 @@ export default function AdminPage() {
                   return b.date < today && !flightLogs.some(l => l.booking_id === b.id)
                 }).length
                 return (
-                  <div key={name} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                  <div key={name} className="card rounded-xl p-4">
                     <div className="flex justify-between items-center mb-3">
                       <h4 className="font-bold text-gray-900 text-base">{name}</h4>
                       {debt > 0
@@ -937,11 +940,11 @@ export default function AdminPage() {
                       }
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                      <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="bg-baron-bg rounded-lg p-2">
                         <div className="font-bold text-gray-900">{Math.round(hoursFlown * 10) / 10}h</div>
                         <div className="text-xs text-gray-500">שעות שנטסו</div>
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="bg-baron-bg rounded-lg p-2">
                         <div className="font-bold text-gray-900">{totalPurchased}h</div>
                         <div className="text-xs text-gray-500">שעות שנרכשו</div>
                       </div>
@@ -949,7 +952,7 @@ export default function AdminPage() {
                         <div className={`font-bold ${hoursRemaining >= 0 ? 'text-green-700' : 'text-red-700'}`}>{hoursRemaining}h</div>
                         <div className="text-xs text-gray-500">יתרה</div>
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="bg-baron-bg rounded-lg p-2">
                         <div className="font-bold text-gray-900">₪{totalPaid.toLocaleString()}</div>
                         <div className="text-xs text-gray-500">סה"כ שולם</div>
                       </div>
@@ -970,12 +973,12 @@ export default function AdminPage() {
               {pilotNames.length === 0 && <p className="text-gray-500 text-center py-4">אין טייסים</p>}
 
               {/* Divider + Add package */}
-              <div className="border-t border-gray-200 pt-4 space-y-3">
+              <div className="border-t border-baron-border pt-4 space-y-3">
                 <div className="flex justify-between items-center">
                   <h3 className="text-gray-700 font-semibold text-sm">💼 הוספת רכישת שעות</h3>
                   {rates.length > 0 && <span className="text-xs text-gray-500">תעריף: ₪{rates[0]?.rate_per_hour?.toLocaleString()}/שעה</span>}
                 </div>
-                <form onSubmit={addPackage} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                <form onSubmit={addPackage} className="card rounded-xl p-4 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">שם הטייס</label>
@@ -1016,7 +1019,7 @@ export default function AdminPage() {
                       <label className="block text-xs font-semibold text-gray-600 mb-1">סכום לתשלום (₪)</label>
                       <input type="number" step="0.01" value={packageForm.price_paid}
                         onChange={e => setPackageForm({ ...packageForm, price_paid: e.target.value })}
-                        placeholder="מחושב אוטומטית" className={inputClass + ' bg-blue-50'} />
+                        placeholder="מחושב אוטומטית" className={inputClass + ' bg-baron-gold/5'} />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">שעות מתנה 🎁 <span className="text-gray-400 font-normal">(אופציונלי)</span></label>
@@ -1032,26 +1035,26 @@ export default function AdminPage() {
                     </div>
                   </div>
                   {packageForm.hours_purchased && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800 space-y-0.5">
+                    <div className="bg-baron-gold/5 border border-baron-border rounded-lg px-3 py-2 text-sm text-baron-text space-y-0.5">
                       {packageForm.price_paid && <div>💰 {packageForm.hours_purchased} שעות × ₪{rates[0]?.rate_per_hour?.toLocaleString() || '?'} = <strong>₪{packageForm.price_paid}</strong></div>}
                       {parseFloat(packageForm.hours_gift || '0') > 0 && (
                         <div className="text-green-700">🎁 + {packageForm.hours_gift} שעות מתנה | סה"כ: <strong>{(parseFloat(packageForm.hours_purchased||'0') + parseFloat(packageForm.hours_gift||'0'))} שעות</strong></div>
                       )}
                     </div>
                   )}
-                  <button type="submit" className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold">
+                  <button type="submit" className="w-full py-2.5 rounded-lg gold-bg text-white font-bold">
                     + הוסף רכישת שעות
                   </button>
                 </form>
               </div>
 
               {/* Rate management */}
-              <div className="border-t border-gray-200 pt-4 space-y-3">
+              <div className="border-t border-baron-border pt-4 space-y-3">
                 <h3 className="text-gray-700 font-semibold text-sm">⚙️ ניהול תעריפים</h3>
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+                <div className="card rounded-xl overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
+                      <tr className="bg-baron-bg border-b border-baron-border">
                         <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">שם</th>
                         <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">₪/שעה</th>
                         <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">פעולות</th>
@@ -1065,7 +1068,7 @@ export default function AdminPage() {
                               <td className="p-2"><input type="text" value={editRateForm.name || ''} onChange={e => setEditRateForm({ ...editRateForm, name: e.target.value })} className={inputClass} /></td>
                               <td className="p-2"><input type="number" step="0.01" value={editRateForm.rate_per_hour || ''} onChange={e => setEditRateForm({ ...editRateForm, rate_per_hour: parseFloat(e.target.value) })} className={inputClass} /></td>
                               <td className="p-2 flex gap-1">
-                                <button onClick={() => saveRateEdit(r.id)} className="px-2 py-1 rounded bg-green-600 text-white text-xs">שמור</button>
+                                <button onClick={() => saveRateEdit(r.id)} className="px-2 py-1 rounded bg-baron-gold text-white text-xs">שמור</button>
                                 <button onClick={() => setEditingRateId(null)} className="px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">ביטול</button>
                               </td>
                             </>
@@ -1075,7 +1078,7 @@ export default function AdminPage() {
                               <td className="py-2 px-3 text-gray-900">₪{r.rate_per_hour?.toLocaleString()}</td>
                               <td className="py-2 px-3 flex gap-1">
                                 <button onClick={() => { setEditingRateId(r.id); setEditRateForm({ name: r.name, rate_per_hour: r.rate_per_hour, description: r.description }) }}
-                                  className="px-2 py-1 rounded bg-blue-600 text-white text-xs">ערוך</button>
+                                  className="px-2 py-1 rounded bg-baron-gold text-white text-xs">ערוך</button>
                                 <button onClick={() => deleteRate(r.id)}
                                   className="px-2 py-1 rounded bg-red-600 text-white text-xs">מחק</button>
                               </td>
@@ -1090,7 +1093,7 @@ export default function AdminPage() {
                 <form onSubmit={addRate} className="flex gap-2 flex-wrap">
                   <input type="text" required value={rateForm.name} onChange={e => setRateForm({ ...rateForm, name: e.target.value })} placeholder="שם תעריף" className={inputClass + ' flex-1 min-w-24'} />
                   <input type="number" required step="0.01" value={rateForm.rate_per_hour} onChange={e => setRateForm({ ...rateForm, rate_per_hour: e.target.value })} placeholder="₪/שעה" className={inputClass + ' w-28'} />
-                  <button type="submit" className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold">+ הוסף</button>
+                  <button type="submit" className="px-3 py-2 rounded-lg gold-bg text-white text-sm font-semibold">+ הוסף</button>
                 </form>
               </div>
             </div>
@@ -1100,7 +1103,7 @@ export default function AdminPage() {
         {activeTab === 'תחזוקה' && (
           <div className="space-y-4">
             {/* Airframe Hours + Hobbs display */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+            <div className="card rounded-2xl p-5">
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
                   <div className="text-gray-500 text-sm mb-1">Hobbs נוכחי</div>
@@ -1113,14 +1116,14 @@ export default function AdminPage() {
                       <input type="number" step="0.1" value={airframeHoursInput}
                         onChange={e => setAirframeHoursInput(e.target.value)}
                         className={inputClass + ' w-28 text-center'} placeholder="שעות בסיס" />
-                      <button onClick={saveAirframeHours} className="px-2 py-1 rounded bg-green-600 text-white text-xs">שמור</button>
+                      <button onClick={saveAirframeHours} className="px-2 py-1 rounded bg-baron-gold text-white text-xs">שמור</button>
                       <button onClick={() => setEditingAirframeHours(false)} className="px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">ביטול</button>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-4xl font-black text-gray-900">{Math.round(totalAirframeHours * 10) / 10}</span>
                       <button onClick={() => { setEditingAirframeHours(true); setAirframeHoursInput(String(Math.round(totalAirframeHours * 10) / 10)) }}
-                        className="text-blue-500 hover:text-blue-700 text-sm">✏️</button>
+                        className="text-baron-gold hover:text-baron-gold-text text-sm">✏️</button>
                     </div>
                   )}
                 </div>
@@ -1130,7 +1133,7 @@ export default function AdminPage() {
             {/* Toggle display mode */}
             <div className="flex justify-end">
               <button onClick={() => setShowAirframeToggle(!showAirframeToggle)}
-                className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium transition-colors border border-gray-200">
+                className="px-3 py-1.5 rounded-lg bg-baron-bg hover:bg-baron-gold/10 text-baron-muted text-xs font-medium transition-colors border border-baron-border">
                 {showAirframeToggle ? 'שעות שנותרו' : 'שעות גוף'}
               </button>
             </div>
@@ -1171,7 +1174,7 @@ export default function AdminPage() {
                 }
 
                 return (
-                  <div key={rec.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                  <div key={rec.id} className="card rounded-xl p-4 space-y-3">
                     <div className="flex justify-between items-start">
                       <div className="flex items-start gap-2">
                         <span className="text-lg">{typeIcon}</span>
@@ -1228,7 +1231,7 @@ export default function AdminPage() {
                         </div>
                         <div className="flex gap-2">
                           <button onClick={() => saveMaintEdit(rec.id)}
-                            className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-sm font-medium">שמור</button>
+                            className="px-3 py-1.5 rounded-lg bg-baron-gold text-white text-sm font-medium">שמור</button>
                           <button onClick={() => setEditingMaintId(null)}
                             className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium">ביטול</button>
                         </div>
@@ -1244,7 +1247,7 @@ export default function AdminPage() {
                             hobbs_at_maintenance: String(currentHobbs),
                             notes: '',
                           })
-                        }} className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                        }} className="text-baron-gold-text hover:text-baron-gold text-xs font-medium">
                           ✏️ עדכן תחזוקה
                         </button>
                         <button onClick={() => {
@@ -1297,13 +1300,13 @@ export default function AdminPage() {
             <div>
               <button onClick={() => setShowAddMaint(!showAddMaint)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  showAddMaint ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+                  showAddMaint ? 'bg-red-600 hover:bg-red-700 text-white' : 'gold-bg text-white'
                 }`}>
                 {showAddMaint ? '✕ סגור' : '+ הוסף ביקורת'}
               </button>
 
               {showAddMaint && (
-                <form onSubmit={addMaintenanceItem} className="mt-3 bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                <form onSubmit={addMaintenanceItem} className="mt-3 card rounded-xl p-4 space-y-3">
                   {/* Quick presets */}
                   <div className="flex flex-wrap gap-2">
                     {[
@@ -1321,7 +1324,7 @@ export default function AdminPage() {
                         hobbs_at_maintenance: String(currentHobbs),
                         notes: p.notes
                       })}
-                        className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200 hover:bg-blue-100 transition-colors">
+                        className="px-3 py-1.5 rounded-lg bg-baron-gold/5 text-baron-gold-text text-xs font-medium border border-baron-border hover:bg-baron-gold/10 transition-colors">
                         {p.label}
                       </button>
                     ))}
@@ -1392,7 +1395,7 @@ export default function AdminPage() {
                         placeholder="תיאור הפריט" className={inputClass} />
                     </div>
                   </div>
-                  <button type="submit" className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold">
+                  <button type="submit" className="px-4 py-3 rounded-lg gold-bg text-white font-bold">
                     הוסף ביקורת
                   </button>
                 </form>
@@ -1426,18 +1429,18 @@ export default function AdminPage() {
               <h3 className="text-gray-900 font-bold text-lg">📊 דוח חודשי — {now.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}</h3>
 
               {/* Aircraft utilization */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <div className="card rounded-xl p-5">
                 <h4 className="text-gray-700 font-semibold text-sm mb-3">🛩️ ניצולת מטוס</h4>
                 <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-baron-bg rounded-lg p-3">
                     <div className="text-3xl font-black text-gray-900">{Math.round(monthHours * 10) / 10}</div>
                     <div className="text-xs text-gray-500">שעות טיסה</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-baron-bg rounded-lg p-3">
                     <div className="text-3xl font-black text-gray-900">{monthFlightLogs.length}</div>
                     <div className="text-xs text-gray-500">טיסות</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-baron-bg rounded-lg p-3">
                     <div className="text-3xl font-black text-gray-900">{Math.round(avgDuration * 10) / 10}</div>
                     <div className="text-xs text-gray-500">ממוצע טיסה (h)</div>
                   </div>
@@ -1445,14 +1448,14 @@ export default function AdminPage() {
               </div>
 
               {/* Revenue */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <div className="card rounded-xl p-5">
                 <h4 className="text-gray-700 font-semibold text-sm mb-3">💰 הכנסות</h4>
                 <div className="grid grid-cols-2 gap-3 text-center">
                   <div className="bg-green-50 rounded-lg p-3">
                     <div className="text-3xl font-black text-green-700">₪{monthRevenue.toLocaleString()}</div>
                     <div className="text-xs text-gray-500">שולם החודש</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-baron-bg rounded-lg p-3">
                     <div className="text-3xl font-black text-gray-900">{monthPackages.length}</div>
                     <div className="text-xs text-gray-500">רכישות חבילות</div>
                   </div>
@@ -1460,12 +1463,12 @@ export default function AdminPage() {
               </div>
 
               {/* Per-pilot breakdown */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <div className="card rounded-xl p-5">
                 <h4 className="text-gray-700 font-semibold text-sm mb-3">👥 פילוח לפי טייס</h4>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
+                      <tr className="bg-baron-bg border-b border-baron-border">
                         <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">טייס</th>
                         <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">טיסות</th>
                         <th className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right py-2 px-3">שעות</th>
@@ -1485,7 +1488,7 @@ export default function AdminPage() {
                         const pilotCost = Math.round(pilotHours * defaultRate)
                         const pilotPaid = monthPackages.filter(pkg => pkg.pilot_name === p.name).reduce((s, pkg) => s + (pkg.price_paid || 0), 0)
                         return (
-                          <tr key={p.id} className="border-b border-gray-100 even:bg-gray-50">
+                          <tr key={p.id} className="border-b border-baron-border even:bg-baron-bg/50">
                             <td className="py-2 px-3 text-gray-900 font-medium">{p.name}</td>
                             <td className="py-2 px-3 text-gray-700">{pilotMonthBookings.length}</td>
                             <td className="py-2 px-3 text-gray-700">{Math.round(pilotHours * 10) / 10}</td>
