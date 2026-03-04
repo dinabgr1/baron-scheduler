@@ -7,6 +7,7 @@ import WeeklyCalendar from '@/components/WeeklyCalendar'
 import { Booking, FlightLog, Pilot, Rate, HourPackage } from '@/lib/db'
 
 type AdminTab = 'הזמנות' | 'טייסים' | 'פיננסים' | 'תחזוקה' | 'דוחות'
+const VALID_TABS: AdminTab[] = ['הזמנות', 'טייסים', 'פיננסים', 'תחזוקה', 'דוחות']
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
@@ -32,6 +33,17 @@ export default function AdminPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [addSubmitting, setAddSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState<AdminTab>('הזמנות')
+
+  // Read tab from URL on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tab = params.get('tab') as AdminTab | null
+      if (tab && VALID_TABS.includes(tab)) {
+        setActiveTab(tab)
+      }
+    }
+  }, [])
   const [addForm, setAddForm] = useState({
     pilot_name: '',
     date: '',

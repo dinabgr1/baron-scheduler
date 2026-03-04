@@ -320,11 +320,7 @@ export default function PilotDetailPage() {
           {adminTabs.map(tab => (
             <Link
               key={tab}
-              href={`/admin${tab === 'טייסים' ? '' : ''}`}
-              onClick={(e) => {
-                e.preventDefault()
-                window.location.href = `/admin?tab=${encodeURIComponent(tab)}`
-              }}
+              href={`/admin?tab=${encodeURIComponent(tab)}`}
               className={`px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-colors ${
                 tab === 'טייסים'
                   ? 'bg-baron-gold text-white'
