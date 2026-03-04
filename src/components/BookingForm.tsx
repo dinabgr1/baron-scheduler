@@ -155,50 +155,60 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
               onChange={(e) => {
                 const val = e.target.value
                 setPilotSearch(val)
-                setShowPilotDropdown(true)
+                // Only show dropdown when user is actively typing (2+ chars)
+                if (val.length >= 2) {
+                  setShowPilotDropdown(true)
+                } else {
+                  setShowPilotDropdown(false)
+                }
                 if (!val) {
                   setForm({ ...form, pilot_name: '', phone: '' })
                   setPilotStatus('idle')
                 }
               }}
-              onFocus={() => setShowPilotDropdown(true)}
-              placeholder="חפש או הקלד שם טייס..."
+              placeholder="הקלד שם טייס..."
               className={inputClass}
               autoComplete="off"
             />
             {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold text-sm">✓</span>}
           </div>
-          {showPilotDropdown && (
+          {showPilotDropdown && pilotSearch && pilotSearch.length >= 2 && (
             <div className="absolute z-50 w-full mt-1 bg-white rounded-xl border border-baron-border shadow-lg max-h-48 overflow-y-auto">
-              {pilots
-                .filter(p => !pilotSearch || p.name.toLowerCase().includes(pilotSearch.toLowerCase()))
-                .map(p => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => {
-                      setForm({ ...form, pilot_name: p.name, phone: p.phone || '' })
-                      setPilotStatus('found')
-                      setPilotSearch(null)
-                      setShowPilotDropdown(false)
-                    }}
-                    className="w-full text-right px-4 py-2.5 text-[13px] text-baron-text hover:bg-baron-bg transition-colors border-b border-baron-border/50 last:border-0"
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setForm({ ...form, pilot_name: '__new__', phone: '' })
-                  setPilotStatus('new')
-                  setPilotSearch(null)
-                  setShowPilotDropdown(false)
-                }}
-                className="w-full text-right px-4 py-2.5 text-[13px] text-baron-gold-text font-medium hover:bg-baron-gold/5 transition-colors"
-              >
-                ➕ טייס חדש
-              </button>
+              {(() => {
+                const filtered = pilots.filter(p => p.name.toLowerCase().includes(pilotSearch.toLowerCase()))
+                if (filtered.length > 0) {
+                  return filtered.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setForm({ ...form, pilot_name: p.name, phone: p.phone || '' })
+                        setPilotStatus('found')
+                        setPilotSearch(null)
+                        setShowPilotDropdown(false)
+                      }}
+                      className="w-full text-right px-4 py-2.5 text-[13px] text-baron-text hover:bg-baron-bg transition-colors border-b border-baron-border/50 last:border-0"
+                    >
+                      {p.name}
+                    </button>
+                  ))
+                } else {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm({ ...form, pilot_name: '__new__', phone: '' })
+                        setPilotStatus('new')
+                        setPilotSearch(null)
+                        setShowPilotDropdown(false)
+                      }}
+                      className="w-full text-right px-4 py-2.5 text-[13px] text-baron-gold-text font-medium hover:bg-baron-gold/5 transition-colors"
+                    >
+                      ➕ הוסף את &quot;{pilotSearch}&quot; כטייס חדש
+                    </button>
+                  )
+                }
+              })()}
             </div>
           )}
           {pilotStatus === 'found' && <p className="text-emerald-500 text-[11px] mt-1 font-medium">✓ טייס קיים במערכת</p>}
