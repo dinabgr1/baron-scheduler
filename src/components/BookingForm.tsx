@@ -19,6 +19,20 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
   const [pilots, setPilots] = useState<Pilot[]>([])
   const [newPilotFields, setNewPilotFields] = useState({ license_number: '', new_name: '' })
   const [pilotStatus, setPilotStatus] = useState<'idle' | 'checking' | 'found' | 'new'>('idle')
+  const [pilotSearch, setPilotSearch] = useState<string | null>(null)
+  const [showPilotDropdown, setShowPilotDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowPilotDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -132,40 +146,63 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="text-baron-muted text-[11px] font-medium uppercase tracking-[0.1em] block mb-1.5">שם הטייס</label>
-        {pilots.length > 0 ? (
-          <>
-            <select
+        <div className="relative" ref={dropdownRef}>
+          <div className="relative">
+            <input
+              type="text"
               required
-              value={form.pilot_name}
+              value={form.pilot_name === '__new__' ? '' : pilotSearch ?? form.pilot_name}
               onChange={(e) => {
                 const val = e.target.value
-                if (val === '__new__') {
-                  setForm({ ...form, pilot_name: '__new__', phone: '' })
-                  setPilotStatus('new')
-                } else {
-                  const p = pilots.find(p => p.name === val)
-                  setForm({ ...form, pilot_name: val, phone: p?.phone || '' })
-                  setPilotStatus(val ? 'found' : 'idle')
+                setPilotSearch(val)
+                setShowPilotDropdown(true)
+                if (!val) {
+                  setForm({ ...form, pilot_name: '', phone: '' })
+                  setPilotStatus('idle')
                 }
               }}
+              onFocus={() => setShowPilotDropdown(true)}
+              placeholder="חפש או הקלד שם טייס..."
               className={inputClass}
-            >
-              <option value="">בחר טייס...</option>
-              {pilots.map(p => (
-                <option key={p.id} value={p.name}>{p.name}</option>
-              ))}
-              <option value="__new__">➕ טייס חדש</option>
-            </select>
-            {pilotStatus === 'found' && <p className="text-emerald-500 text-[11px] mt-1 font-medium">✓ טייס קיים במערכת</p>}
-          </>
-        ) : (
-          <div className="relative">
-            <input type="text" required value={form.pilot_name}
-              onChange={(e) => { setForm({ ...form, pilot_name: e.target.value }); setPilotStatus('idle') }}
-              placeholder="הכנס שם מלא" className={inputClass} />
-            {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">✓</span>}
+              autoComplete="off"
+            />
+            {pilotStatus === 'found' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold text-sm">✓</span>}
           </div>
-        )}
+          {showPilotDropdown && (
+            <div className="absolute z-50 w-full mt-1 bg-white rounded-xl border border-baron-border shadow-lg max-h-48 overflow-y-auto">
+              {pilots
+                .filter(p => !pilotSearch || p.name.toLowerCase().includes(pilotSearch.toLowerCase()))
+                .map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setForm({ ...form, pilot_name: p.name, phone: p.phone || '' })
+                      setPilotStatus('found')
+                      setPilotSearch(null)
+                      setShowPilotDropdown(false)
+                    }}
+                    className="w-full text-right px-4 py-2.5 text-[13px] text-baron-text hover:bg-baron-bg transition-colors border-b border-baron-border/50 last:border-0"
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setForm({ ...form, pilot_name: '__new__', phone: '' })
+                  setPilotStatus('new')
+                  setPilotSearch(null)
+                  setShowPilotDropdown(false)
+                }}
+                className="w-full text-right px-4 py-2.5 text-[13px] text-baron-gold-text font-medium hover:bg-baron-gold/5 transition-colors"
+              >
+                ➕ טייס חדש
+              </button>
+            </div>
+          )}
+          {pilotStatus === 'found' && <p className="text-emerald-500 text-[11px] mt-1 font-medium">✓ טייס קיים במערכת</p>}
+        </div>
       </div>
 
       {pilotStatus === 'new' && (
