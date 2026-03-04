@@ -188,6 +188,7 @@ export default function WeeklyCalendar() {
   const [anchor, setAnchor] = useState<Date>(new Date())
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT)
   const [logsByBookingId, setLogsByBookingId] = useState<Record<string, FlightLog>>({})
   const [tooltip, setTooltip] = useState<{ bookingId: string; message: string } | null>(null)
@@ -220,8 +221,9 @@ export default function WeeklyCalendar() {
           setLogsByBookingId(map)
         }
         setLoading(false)
+        setInitialLoad(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => { setLoading(false); setInitialLoad(false) })
   }, [fetchFrom, fetchTo])
 
   useEffect(() => {
@@ -394,7 +396,7 @@ export default function WeeklyCalendar() {
         </button>
       </div>
 
-      {loading ? (
+      {loading && initialLoad ? (
         <div className="p-8 text-center text-slate-400">טוען...</div>
       ) : view === 'month' ? (
         <MonthView
