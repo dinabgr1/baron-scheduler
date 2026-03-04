@@ -4,6 +4,7 @@ export const runtime = 'edge'
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Header from '@/components/Header'
+import Link from 'next/link'
 import { Pilot, Booking, FlightLog, HourPackage, BillingRecord, Rate } from '@/lib/db'
 
 type BillingTab = 'שעות'
@@ -296,14 +297,46 @@ export default function PilotDetailPage() {
     )
   }
 
+  const adminTabs = ['הזמנות', 'טייסים', 'פיננסים', 'תחזוקה', 'דוחות']
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-baron-bg" dir="rtl">
       <Header />
-      <main className="max-w-4xl mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
-        {/* Back button */}
-        <a href="/admin" className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors text-sm">
-          ← חזרה לניהול
-        </a>
+      {/* Admin page header */}
+      <div className="page-header pt-[52px] md:pt-[63px] pb-4 px-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="space-y-0.5">
+            <h2 className="font-semibold text-[15px] leading-none text-white">כרטיס טייס</h2>
+            <p className="text-white/50 text-[11px]">{pilot?.name || '...'}</p>
+          </div>
+          <Link href="/admin" className="text-baron-gold-light hover:text-white text-[12px] font-medium transition-colors">
+            חזרה לניהול ←
+          </Link>
+        </div>
+      </div>
+      {/* Admin tabs navigation */}
+      <div className="bg-white border-b border-baron-border sticky top-[52px] md:top-[63px] z-40">
+        <div className="max-w-4xl mx-auto px-4 flex items-center gap-1 overflow-x-auto py-2">
+          {adminTabs.map(tab => (
+            <Link
+              key={tab}
+              href={`/admin${tab === 'טייסים' ? '' : ''}`}
+              onClick={(e) => {
+                e.preventDefault()
+                window.location.href = `/admin?tab=${encodeURIComponent(tab)}`
+              }}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-colors ${
+                tab === 'טייסים'
+                  ? 'bg-baron-gold text-white'
+                  : 'text-baron-muted hover:bg-baron-bg'
+              }`}
+            >
+              {tab}
+            </Link>
+          ))}
+        </div>
+      </div>
+      <main className="max-w-4xl mx-auto px-4 py-4 pb-20 md:pb-6 space-y-4">
 
         {/* Section A - Pilot Header */}
         {pilot && (
