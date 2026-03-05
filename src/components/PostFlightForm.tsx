@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Booking, FlightLog } from '@/lib/db'
 import PreFlightChecklist from '@/components/PreFlightChecklist'
+import CadetLessonForm from '@/components/CadetLessonForm'
 
-type Step = 'name' | 'select' | 'form' | 'done'
+type Step = 'name' | 'select' | 'form' | 'cadet' | 'done'
 
 export default function PostFlightForm() {
   const searchParams = useSearchParams()
@@ -25,6 +26,7 @@ export default function PostFlightForm() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [initialLoading, setInitialLoading] = useState(!!bookingIdParam)
+  const [savedFlightLogId, setSavedFlightLogId] = useState<string | null>(null)
 
   const [form, setForm] = useState({
     hobbs_start: '',
@@ -204,6 +206,22 @@ export default function PostFlightForm() {
         throw new Error(err.error || 'Failed to save flight log')
       }
 
+      const savedLog = await res.json()
+      const logId = savedLog?.id || existingLogId || null
+      setSavedFlightLogId(logId)
+
+      // Check if pilot is a cadet
+      try {
+        const statusRes = await fetch(`/api/pilots/check-status?name=${encodeURIComponent(pilotName)}`)
+        const statusData = await statusRes.json()
+        if (statusData.twin_engine_status === 'cadet') {
+          setStep('cadet')
+          return
+        }
+      } catch {
+        // ignore — proceed to done
+      }
+
       setStep('done')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'שגיאה בשמירת הנתונים')
@@ -283,6 +301,20 @@ export default function PostFlightForm() {
             </button>
           ))}
         </div>
+      </div>
+    )
+  }
+
+  // Step cadet: Cadet lesson form
+  if (step === 'cadet' && selectedBooking && savedFlightLogId) {
+    return (
+      <div className="space-y-4">
+        <CadetLessonForm
+          pilotName={pilotName}
+          bookingId={selectedBooking.id}
+          flightLogId={savedFlightLogId}
+          onComplete={() => setStep('done')}
+        />
       </div>
     )
   }

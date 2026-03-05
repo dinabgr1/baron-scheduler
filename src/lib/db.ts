@@ -47,7 +47,18 @@ export type FlightLog = {
   flight_time_hours: number; flight_time_minutes: number; fuel_added_liters: number;
   fuel_level_quarters: number; oil_engine1: number; oil_engine2: number; notes: string | null; created_at: string
 }
-export type Pilot = { id: string; name: string; phone: string|null; email: string|null; license_number: string|null; is_active: number; created_at: string }
+export type Pilot = { id: string; name: string; phone: string|null; email: string|null; license_number: string|null; is_active: number; created_at: string; twin_engine_status: string|null }
+export type CadetLessonRecord = {
+  id: string; pilot_name: string; booking_id: string|null;
+  flight_log_id: string|null; lesson_type: string; lesson_number: number;
+  lesson_attempt: number; lesson_status: string; instructor_name: string|null;
+  instructor_license: string|null; notes: string|null; submitted_by: string|null;
+  created_at: string; updated_at: string
+}
+export type CadetLessonExercise = {
+  id: string; lesson_record_id: string; exercise_name: string;
+  grade: string; created_at: string
+}
 export type Rate = { id: string; name: string; rate_per_hour: number; description: string|null; is_active: number; created_at: string }
 export type HourPackage = { id: string; pilot_id: string|null; pilot_name: string; hours_purchased: number; hours_used: number; price_paid: number|null; purchase_date: string; notes: string|null; created_at: string }
 export type BillingRecord = { id: string; booking_id: string|null; pilot_name: string; flight_date: string|null; hours_flown: number|null; rate_per_hour: number|null; total_amount: number|null; payment_method: string; package_id: string|null; notes: string|null; created_at: string }

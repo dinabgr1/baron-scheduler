@@ -134,3 +134,31 @@ CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
 CREATE INDEX IF NOT EXISTS idx_flight_logs_booking ON flight_logs(booking_id);
 CREATE INDEX IF NOT EXISTS idx_hour_packages_pilot ON hour_packages(pilot_name);
 CREATE INDEX IF NOT EXISTS idx_billing_pilot ON billing_records(pilot_name);
+
+-- Cadet portfolio (twin-engine license training)
+ALTER TABLE pilots ADD COLUMN twin_engine_status TEXT DEFAULT 'none';
+
+CREATE TABLE IF NOT EXISTS cadet_lesson_records (
+  id TEXT PRIMARY KEY,
+  pilot_name TEXT NOT NULL,
+  booking_id TEXT,
+  flight_log_id TEXT,
+  lesson_type TEXT NOT NULL,
+  lesson_number INTEGER NOT NULL,
+  lesson_attempt INTEGER DEFAULT 1,
+  lesson_status TEXT DEFAULT 'U',
+  instructor_name TEXT,
+  instructor_license TEXT,
+  notes TEXT,
+  submitted_by TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS cadet_lesson_exercises (
+  id TEXT PRIMARY KEY,
+  lesson_record_id TEXT NOT NULL,
+  exercise_name TEXT NOT NULL,
+  grade TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);

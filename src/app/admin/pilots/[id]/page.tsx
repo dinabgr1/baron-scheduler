@@ -41,6 +41,8 @@ export default function PilotDetailPage() {
   // Edit pilot state
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', phone: '', license_number: '', email: '' })
+  const [twinStatus, setTwinStatus] = useState<string>('none')
+  const [savingTwinStatus, setSavingTwinStatus] = useState(false)
 
   // Add package form
   const [showPackageForm, setShowPackageForm] = useState(false)
@@ -79,6 +81,7 @@ export default function PilotDetailPage() {
     const found = Array.isArray(allPilots) ? allPilots.find((p: Pilot) => p.id === pilotId) : null
     if (!found) { setError('טייס לא נמצא'); setLoading(false); return null }
     setPilot(found)
+    setTwinStatus(found.twin_engine_status || 'none')
     return found
   }, [pilotId])
 
@@ -155,6 +158,18 @@ export default function PilotDetailPage() {
       body: JSON.stringify(editForm),
     })
     setEditing(false)
+    loadPilot()
+  }
+
+  async function saveTwinEngineStatus(newStatus: string) {
+    setSavingTwinStatus(true)
+    await fetch(`/api/pilots/${pilotId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ twin_engine_status: newStatus }),
+    })
+    setTwinStatus(newStatus)
+    setSavingTwinStatus(false)
     loadPilot()
   }
 
@@ -400,6 +415,45 @@ export default function PilotDetailPage() {
                 }`}>
                 {pilot.is_active ? 'פעיל' : 'לא פעיל'}
               </button>
+            </div>
+
+            {/* Twin engine status */}
+            <div className="mb-4 p-3 rounded-lg bg-baron-bg border border-baron-border">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold text-gray-600 mb-1">סטטוס הגדר דו מנועי</div>
+                  <div className="flex gap-2">
+                    {[
+                      { value: 'none', label: 'אין' },
+                      { value: 'cadet', label: 'חניך לרישיון קבוצה ב\'' },
+                      { value: 'licensed', label: 'בעל רישיון קבוצה ב\'' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => saveTwinEngineStatus(opt.value)}
+                        disabled={savingTwinStatus}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          twinStatus === opt.value
+                            ? 'bg-baron-gold text-white'
+                            : 'bg-white border border-baron-border text-baron-muted hover:bg-baron-bg'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {twinStatus === 'cadet' && pilot && (
+                  <a
+                    href={`/cadet/${encodeURIComponent(pilot.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium gold-bg text-white"
+                  >
+                    📋 תיק חניך
+                  </a>
+                )}
+              </div>
             </div>
 
             {/* Quick stats */}
