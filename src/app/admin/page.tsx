@@ -457,7 +457,7 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-baron-bg">
         <Header />
-        <main className="max-w-sm mx-auto px-4 py-20 pb-20 md:pb-6">
+        <main className="max-w-sm mx-auto px-4 py-20 pb-32 md:pb-6">
           <div className="card rounded-xl p-6">
             <h2 className="text-gray-900 font-bold text-xl text-center mb-6">כניסת מנהל</h2>
             <form onSubmit={login} className="space-y-4">
@@ -488,7 +488,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-baron-bg" dir="rtl">
       <Header />
-      <main className="max-w-6xl mx-auto px-4 py-6 pb-20 md:pb-6 space-y-6">
+      <main className="max-w-6xl mx-auto px-4 py-6 pb-32 md:pb-6 space-y-6">
         <div className="page-header pt-[52px] md:pt-[63px] pb-4 px-4 -mx-4">
           <div className="max-w-6xl mx-auto">
             <div className="accent-stripe mb-3" />

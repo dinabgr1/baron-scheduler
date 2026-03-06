@@ -107,7 +107,7 @@ export default function CadetPage() {
   return (
     <div className="min-h-screen bg-baron-bg" dir="rtl">
       <Header />
-      <main className="max-w-2xl mx-auto px-4 py-4 pb-20 md:pb-6 space-y-4 pt-[72px]">
+      <main className="max-w-2xl mx-auto px-4 py-4 pb-32 md:pb-6 space-y-4 pt-[72px]">
 
         {/* Header */}
         <div className="card rounded-xl p-5">

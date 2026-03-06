@@ -10,7 +10,7 @@ export default function AvailabilityPage() {
   const [showBooking, setShowBooking] = useState(false)
 
   return (
-    <div className={`md:h-auto md:min-h-screen bg-baron-bg flex flex-col md:block md:overflow-auto ${showBooking ? 'min-h-screen overflow-auto' : 'fixed inset-0 md:relative md:h-auto overflow-hidden'}`}>
+    <div className="min-h-screen bg-baron-bg flex flex-col md:block">
       <PageView page="זמינות" />
       <Header onBookClick={() => setShowBooking(!showBooking)} />
 
@@ -47,7 +47,7 @@ export default function AvailabilityPage() {
           </div>
         )}
 
-        <div className="card rounded-xl md:rounded-2xl overflow-hidden flex-1 min-h-0 md:flex-none">
+        <div className="card rounded-xl md:rounded-2xl overflow-hidden flex-1 min-h-[480px] md:flex-none">
           <WeeklyCalendar />
         </div>
       </main>
