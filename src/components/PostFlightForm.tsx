@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Booking, FlightLog } from '@/lib/db'
-import PreFlightChecklist from '@/components/PreFlightChecklist'
 import CadetLessonForm from '@/components/CadetLessonForm'
 
 type Step = 'name' | 'select' | 'form' | 'cadet' | 'done'
@@ -19,9 +18,6 @@ export default function PostFlightForm() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [existingLogId, setExistingLogId] = useState<string | null>(null)
   const [lastHobbs, setLastHobbs] = useState<number>(0)
-  const [hasChecklist, setHasChecklist] = useState<boolean | null>(null)
-  const [showChecklist, setShowChecklist] = useState(false)
-  const [checklistData, setChecklistData] = useState<Record<string, boolean> | null>(null)
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -155,20 +151,6 @@ export default function PostFlightForm() {
   async function selectBooking(booking: Booking) {
     setSelectedBooking(booking)
     setForm((f) => ({ ...f, hobbs_start: lastHobbs ? String(lastHobbs) : '' }))
-
-    // Check if pre-flight checklist exists for this booking
-    try {
-      const res = await fetch(`/api/preflight?booking_id=${booking.id}`)
-      const data = await res.json()
-      if (data && data.completed) {
-        setHasChecklist(true)
-        setChecklistData(data.checklist_data)
-      } else {
-        setHasChecklist(false)
-      }
-    } catch {
-      setHasChecklist(false)
-    }
 
     setStep('form')
   }
@@ -367,33 +349,6 @@ export default function PostFlightForm() {
           {selectedBooking?.start_time.slice(0, 5)} - {selectedBooking?.end_time.slice(0, 5)}
         </div>
       </div>
-
-      {/* Pre-flight checklist status */}
-      {hasChecklist === false && !showChecklist && (
-        <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
-          <div className="flex justify-between items-center">
-            <span>⚠️ לא בוצע צ&apos;קליסט לפני טיסה</span>
-            <button type="button" onClick={() => setShowChecklist(true)}
-              className="text-blue-600 hover:text-blue-800 font-medium text-xs">מלא עכשיו</button>
-          </div>
-        </div>
-      )}
-      {hasChecklist === true && (
-        <div className="p-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm">
-          ✅ צ&apos;קליסט לפני טיסה הושלם
-        </div>
-      )}
-      {showChecklist && selectedBooking && (
-        <PreFlightChecklist
-          bookingId={selectedBooking.id}
-          pilotName={pilotName}
-          existingChecklist={checklistData}
-          onComplete={() => {
-            setHasChecklist(true)
-            setShowChecklist(false)
-          }}
-        />
-      )}
 
       {/* Hobbs */}
       <div className="grid grid-cols-2 gap-3">
