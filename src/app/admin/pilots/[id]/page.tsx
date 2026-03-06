@@ -611,7 +611,11 @@ export default function PilotDetailPage() {
                   <tbody>
                     {packages.map(pkg => {
                       const isIndividual = pkg.notes?.startsWith('[individual]')
-                      const displayNotes = isIndividual ? pkg.notes?.replace('[individual]', '').trim() : pkg.notes
+                      const giftMatch = pkg.notes?.match(/\[gift:([\d.]+)\]/)
+                      const giftHours = giftMatch ? parseFloat(giftMatch[1]) : 0
+                      let displayNotes = pkg.notes || ''
+                      if (isIndividual) displayNotes = displayNotes.replace('[individual]', '').trim()
+                      if (giftMatch) displayNotes = displayNotes.replace(giftMatch[0], '').trim()
                       return (
                         <tr key={pkg.id} className="border-b border-baron-border even:bg-baron-bg/50 hover:bg-baron-bg">
                           <td className="py-3 px-4">
@@ -622,7 +626,10 @@ export default function PilotDetailPage() {
                           <td className="py-3 px-4 text-base text-gray-500">{formatDate(pkg.purchase_date)}</td>
                           <td className="py-3 px-4 text-base text-gray-900 font-bold">{pkg.hours_purchased}</td>
                           <td className="py-3 px-3 text-sm text-gray-500">{pkg.price_paid ? `₪${pkg.price_paid.toLocaleString()}` : '-'}</td>
-                          <td className="hidden sm:table-cell py-3 px-4 text-base text-gray-500">{displayNotes || '-'}</td>
+                          <td className="hidden sm:table-cell py-3 px-4 text-base text-gray-500">
+                            {giftHours > 0 && <span className="text-xs text-green-700 font-medium">🎁 {giftHours} מתנה </span>}
+                            {displayNotes || (giftHours === 0 ? '-' : '')}
+                          </td>
                         </tr>
                       )
                     })}
