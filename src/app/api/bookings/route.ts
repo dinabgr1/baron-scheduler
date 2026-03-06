@@ -60,13 +60,16 @@ export async function POST(request: NextRequest) {
     console.error('Google Calendar error:', error)
   }
 
+  // טיסה עם מדריך (שני שגיב) — מאושרת אוטומטית
+  const initialStatus = with_instructor ? 'approved' : 'pending'
+
   const id = crypto.randomUUID()
   await dbRun(
     `INSERT INTO bookings (id, pilot_name, date, start_time, end_time, with_instructor, instructor_name, status, google_event_id, phone, flight_purpose)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id, pilot_name, date, start_time, end_time, with_instructor ? 1 : 0,
     with_instructor ? (instructor_name || 'Shani Segev') : null,
-    googleEventId, phone || null, flight_purpose || 'אימון'
+    initialStatus, googleEventId, phone || null, flight_purpose || 'אימון'
   )
 
   const data = await dbFirst<Booking>('SELECT * FROM bookings WHERE id = ?', id)
